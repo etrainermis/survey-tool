@@ -86,6 +86,122 @@ interface SurveyData {
   };
 }
 
+const sampleSchools = [
+  {
+    id: "1",
+    name: "IPRC Kigali",
+    status: "active",
+    category: "public",
+    location: {
+      province: "Kigali City",
+      district: "Nyarugenge",
+      sector: "Nyarugenge",
+      cell: "Nyarugenge",
+      village: "Nyarugenge"
+    },
+    stats: {
+      trades: 5,
+      students: 1200,
+      teachers: 80
+    },
+    contact: {
+      phone: "+250789123456",
+      email: "info@iprckigali.rw",
+      headteacher: "Dr. John Doe"
+    },
+    trades: [
+      {
+        id: "t1",
+        name: "Information Technology",
+        levels: [
+          {
+            level: 3,
+            classrooms: 4,
+            students: { male: 60, female: 40 }
+          },
+          {
+            level: 4,
+            classrooms: 3,
+            students: { male: 45, female: 35 }
+          },
+          {
+            level: 5,
+            classrooms: 2,
+            students: { male: 30, female: 25 }
+          }
+        ]
+      },
+      {
+        id: "t2",
+        name: "Civil Engineering",
+        levels: [
+          {
+            level: 3,
+            classrooms: 3,
+            students: { male: 50, female: 30 }
+          },
+          {
+            level: 4,
+            classrooms: 2,
+            students: { male: 40, female: 20 }
+          },
+          {
+            level: 5,
+            classrooms: 2,
+            students: { male: 35, female: 15 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "2",
+    name: "IPRC Huye",
+    status: "active",
+    category: "public",
+    location: {
+      province: "Southern",
+      district: "Huye",
+      sector: "Huye",
+      cell: "Huye",
+      village: "Huye"
+    },
+    stats: {
+      trades: 4,
+      students: 800,
+      teachers: 60
+    },
+    contact: {
+      phone: "+250789123457",
+      email: "info@iprchuye.rw",
+      headteacher: "Dr. Jane Smith"
+    },
+    trades: [
+      {
+        id: "t3",
+        name: "Mechanical Engineering",
+        levels: [
+          {
+            level: 3,
+            classrooms: 3,
+            students: { male: 55, female: 25 }
+          },
+          {
+            level: 4,
+            classrooms: 2,
+            students: { male: 45, female: 20 }
+          },
+          {
+            level: 5,
+            classrooms: 2,
+            students: { male: 35, female: 15 }
+          }
+        ]
+      }
+    ]
+  }
+];
+
 const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -180,9 +296,19 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           id="school-select"
           className="w-full p-2 border rounded-md"
           {...form.register("school.id")}
+          onChange={(e) => {
+            const selectedSchool = sampleSchools.find(s => s.id === e.target.value);
+            if (selectedSchool) {
+              form.reset({ school: selectedSchool });
+            }
+          }}
         >
           <option value="">Select a school...</option>
-          {/* School options will be populated from API */}
+          {sampleSchools.map(school => (
+            <option key={school.id} value={school.id}>
+              {school.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -259,7 +385,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
 
   const renderInfrastructureSection = () => {
     const type = infrastructureTypes[currentInfraType];
-    const infraKey = `infrastructure.${currentInfraType}`;
+    const infraIndex = currentInfraType;
 
     return (
       <div className="space-y-6">
@@ -270,9 +396,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
               <Label>Size (sq. m)</Label>
               <RadioGroup 
                 onValueChange={(value) => 
-                  form.setValue(`${infraKey}.size`, value)
+                  form.setValue(`infrastructure.${infraIndex}.size`, value)
                 }
-                value={form.watch(`${infraKey}.size`)}
+                value={form.watch(`infrastructure.${infraIndex}.size`)}
               >
                 {["1-20", "20-50", "50-100", "100-150", "150-200", "200-250", 
                   "250-300", "300-400", "400-600", "600-more"
@@ -295,15 +421,15 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
                   <div key={material} className="flex items-center space-x-2">
                     <Checkbox 
                       id={`material-${material}`}
-                      checked={(form.watch(`${infraKey}.materials`) || []).includes(material)}
+                      checked={form.watch(`infrastructure.${infraIndex}.materials`)?.includes(material)}
                       onCheckedChange={(checked) => {
-                        const currentMaterials = form.watch(`${infraKey}.materials`) || [];
+                        const currentMaterials = form.watch(`infrastructure.${infraIndex}.materials`) || [];
                         if (checked) {
-                          form.setValue(`${infraKey}.materials`, 
+                          form.setValue(`infrastructure.${infraIndex}.materials`, 
                             [...currentMaterials, material]
                           );
                         } else {
-                          form.setValue(`${infraKey}.materials`,
+                          form.setValue(`infrastructure.${infraIndex}.materials`,
                             currentMaterials.filter((m) => m !== material)
                           );
                         }
@@ -321,16 +447,16 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
               <Label>Construction Year</Label>
               <Input 
                 type="number"
-                {...form.register(`${infraKey}.constructionYear`)}
+                {...form.register(`infrastructure.${infraIndex}.constructionYear` as const)}
               />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <RadioGroup 
                 onValueChange={(value) => 
-                  form.setValue(`${infraKey}.status`, value)
+                  form.setValue(`infrastructure.${infraIndex}.status`, value)
                 }
-                value={form.watch(`${infraKey}.status`)}
+                value={form.watch(`infrastructure.${infraIndex}.status`)}
               >
                 {["good", "moderate", "poor"].map((status) => (
                   <div key={status} className="flex items-center space-x-2">
