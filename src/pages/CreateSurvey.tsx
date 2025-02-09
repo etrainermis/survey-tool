@@ -89,8 +89,15 @@ interface SurveyData {
 const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [currentInfraType, setCurrentInfraType] = useState(0);
   const { toast } = useToast();
   const form = useForm<SurveyData>();
+
+  const infrastructureTypes = [
+    "administration block", "classroom block", "computer lab", "library", 
+    "kitchen", "refectory", "smart classroom", "dormitories", "washrooms", 
+    "playgrounds", "school garden"
+  ];
 
   useEffect(() => {
     const savedData = localStorage.getItem(`survey_draft_${authState.user?.id}`);
@@ -145,6 +152,23 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const nextInfraType = () => {
+    if (currentInfraType < infrastructureTypes.length - 1) {
+      saveProgress(form.getValues());
+      setCurrentInfraType(currentInfraType + 1);
+    } else {
+      nextStep();
+    }
+  };
+
+  const prevInfraType = () => {
+    if (currentInfraType > 0) {
+      setCurrentInfraType(currentInfraType - 1);
+    } else {
+      prevStep();
     }
   };
 
@@ -233,20 +257,22 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     </div>
   );
 
-  const renderInfrastructureSection = () => (
-    <div className="space-y-6">
-      {["administration block", "classroom block", "computer lab", "library", "kitchen", 
-        "refectory", "smart classroom", "dormitories", "washrooms", "playgrounds", "school garden"
-      ].map((type) => (
-        <Card key={type} className="p-4 space-y-4">
+  const renderInfrastructureSection = () => {
+    const type = infrastructureTypes[currentInfraType];
+    const infraKey = `infrastructure.${currentInfraType}`;
+
+    return (
+      <div className="space-y-6">
+        <Card className="p-4 space-y-4">
           <h3 className="font-semibold capitalize">{type}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Size (sq. m)</Label>
               <RadioGroup 
                 onValueChange={(value) => 
-                  form.setValue(`infrastructure.${type}.size`, value)
+                  form.setValue(`${infraKey}.size`, value)
                 }
+                value={form.watch(`${infraKey}.size`)}
               >
                 {["1-20", "20-50", "50-100", "100-150", "150-200", "200-250", 
                   "250-300", "300-400", "400-600", "600-more"
@@ -269,14 +295,15 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
                   <div key={material} className="flex items-center space-x-2">
                     <Checkbox 
                       id={`material-${material}`}
+                      checked={(form.watch(`${infraKey}.materials`) || []).includes(material)}
                       onCheckedChange={(checked) => {
-                        const currentMaterials = form.getValues(`infrastructure.${type}.materials`) || [];
+                        const currentMaterials = form.watch(`${infraKey}.materials`) || [];
                         if (checked) {
-                          form.setValue(`infrastructure.${type}.materials`, 
+                          form.setValue(`${infraKey}.materials`, 
                             [...currentMaterials, material]
                           );
                         } else {
-                          form.setValue(`infrastructure.${type}.materials`,
+                          form.setValue(`${infraKey}.materials`,
                             currentMaterials.filter((m) => m !== material)
                           );
                         }
@@ -294,15 +321,16 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
               <Label>Construction Year</Label>
               <Input 
                 type="number"
-                {...form.register(`infrastructure.${type}.constructionYear`)}
+                {...form.register(`${infraKey}.constructionYear`)}
               />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <RadioGroup 
                 onValueChange={(value) => 
-                  form.setValue(`infrastructure.${type}.status`, value)
+                  form.setValue(`${infraKey}.status`, value)
                 }
+                value={form.watch(`${infraKey}.status`)}
               >
                 {["good", "moderate", "poor"].map((status) => (
                   <div key={status} className="flex items-center space-x-2">
@@ -314,9 +342,43 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             </div>
           </div>
         </Card>
-      ))}
-    </div>
-  );
+
+        <div className="flex justify-between mt-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevInfraType}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Previous
+          </Button>
+
+          <Button type="button" onClick={nextInfraType}>
+            {currentInfraType < infrastructureTypes.length - 1 ? (
+              <>
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            ) : (
+              'Complete Infrastructure'
+            )}
+          </Button>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm text-gray-500">
+            Infrastructure {currentInfraType + 1} of {infrastructureTypes.length}
+          </p>
+          <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentInfraType + 1) / infrastructureTypes.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderITSection = () => (
     <div className="space-y-6">
@@ -533,26 +595,28 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {renderStepContent()}
 
-              <div className="flex justify-between mt-8">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={prevStep}
-                  disabled={currentStep === 1}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Previous
-                </Button>
-
-                {currentStep < 4 ? (
-                  <Button type="button" onClick={nextStep}>
-                    Next
-                    <ArrowRight className="ml-2 h-4 w-4" />
+              {currentStep !== 3 && (
+                <div className="flex justify-between mt-8">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={prevStep}
+                    disabled={currentStep === 1}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Previous
                   </Button>
-                ) : (
-                  <Button type="submit">Submit Survey</Button>
-                )}
-              </div>
+
+                  {currentStep < 4 ? (
+                    <Button type="button" onClick={nextStep}>
+                      Next
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button type="submit">Submit Survey</Button>
+                  )}
+                </div>
+              )}
             </form>
           </Form>
         </Card>
