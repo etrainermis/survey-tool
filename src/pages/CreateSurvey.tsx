@@ -221,7 +221,26 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
       const parsedData = JSON.parse(savedData);
       form.reset(parsedData);
     }
-  }, [authState.user?.id]);
+  }, [authState.user?.id, form]);
+
+  useEffect(() => {
+    const currentData = form.getValues();
+    if (!currentData.infrastructure) {
+      currentData.infrastructure = [];
+    }
+    
+    if (!currentData.infrastructure[currentInfraType]) {
+      currentData.infrastructure[currentInfraType] = {
+        type: infrastructureTypes[currentInfraType],
+        size: "",
+        capacity: "",
+        constructionYear: undefined,
+        materials: [],
+        status: ""
+      };
+      form.reset(currentData);
+    }
+  }, [currentInfraType, infrastructureTypes, form]);
 
   const saveProgress = (data: Partial<SurveyData>) => {
     if (authState.user?.id) {
@@ -230,8 +249,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         JSON.stringify(data)
       );
       toast({
-        title: "Progress saved",
-        description: "Your survey progress has been saved automatically.",
+        description: "Progress saved",
+        duration: 1000,
+        className: "bg-accent text-accent-foreground"
       });
     }
   };
@@ -273,8 +293,22 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
 
   const nextInfraType = () => {
     if (currentInfraType < infrastructureTypes.length - 1) {
-      saveProgress(form.getValues());
-      setCurrentInfraType(currentInfraType + 1);
+      const currentData = form.getValues();
+      const nextIndex = currentInfraType + 1;
+      
+      if (currentData.infrastructure) {
+        currentData.infrastructure[nextIndex] = {
+          type: infrastructureTypes[nextIndex],
+          size: "",
+          capacity: "",
+          constructionYear: undefined,
+          materials: [],
+          status: ""
+        };
+      }
+      
+      saveProgress(currentData);
+      setCurrentInfraType(nextIndex);
     } else {
       nextStep();
     }

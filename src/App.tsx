@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,10 @@ const App = () => {
     setAuthState(state);
   }, []);
 
+  const handleAuthStateChange = (newState: AuthState) => {
+    setAuthState(newState);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -29,13 +32,19 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={
-              !authState.isAuthenticated ? <Login setAuthState={setAuthState} /> : <Navigate to="/dashboard" replace />
+              !authState.isAuthenticated ? 
+                <Login setAuthState={handleAuthStateChange} /> : 
+                <Navigate to="/dashboard" replace />
             } />
             <Route path="/dashboard" element={
-              authState.isAuthenticated ? <Dashboard authState={authState} /> : <Navigate to="/login" replace />
+              authState.isAuthenticated ? 
+                <Dashboard authState={authState} setAuthState={handleAuthStateChange} /> : 
+                <Navigate to="/login" replace />
             } />
             <Route path="/create-survey" element={
-              authState.isAuthenticated ? <CreateSurvey authState={authState} /> : <Navigate to="/login" replace />
+              authState.isAuthenticated ? 
+                <CreateSurvey authState={authState} /> : 
+                <Navigate to="/login" replace />
             } />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
