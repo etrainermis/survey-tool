@@ -38,6 +38,7 @@ interface SurveyData {
       phone: string;
       email: string;
       headteacher: string;
+      owner:string;
     };
     trades: Array<{
       id: string;
@@ -97,17 +98,17 @@ const sampleSchools = [
       district: "Nyarugenge",
       sector: "Nyarugenge",
       cell: "Nyarugenge",
-      village: "Nyarugenge"
+      village: "Nyarugenge",
     },
     stats: {
       trades: 5,
       students: 1200,
-      teachers: 80
+      teachers: 80,
     },
     contact: {
       phone: "+250789123456",
       email: "info@iprckigali.rw",
-      headteacher: "Dr. John Doe"
+      headteacher: "Dr. John Doe",
     },
     trades: [
       {
@@ -117,19 +118,19 @@ const sampleSchools = [
           {
             level: 3,
             classrooms: 4,
-            students: { male: 60, female: 40 }
+            students: { male: 60, female: 40 },
           },
           {
             level: 4,
             classrooms: 3,
-            students: { male: 45, female: 35 }
+            students: { male: 45, female: 35 },
           },
           {
             level: 5,
             classrooms: 2,
-            students: { male: 30, female: 25 }
-          }
-        ]
+            students: { male: 30, female: 25 },
+          },
+        ],
       },
       {
         id: "t2",
@@ -138,21 +139,21 @@ const sampleSchools = [
           {
             level: 3,
             classrooms: 3,
-            students: { male: 50, female: 30 }
+            students: { male: 50, female: 30 },
           },
           {
             level: 4,
             classrooms: 2,
-            students: { male: 40, female: 20 }
+            students: { male: 40, female: 20 },
           },
           {
             level: 5,
             classrooms: 2,
-            students: { male: 35, female: 15 }
-          }
-        ]
-      }
-    ]
+            students: { male: 35, female: 15 },
+          },
+        ],
+      },
+    ],
   },
   {
     id: "2",
@@ -164,17 +165,17 @@ const sampleSchools = [
       district: "Huye",
       sector: "Huye",
       cell: "Huye",
-      village: "Huye"
+      village: "Huye",
     },
     stats: {
       trades: 4,
       students: 800,
-      teachers: 60
+      teachers: 60,
     },
     contact: {
       phone: "+250789123457",
       email: "info@iprchuye.rw",
-      headteacher: "Dr. Jane Smith"
+      headteacher: "Dr. Jane Smith",
     },
     trades: [
       {
@@ -184,23 +185,24 @@ const sampleSchools = [
           {
             level: 3,
             classrooms: 3,
-            students: { male: 55, female: 25 }
+            students: { male: 55, female: 25 },
           },
           {
             level: 4,
             classrooms: 2,
-            students: { male: 45, female: 20 }
+            students: { male: 45, female: 20 },
           },
           {
             level: 5,
             classrooms: 2,
-            students: { male: 35, female: 15 }
-          }
-        ]
-      }
-    ]
-  }
+            students: { male: 35, female: 15 },
+          },
+        ],
+      },
+    ],
+  },
 ];
+
 
 const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const navigate = useNavigate();
@@ -208,15 +210,26 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const [currentInfraType, setCurrentInfraType] = useState(0);
   const { toast } = useToast();
   const form = useForm<SurveyData>();
+  const [schoolStatus, setSchoolStatus] = useState("");
 
   const infrastructureTypes = [
-    "administration block", "classroom block", "computer lab", "library", 
-    "kitchen", "refectory", "smart classroom", "dormitories", "washrooms", 
-    "playgrounds", "school garden"
+    "administration block",
+    "classroom block",
+    "computer lab",
+    "library",
+    "kitchen",
+    "refectory",
+    "smart classroom",
+    "dormitories",
+    "washrooms",
+    "playgrounds",
+    "school garden",
   ];
 
   useEffect(() => {
-    const savedData = localStorage.getItem(`survey_draft_${authState.user?.id}`);
+    const savedData = localStorage.getItem(
+      `survey_draft_${authState.user?.id}`
+    );
     if (savedData) {
       const parsedData = JSON.parse(savedData);
       form.reset(parsedData);
@@ -228,7 +241,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     if (!currentData.infrastructure) {
       currentData.infrastructure = [];
     }
-    
+
     if (!currentData.infrastructure[currentInfraType]) {
       currentData.infrastructure[currentInfraType] = {
         type: infrastructureTypes[currentInfraType],
@@ -236,7 +249,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         capacity: "",
         constructionYear: undefined,
         materials: [],
-        status: ""
+        status: "",
       };
       form.reset(currentData);
     }
@@ -251,7 +264,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
       toast({
         description: "Progress saved",
         duration: 1000,
-        className: "bg-accent text-accent-foreground"
+        className: "bg-accent text-accent-foreground",
       });
     }
   };
@@ -264,7 +277,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
       createdAt: new Date().toISOString(),
     };
 
-    const savedSurveys = JSON.parse(localStorage.getItem("completed_surveys") || "[]");
+    const savedSurveys = JSON.parse(
+      localStorage.getItem("completed_surveys") || "[]"
+    );
     savedSurveys.push(surveyData);
     localStorage.setItem("completed_surveys", JSON.stringify(savedSurveys));
 
@@ -279,11 +294,14 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   };
 
   const nextStep = () => {
-    if (currentStep < 4) {
-      saveProgress(form.getValues());
-      setCurrentStep(currentStep + 1);
-    }
+    form.trigger().then((isValid) => {
+      if (isValid) {
+        saveProgress(form.getValues());
+        setCurrentStep((prev) => prev + 1);
+      }
+    });
   };
+
 
   const prevStep = () => {
     if (currentStep > 1) {
@@ -295,7 +313,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     if (currentInfraType < infrastructureTypes.length - 1) {
       const currentData = form.getValues();
       const nextIndex = currentInfraType + 1;
-      
+
       if (currentData.infrastructure) {
         currentData.infrastructure[nextIndex] = {
           type: infrastructureTypes[nextIndex],
@@ -303,10 +321,10 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           capacity: "",
           constructionYear: undefined,
           materials: [],
-          status: ""
+          status: "",
         };
       }
-      
+
       saveProgress(currentData);
       setCurrentInfraType(nextIndex);
     } else {
@@ -326,87 +344,171 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="school-select">Select School</Label>
-        <select 
+        <select
           id="school-select"
           className="w-full p-2 border rounded-md"
-          {...form.register("school.id")}
+          {...form.register("school.id", { required: "Please select a school" })}
           onChange={(e) => {
-            const selectedSchool = sampleSchools.find(s => s.id === e.target.value);
+            const selectedSchool = sampleSchools.find((s) => s.id === e.target.value);
             if (selectedSchool) {
               form.reset({ school: selectedSchool });
             }
           }}
         >
           <option value="">Select a school...</option>
-          {sampleSchools.map(school => (
+          {sampleSchools.map((school) => (
             <option key={school.id} value={school.id}>
               {school.name}
             </option>
           ))}
         </select>
+        {form.formState.errors.school?.id && (
+          <p className="text-red-500">{form.formState.errors.school.id.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="school-name">School Name</Label>
-          <Input id="school-name" {...form.register("school.name")} />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="school-status">Status</Label>
-          <Input id="school-status" {...form.register("school.status")} />
+          <select
+            id="school-status"
+            className="w-full p-2 border rounded-md"
+            {...form.register("school.status", { required: "Status is required" })}
+          >
+            <option value="">Select status...</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+            <option value="private-govt">Private-Govt</option>
+          </select>
+          {form.formState.errors.school?.status && (
+            <p className="text-red-500">{form.formState.errors.school.status.message}</p>
+          )}
         </div>
+
+
+        <div className="space-y-2">
+          <Label htmlFor="school-category">category</Label>
+          <select
+            id="school-category"
+            className="w-full p-2 border rounded-md"
+            {...form.register("school.category", { required: "school's category is required" })}
+          >
+            <option value="">Select Category...</option>
+            <option value="public">TSS</option>
+            <option value="private">TVET WING</option>
+            <option value="private-govt">VTC</option>
+          </select>
+          {form.formState.errors.school?.category && (
+            <p className="text-red-500">{form.formState.errors.school.category.message}</p>
+          )}
+        </div>
+
+
       </div>
+
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="school-email">Email</Label>
-          <Input 
-            id="school-email" 
+          <Input
+            id="school-email"
             type="email"
-            {...form.register("school.contact.email")} 
+            {...form.register("school.contact.email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                message: "Invalid email format",
+              },
+            })}
           />
+          {form.formState.errors.school?.contact?.email && (
+            <p className="text-red-500">{form.formState.errors.school.contact.email.message}</p>
+          )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="school-phone">Phone</Label>
-          <Input 
-            id="school-phone" 
-            type="tel"
-            {...form.register("school.contact.phone")} 
+          <Label htmlFor="headTeacherName">Head Teacher's Name</Label>
+          <Input
+            id="headTeacherName"
+            type="text"
+            {...form.register("school.contact.headteacher", { required: "Head Teacher's name is required" })}
           />
+          {form.formState.errors.school?.contact?.headteacher && (
+            <p className="text-red-500">{form.formState.errors.school.contact.headteacher.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="school-phone">Phone</Label>
+          <Input
+            id="school-phone"
+            type="tel"
+            {...form.register("school.contact.phone", { required: "Phone number is required" })}
+          />
+          {form.formState.errors.school?.contact?.phone && (
+            <p className="text-red-500">{form.formState.errors.school.contact.phone.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="number-of-teachers">Number of Teachers</Label>
+          <Input
+            id="number-of-teachers"
+            type="number"
+            {...form.register("school.stats.teachers", {
+              required: "Number of teachers is required",
+              min: { value: 1, message: "Must be at least 1" },
+            })}
+          />
+          {form.formState.errors.school?.stats?.teachers && (
+            <p className="text-red-500">{form.formState.errors.school.stats.teachers.message}</p>
+          )}
         </div>
       </div>
     </div>
   );
+
 
   const renderTradesSection = () => (
     <div className="space-y-6">
       {form.watch("school.trades")?.map((trade, tradeIndex) => (
         <Card key={trade.id} className="p-4 space-y-4">
           <h3 className="font-semibold">{trade.name}</h3>
-          
+
           {[3, 4, 5].map((level) => (
             <div key={level} className="space-y-4 border-t pt-4">
               <h4 className="font-medium">Level {level}</h4>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Classrooms</Label>
-                  <Input 
+                  <Input
                     type="number"
-                    {...form.register(`school.trades.${tradeIndex}.levels.${level-3}.classrooms` as const)}
+                    {...form.register(
+                      `school.trades.${tradeIndex}.levels.${
+                        level - 3
+                      }.classrooms` as const
+                    )}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Male Students</Label>
-                  <Input 
+                  <Input
                     type="number"
-                    {...form.register(`school.trades.${tradeIndex}.levels.${level-3}.students.male` as const)}
+                    {...form.register(
+                      `school.trades.${tradeIndex}.levels.${
+                        level - 3
+                      }.students.male` as const
+                    )}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Female Students</Label>
-                  <Input 
+                  <Input
                     type="number"
-                    {...form.register(`school.trades.${tradeIndex}.levels.${level-3}.students.female` as const)}
+                    {...form.register(
+                      `school.trades.${tradeIndex}.levels.${
+                        level - 3
+                      }.students.female` as const
+                    )}
                   />
                 </div>
               </div>
@@ -428,14 +530,23 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Size (sq. m)</Label>
-              <RadioGroup 
-                onValueChange={(value) => 
+              <RadioGroup
+                onValueChange={(value) =>
                   form.setValue(`infrastructure.${infraIndex}.size`, value)
                 }
                 value={form.watch(`infrastructure.${infraIndex}.size`)}
               >
-                {["1-20", "20-50", "50-100", "100-150", "150-200", "200-250", 
-                  "250-300", "300-400", "400-600", "600-more"
+                {[
+                  "1-20",
+                  "20-50",
+                  "50-100",
+                  "100-150",
+                  "150-200",
+                  "200-250",
+                  "250-300",
+                  "300-400",
+                  "400-600",
+                  "600-more",
                 ].map((size) => (
                   <div key={size} className="flex items-center space-x-2">
                     <RadioGroupItem value={size} id={`size-${size}`} />
@@ -444,26 +555,42 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
                 ))}
               </RadioGroup>
             </div>
-            
+
             <div className="space-y-2">
               <Label>Construction Material</Label>
               <div className="grid grid-cols-2 gap-2">
-                {["ruriba", "amatafari ahiye", "block cement", "rukarakara", 
-                  "ibiti n'ibyondo", "ibyuma", "amabati", "amategura", "amakara", 
-                  "cement", "pavement"
+                {[
+                  "ruriba",
+                  "amatafari ahiye",
+                  "block cement",
+                  "rukarakara",
+                  "ibiti n'ibyondo",
+                  "ibyuma",
+                  "amabati",
+                  "amategura",
+                  "amakara",
+                  "cement",
+                  "pavement",
                 ].map((material) => (
                   <div key={material} className="flex items-center space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id={`material-${material}`}
-                      checked={form.watch(`infrastructure.${infraIndex}.materials`)?.includes(material)}
+                      checked={form
+                        .watch(`infrastructure.${infraIndex}.materials`)
+                        ?.includes(material)}
                       onCheckedChange={(checked) => {
-                        const currentMaterials = form.watch(`infrastructure.${infraIndex}.materials`) || [];
+                        const currentMaterials =
+                          form.watch(
+                            `infrastructure.${infraIndex}.materials`
+                          ) || [];
                         if (checked) {
-                          form.setValue(`infrastructure.${infraIndex}.materials`, 
+                          form.setValue(
+                            `infrastructure.${infraIndex}.materials`,
                             [...currentMaterials, material]
                           );
                         } else {
-                          form.setValue(`infrastructure.${infraIndex}.materials`,
+                          form.setValue(
+                            `infrastructure.${infraIndex}.materials`,
                             currentMaterials.filter((m) => m !== material)
                           );
                         }
@@ -479,15 +606,17 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Construction Year</Label>
-              <Input 
+              <Input
                 type="number"
-                {...form.register(`infrastructure.${infraIndex}.constructionYear` as const)}
+                {...form.register(
+                  `infrastructure.${infraIndex}.constructionYear` as const
+                )}
               />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <RadioGroup 
-                onValueChange={(value) => 
+              <RadioGroup
+                onValueChange={(value) =>
                   form.setValue(`infrastructure.${infraIndex}.status`, value)
                 }
                 value={form.watch(`infrastructure.${infraIndex}.status`)}
@@ -504,11 +633,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         </Card>
 
         <div className="flex justify-between mt-8">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={prevInfraType}
-          >
+          <Button type="button" variant="outline" onClick={prevInfraType}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Previous
           </Button>
@@ -520,19 +645,24 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             ) : (
-              'Complete Infrastructure'
+              "Complete Infrastructure"
             )}
           </Button>
         </div>
 
         <div className="mt-4">
           <p className="text-sm text-gray-500">
-            Infrastructure {currentInfraType + 1} of {infrastructureTypes.length}
+            Infrastructure {currentInfraType + 1} of{" "}
+            {infrastructureTypes.length}
           </p>
           <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentInfraType + 1) / infrastructureTypes.length) * 100}%` }}
+              style={{
+                width: `${
+                  ((currentInfraType + 1) / infrastructureTypes.length) * 100
+                }%`,
+              }}
             />
           </div>
         </div>
@@ -547,14 +677,14 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Total Computers</Label>
-            <Input 
+            <Input
               type="number"
               {...form.register("it.computerLab.totalComputers")}
             />
           </div>
           <div className="space-y-2">
             <Label>Working Computers</Label>
-            <Input 
+            <Input
               type="number"
               {...form.register("it.computerLab.workingComputers")}
             />
@@ -562,9 +692,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="space-y-2">
             <Label>Connected with LAN</Label>
             <div className="flex items-center space-x-2">
-              <Checkbox 
+              <Checkbox
                 id="has-lan"
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   form.setValue("it.computerLab.hasLAN", checked as boolean)
                 }
               />
@@ -574,10 +704,13 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="space-y-2">
             <Label>Has Projectors</Label>
             <div className="flex items-center space-x-2">
-              <Checkbox 
+              <Checkbox
                 id="has-projectors"
                 onCheckedChange={(checked) => {
-                  form.setValue("it.computerLab.hasProjectors", checked as boolean);
+                  form.setValue(
+                    "it.computerLab.hasProjectors",
+                    checked as boolean
+                  );
                 }}
               />
               <Label htmlFor="has-projectors">Yes</Label>
@@ -592,9 +725,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="space-y-2">
             <Label>Internet Available</Label>
             <div className="flex items-center space-x-2">
-              <Checkbox 
+              <Checkbox
                 id="has-internet"
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   form.setValue("it.internet", checked as boolean)
                 }
               />
@@ -604,9 +737,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <div className="space-y-2">
             <Label>Has Server</Label>
             <div className="flex items-center space-x-2">
-              <Checkbox 
+              <Checkbox
                 id="has-server"
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   form.setValue("it.server.exists", checked as boolean)
                 }
               />
@@ -634,14 +767,19 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             <div className="grid grid-cols-3 gap-2">
               {["Solar", "Grid", "Renewable Energy"].map((source) => (
                 <div key={source} className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id={`energy-${source}`}
                     onCheckedChange={(checked) => {
-                      const currentSources = form.getValues("it.energySources") || [];
+                      const currentSources =
+                        form.getValues("it.energySources") || [];
                       if (checked) {
-                        form.setValue("it.energySources", [...currentSources, source]);
+                        form.setValue("it.energySources", [
+                          ...currentSources,
+                          source,
+                        ]);
                       } else {
-                        form.setValue("it.energySources", 
+                        form.setValue(
+                          "it.energySources",
                           currentSources.filter((s) => s !== source)
                         );
                       }
@@ -657,25 +795,33 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             <Label>Equipment Status</Label>
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-center space-x-2">
-                <Checkbox 
+                <Checkbox
                   id="has-asset-register"
-                  onCheckedChange={(checked) => 
-                    form.setValue("it.equipment.hasAssetRegister", checked as boolean)
+                  onCheckedChange={(checked) =>
+                    form.setValue(
+                      "it.equipment.hasAssetRegister",
+                      checked as boolean
+                    )
                   }
                 />
                 <Label htmlFor="has-asset-register">Has Asset Register</Label>
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <RadioGroup 
-                  onValueChange={(value) => 
+                <RadioGroup
+                  onValueChange={(value) =>
                     form.setValue("it.equipment.status", value)
                   }
                 >
                   {["good", "moderate", "poor"].map((status) => (
                     <div key={status} className="flex items-center space-x-2">
-                      <RadioGroupItem value={status} id={`equipment-status-${status}`} />
-                      <Label htmlFor={`equipment-status-${status}`}>{status}</Label>
+                      <RadioGroupItem
+                        value={status}
+                        id={`equipment-status-${status}`}
+                      />
+                      <Label htmlFor={`equipment-status-${status}`}>
+                        {status}
+                      </Label>
                     </div>
                   ))}
                 </RadioGroup>
@@ -693,7 +839,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">School Information</h2>
-            <p className="text-gray-500">Select a school and verify its information</p>
+            <p className="text-gray-500">
+              Select a school and verify its information
+            </p>
             {renderSchoolSection()}
           </div>
         );
@@ -701,7 +849,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Trade Information</h2>
-            <p className="text-gray-500">Enter information about school trades and students</p>
+            <p className="text-gray-500">
+              Enter information about school trades and students
+            </p>
             {renderTradesSection()}
           </div>
         );
@@ -709,7 +859,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Infrastructure</h2>
-            <p className="text-gray-500">Enter details about school infrastructure</p>
+            <p className="text-gray-500">
+              Enter details about school infrastructure
+            </p>
             {renderInfrastructureSection()}
           </div>
         );
@@ -717,7 +869,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">IT Infrastructure</h2>
-            <p className="text-gray-500">Enter information about IT equipment and facilities</p>
+            <p className="text-gray-500">
+              Enter information about IT equipment and facilities
+            </p>
             {renderITSection()}
           </div>
         );
