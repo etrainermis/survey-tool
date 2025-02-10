@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: [github43]
+    runs-on: [github43,self-hosted]
 
     steps:
       - name: Checkout code
