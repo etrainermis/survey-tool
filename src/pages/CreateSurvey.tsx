@@ -74,7 +74,10 @@ interface SurveyData {
       workingProjectors: number;
       nonWorkingProjectors: number;
     };
-    internet: boolean;
+    internet: {
+      exists: boolean;
+      type?: "4G" | "Fiber"; // Add this field
+    };
     server: {
       exists: boolean;
       specifications: string;
@@ -128,7 +131,6 @@ const CreateSurvey = () => {
     if (!currentData.infrastructure) {
       currentData.infrastructure = [];
     }
-
     if (!currentData.infrastructure[currentInfraType]) {
       currentData.infrastructure[currentInfraType] = {
         type: infrastructureTypes[currentInfraType],
@@ -619,71 +621,133 @@ const CreateSurvey = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label>Working Computers</Label>
-            <Input
-              type="number"
-              {...form.register("it.computerLab.workingComputers")}
-            />
-          </div>
+          <Label>Working Computers</Label>
+          <Input 
+            type="number"
+            {...form.register("it.computerLab.workingComputers")}
+          />
+        </div>
+        {/* Not Working Computers */}
+        <div className="space-y-2">
+          <Label>Not Working Computers</Label>
+          <Input 
+            type="number"
+            {...form.register("it.computerLab.nonWorkingComputers")}
+          />
+        </div>
+  
           <div className="space-y-2">
             <Label>Connected with LAN</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="has-lan"
-                onCheckedChange={(checked) =>
-                  form.setValue("it.computerLab.hasLAN", checked as boolean)
-                }
-              />
-              <Label htmlFor="has-lan">Yes</Label>
-            </div>
+            <RadioGroup 
+              onValueChange={(value) => form.setValue("it.computerLab.hasLAN", value === "yes")}
+              defaultValue={form.watch("it.computerLab.hasLAN") ? "yes" : "no"}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="has-lan-yes" />
+                <Label htmlFor="has-lan-yes">Yes</Label>
+                <RadioGroupItem value="no" id="has-lan-no" />
+                <Label htmlFor="has-lan-no">No</Label>
+              </div>
+            </RadioGroup>
           </div>
+  
           <div className="space-y-2">
-            <Label>Has Projectors</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="has-projectors"
-                onCheckedChange={(checked) => {
-                  form.setValue(
-                    "it.computerLab.hasProjectors",
-                    checked as boolean
-                  );
-                }}
-              />
-              <Label htmlFor="has-projectors">Yes</Label>
-            </div>
+          <Label>Do you have projectors?</Label>
+        <RadioGroup 
+          onValueChange={(value) => form.setValue("it.computerLab.hasProjectors", value === "yes")}
+          defaultValue={form.watch("it.computerLab.hasProjectors") ? "yes" : "no"}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="yes" id="has-projectors-yes" />
+            <Label htmlFor="has-projectors-yes">Yes</Label>
+            <RadioGroupItem value="no" id="has-projectors-no" />
+            <Label htmlFor="has-projectors-no">No</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {/* Show only when "Yes" is selected */}
+      {form.watch("it.computerLab.hasProjectors") === true && (
+        <div className="grid grid-cols-2 gap-4">
+          {/* Total Projectors */}
+          <div className="space-y-2">
+            <Label>Total Projectors</Label>
+            <Input 
+              type="number"
+              {...form.register("it.computerLab.totalProjectors")}
+            />
+          </div>
+          {/* Working Projectors */}
+          <div className="space-y-2">
+            <Label>Working Projectors</Label>
+            <Input 
+              type="number"
+              {...form.register("it.computerLab.workingProjectors")}
+            />
+          </div>
+          {/* Not Working Projectors */}
+          <div className="space-y-2">
+            <Label>Not Working Projectors</Label>
+            <Input 
+              type="number"
+              {...form.register("it.computerLab.nonWorkingProjectors")}
+            />
           </div>
         </div>
+      )}
+        </div>
       </Card>
-
+  
       <Card className="p-4 space-y-4">
         <h3 className="font-semibold">Internet & Server</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Internet Available</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="has-internet"
-                onCheckedChange={(checked) =>
-                  form.setValue("it.internet", checked as boolean)
-                }
-              />
-              <Label htmlFor="has-internet">Yes</Label>
-            </div>
-          </div>
+            <RadioGroup 
+        onValueChange={(value) => 
+          form.setValue("it.internet.exists", value === "yes")
+        }
+        defaultValue={form.watch("it.internet.exists") ? "yes" : "no"}
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="yes" id="has-internet-yes" />
+          <Label htmlFor="has-internet-yes">Yes</Label>
+          <RadioGroupItem value="no" id="has-internet-no" />
+          <Label htmlFor="has-internet-no">No</Label>
+        </div>
+      </RadioGroup>
+    </div>
+
+    {/* Show Internet Type dropdown only if "Yes" is selected */}
+    {form.watch("it.internet.exists") === true && (
+      <div className="space-y-2">
+        <Label>Internet Type</Label>
+        <select 
+          className="w-full p-2 border rounded-md"
+          {...form.register("it.internet.type")}
+        >
+          <option value="4G">4G</option>
+          <option value="Fiber">Fiber</option>
+        </select>
+      </div>
+    )}
+  
           <div className="space-y-2">
             <Label>Has Server</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="has-server"
-                onCheckedChange={(checked) =>
-                  form.setValue("it.server.exists", checked as boolean)
-                }
-              />
-              <Label htmlFor="has-server">Yes</Label>
-            </div>
+            <RadioGroup 
+              onValueChange={(value) => form.setValue("it.server.exists", value === "yes")}
+              defaultValue={form.watch("it.server.exists") ? "yes" : "no"}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="has-server-yes" />
+                <Label htmlFor="has-server-yes">Yes</Label>
+                <RadioGroupItem value="no" id="has-server-no" />
+                <Label htmlFor="has-server-no">No</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
-
+  
         {form.watch("it.server.exists") && (
           <div className="space-y-2">
             <Label>Server Specifications</Label>
@@ -694,7 +758,6 @@ const CreateSurvey = () => {
           </div>
         )}
       </Card>
-
       <Card className="p-4 space-y-4">
         <h3 className="font-semibold">Additional Information</h3>
         <div className="space-y-4">
@@ -726,7 +789,6 @@ const CreateSurvey = () => {
               ))}
             </div>
           </div>
-
           <div className="space-y-2">
             <Label>Equipment Status</Label>
             <div className="grid grid-cols-1 gap-4">
