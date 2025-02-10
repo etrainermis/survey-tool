@@ -7,7 +7,7 @@ const baseUrl =
 const axios = _.create({
   baseURL: baseUrl,
   headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
   },
 });
 
@@ -18,7 +18,7 @@ export const api = _.create({
 export const AuthApi = _.create({
   baseURL: baseUrl,
   headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
   },
 });
 
