@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 3435,
+    allowedHosts: ["survey.rtb.gov.rw"],
   },
   plugins: [
     react(),
