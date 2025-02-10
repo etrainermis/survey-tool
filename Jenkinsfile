@@ -2,10 +2,10 @@ pipeline {
   agent any
 
   environment {
-    DEPLOY_HOST = credentials('rtb_prod_server_host')
-    DEPLOY_PORT = credentials('rtb_prod_ssh_port')
-    DEPLOY_USER = credentials('rtb_prod_server_user')
-    DEPLOY_PASSWORD = credentials('rtb_prod_server_password')
+    DEPLOY_HOST = credentials('rtb_server_host')
+    DEPLOY_PORT = credentials('rtb_ssh_port')
+    DEPLOY_USER = credentials('rtb_server_user')
+    DEPLOY_PASSWORD = credentials('rtb_server_password')
     DOCKER_IMAGE = 'etrainermis/survey-tool'
     DOCKER_CONTAINER='survey-tool'
     GITHUB_TOKEN = credentials('github-token-id')
