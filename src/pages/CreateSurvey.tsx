@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import useAuth from "@/hooks/useAuth";
 import { useAllSchools } from "@/hooks/useSchools";
+import { AuthApi } from "@/lib/config/axios.config";
 
 interface CreateSurveyProps {
   authState: AuthState;
@@ -151,27 +152,27 @@ const CreateSurvey = () => {
     }
   };
 
-  const onSubmit = (data) => {
-    const surveyData = {
-      ...data,
-      status: "completed",
-      createdBy: user?.id,
-      createdAt: new Date().toISOString(),
-    };
+  // const onSubmit = (data) => {
+  //   const surveyData = {
+  //     ...data,
+  //     status: "completed",
+  //     createdBy: user?.id,
+  //     createdAt: new Date().toISOString(),
+  //   };
 
-    const savedSurveys = JSON.parse(
-      localStorage.getItem("completed_surveys") || "[]"
-    );
-    savedSurveys.push(surveyData);
-    localStorage.setItem("completed_surveys", JSON.stringify(savedSurveys));
-    localStorage.removeItem(`survey_draft_${user?.id}`);
+  //   const savedSurveys = JSON.parse(
+  //     localStorage.getItem("completed_surveys") || "[]"
+  //   );
+  //   savedSurveys.push(surveyData);
+  //   localStorage.setItem("completed_surveys", JSON.stringify(savedSurveys));
+  //   localStorage.removeItem(`survey_draft_${user?.id}`);
 
-    toast({
-      title: "Survey completed",
-      description: "Your survey has been saved successfully.",
-    });
-    navigate("/dashboard");
-  };
+  //   toast({
+  //     title: "Survey completed",
+  //     description: "Your survey has been saved successfully.",
+  //   });
+  //   navigate("/dashboard");
+  // };
 
   const nextStep = () => {
     form.trigger().then((isValid) => {
@@ -214,7 +215,108 @@ const CreateSurvey = () => {
       prevStep();
     }
   };
+  const onSubmit = async (data: any) => {
+    try {
+      // Validate that a school is selected
+      if (!selectedSchool) {
+        toast({
+          title: "Error",
+          description: "Please select a school first",
+          variant: "destructive",
+        });
+        return;
+      }
+      const surveyPayload = {
+        schoolId: selectedSchool.id,
+        schoolSurveyData: JSON.stringify({
+          // School Basic Info
+          schoolName: selectedSchool.name,
+          schoolStatus: data.school.status,
+          schoolCategory: data.school.category,
 
+          // Contact Information
+          contactEmail: data.school.contact.email,
+          contactPhone: data.school.contact.phone,
+          headTeacherName: data.school.contact.headteacher,
+
+          // Stats
+          numberOfTeachers: data.school.stats.teachers,
+
+          // Trades Information
+          trades: data.school.trades?.map((trade) => ({
+            tradeName: trade.name,
+            levels: trade.levels.map((level) => ({
+              level: level.level,
+              classrooms: level.classrooms,
+              maleStudents: level.students.male,
+              femaleStudents: level.students.female,
+            })),
+          })),
+
+          // Infrastructure
+          infrastructure: data.infrastructure?.map((infra) => ({
+            type: infra.type,
+            size: infra.size,
+            capacity: infra.capacity,
+            constructionYear: infra.constructionYear,
+            materials: infra.materials,
+            status: infra.status,
+          })),
+
+          // IT Infrastructure
+          itInfrastructure: {
+            computerLab: {
+              totalComputers: data.it.computerLab.totalComputers,
+              workingComputers: data.it.computerLab.workingComputers,
+              nonWorkingComputers: data.it.computerLab.nonWorkingComputers,
+              hasLAN: data.it.computerLab.hasLAN,
+              hasProjectors: data.it.computerLab.hasProjectors,
+              totalProjectors: data.it.computerLab.totalProjectors,
+              workingProjectors: data.it.computerLab.workingProjectors,
+              nonWorkingProjectors: data.it.computerLab.nonWorkingProjectors,
+            },
+            internet: {
+              exists: data.it.exists,
+              type: data.it.type,
+            },
+            server: {
+              exists: data.it.exists,
+              specifications: data.it.specifications,
+            },
+            energySources: data.it.energySources,
+            equipment: {
+              hasAssetRegister: data.it.hasAssetRegister,
+              status: data.it.status,
+            },
+          },
+        }),
+      };
+
+      // Submit to API
+      const response = await AuthApi.post("/school-survey/add", surveyPayload);
+
+      // Handle successful submission
+      toast({
+        title: "Survey Submitted",
+        description: "Your survey has been successfully submitted.",
+      });
+
+      // Clear local storage and navigate
+      localStorage.removeItem(`survey_draft_${user?.id}`);
+      navigate("/dashboard");
+    } catch (error) {
+      console.log(error);
+
+      // Handle submission error
+      toast({
+        title: "Submission Error",
+        description:
+          error.response?.data?.message ||
+          "Failed to submit survey. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   const renderSchoolSection = () => (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -506,7 +608,7 @@ const CreateSurvey = () => {
                   "ibyuma",
                   "amabati",
                   "amategura",
-                  "amakara",
+                  "amakaro",
                   "cement",
                   "pavement",
                 ].map((material) => (
@@ -621,25 +723,27 @@ const CreateSurvey = () => {
             />
           </div>
           <div className="space-y-2">
-          <Label>Working Computers</Label>
-          <Input 
-            type="number"
-            {...form.register("it.computerLab.workingComputers")}
-          />
-        </div>
-        {/* Not Working Computers */}
-        <div className="space-y-2">
-          <Label>Not Working Computers</Label>
-          <Input 
-            type="number"
-            {...form.register("it.computerLab.nonWorkingComputers")}
-          />
-        </div>
-  
+            <Label>Working Computers</Label>
+            <Input
+              type="number"
+              {...form.register("it.computerLab.workingComputers")}
+            />
+          </div>
+          {/* Not Working Computers */}
+          <div className="space-y-2">
+            <Label>Not Working Computers</Label>
+            <Input
+              type="number"
+              {...form.register("it.computerLab.nonWorkingComputers")}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Connected with LAN</Label>
-            <RadioGroup 
-              onValueChange={(value) => form.setValue("it.computerLab.hasLAN", value === "yes")}
+            <RadioGroup
+              onValueChange={(value) =>
+                form.setValue("it.computerLab.hasLAN", value === "yes")
+              }
               defaultValue={form.watch("it.computerLab.hasLAN") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
@@ -650,92 +754,98 @@ const CreateSurvey = () => {
               </div>
             </RadioGroup>
           </div>
-  
-          <div className="space-y-2">
-          <Label>Do you have projectors?</Label>
-        <RadioGroup 
-          onValueChange={(value) => form.setValue("it.computerLab.hasProjectors", value === "yes")}
-          defaultValue={form.watch("it.computerLab.hasProjectors") ? "yes" : "no"}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="has-projectors-yes" />
-            <Label htmlFor="has-projectors-yes">Yes</Label>
-            <RadioGroupItem value="no" id="has-projectors-no" />
-            <Label htmlFor="has-projectors-no">No</Label>
-          </div>
-        </RadioGroup>
-      </div>
 
-      {/* Show only when "Yes" is selected */}
-      {form.watch("it.computerLab.hasProjectors") === true && (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Total Projectors */}
           <div className="space-y-2">
-            <Label>Total Projectors</Label>
-            <Input 
-              type="number"
-              {...form.register("it.computerLab.totalProjectors")}
-            />
+            <Label>Do you have projectors?</Label>
+            <RadioGroup
+              onValueChange={(value) =>
+                form.setValue("it.computerLab.hasProjectors", value === "yes")
+              }
+              defaultValue={
+                form.watch("it.computerLab.hasProjectors") ? "yes" : "no"
+              }
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="has-projectors-yes" />
+                <Label htmlFor="has-projectors-yes">Yes</Label>
+                <RadioGroupItem value="no" id="has-projectors-no" />
+                <Label htmlFor="has-projectors-no">No</Label>
+              </div>
+            </RadioGroup>
           </div>
-          {/* Working Projectors */}
-          <div className="space-y-2">
-            <Label>Working Projectors</Label>
-            <Input 
-              type="number"
-              {...form.register("it.computerLab.workingProjectors")}
-            />
-          </div>
-          {/* Not Working Projectors */}
-          <div className="space-y-2">
-            <Label>Not Working Projectors</Label>
-            <Input 
-              type="number"
-              {...form.register("it.computerLab.nonWorkingProjectors")}
-            />
-          </div>
-        </div>
-      )}
+
+          {/* Show only when "Yes" is selected */}
+          {form.watch("it.computerLab.hasProjectors") === true && (
+            <div className="grid grid-cols-2 gap-4">
+              {/* Total Projectors */}
+              <div className="space-y-2">
+                <Label>Total Projectors</Label>
+                <Input
+                  type="number"
+                  {...form.register("it.computerLab.totalProjectors")}
+                />
+              </div>
+              {/* Working Projectors */}
+              <div className="space-y-2">
+                <Label>Working Projectors</Label>
+                <Input
+                  type="number"
+                  {...form.register("it.computerLab.workingProjectors")}
+                />
+              </div>
+              {/* Not Working Projectors */}
+              <div className="space-y-2">
+                <Label>Not Working Projectors</Label>
+                <Input
+                  type="number"
+                  {...form.register("it.computerLab.nonWorkingProjectors")}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Card>
-  
+
       <Card className="p-4 space-y-4">
         <h3 className="font-semibold">Internet & Server</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Internet Available</Label>
-            <RadioGroup 
-        onValueChange={(value) => 
-          form.setValue("it.internet.exists", value === "yes")
-        }
-        defaultValue={form.watch("it.internet.exists") ? "yes" : "no"}
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="yes" id="has-internet-yes" />
-          <Label htmlFor="has-internet-yes">Yes</Label>
-          <RadioGroupItem value="no" id="has-internet-no" />
-          <Label htmlFor="has-internet-no">No</Label>
-        </div>
-      </RadioGroup>
-    </div>
+            <RadioGroup
+              onValueChange={(value) =>
+                form.setValue("it.internet.exists", value === "yes")
+              }
+              defaultValue={form.watch("it.internet.exists") ? "yes" : "no"}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="has-internet-yes" />
+                <Label htmlFor="has-internet-yes">Yes</Label>
+                <RadioGroupItem value="no" id="has-internet-no" />
+                <Label htmlFor="has-internet-no">No</Label>
+              </div>
+            </RadioGroup>
+          </div>
 
-    {/* Show Internet Type dropdown only if "Yes" is selected */}
-    {form.watch("it.internet.exists") === true && (
-      <div className="space-y-2">
-        <Label>Internet Type</Label>
-        <select 
-          className="w-full p-2 border rounded-md"
-          {...form.register("it.internet.type")}
-        >
-          <option value="4G">4G</option>
-          <option value="Fiber">Fiber</option>
-        </select>
-      </div>
-    )}
-  
+          {/* Show Internet Type dropdown only if "Yes" is selected */}
+          {form.watch("it.internet.exists") === true && (
+            <div className="space-y-2">
+              <Label>Internet Type</Label>
+              <select
+                className="w-full p-2 border rounded-md"
+                {...form.register("it.internet.type")}
+              >
+                <option value="4G">4G</option>
+                <option value="Fiber">Fiber</option>
+              </select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Has Server</Label>
-            <RadioGroup 
-              onValueChange={(value) => form.setValue("it.server.exists", value === "yes")}
+            <RadioGroup
+              onValueChange={(value) =>
+                form.setValue("it.server.exists", value === "yes")
+              }
               defaultValue={form.watch("it.server.exists") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
@@ -747,7 +857,7 @@ const CreateSurvey = () => {
             </RadioGroup>
           </div>
         </div>
-  
+
         {form.watch("it.server.exists") && (
           <div className="space-y-2">
             <Label>Server Specifications</Label>
