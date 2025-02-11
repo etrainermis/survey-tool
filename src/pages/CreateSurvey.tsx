@@ -152,27 +152,6 @@ const CreateSurvey = () => {
     }
   };
 
-  // const onSubmit = (data) => {
-  //   const surveyData = {
-  //     ...data,
-  //     status: "completed",
-  //     createdBy: user?.id,
-  //     createdAt: new Date().toISOString(),
-  //   };
-
-  //   const savedSurveys = JSON.parse(
-  //     localStorage.getItem("completed_surveys") || "[]"
-  //   );
-  //   savedSurveys.push(surveyData);
-  //   localStorage.setItem("completed_surveys", JSON.stringify(savedSurveys));
-  //   localStorage.removeItem(`survey_draft_${user?.id}`);
-
-  //   toast({
-  //     title: "Survey completed",
-  //     description: "Your survey has been saved successfully.",
-  //   });
-  //   navigate("/dashboard");
-  // };
 
   const nextStep = () => {
     form.trigger().then((isValid) => {

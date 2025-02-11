@@ -11,13 +11,17 @@ interface Survey {
 const IncompleteSurveys = () => {
   const navigate = useNavigate();
   const [incompleteSurveys, setIncompleteSurveys] = useState<Survey[]>([]);
-
   useEffect(() => {
-    const draft = JSON.parse(
-      localStorage.getItem("survey_draft_user") || "null"
-    );
-    if (draft) {
-      setIncompleteSurveys([draft]);
+    const userString = localStorage.getItem("user");
+    const user = userString ? JSON.parse(userString) : null; // Parse user correctly
+
+    if (user && user.id) {
+      const draft = JSON.parse(
+        localStorage.getItem(`survey_draft_${user.id}`) || "null"
+      );
+      if (draft) {
+        setIncompleteSurveys([draft]);
+      }
     }
   }, []);
 

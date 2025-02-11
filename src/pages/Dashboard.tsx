@@ -7,6 +7,7 @@ import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog";
 import { AuthApi } from "@/lib/config/axios.config";
 import useAuth from "@/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAllSurveys } from "@/hooks/useAllSurveys";
 
 interface Survey {
   school: {
@@ -34,7 +35,8 @@ const Dashboard = () => {
     setSelectedSurvey(survey);
     setPreviewOpen(true);
   };
-
+  const { surveys, fetchingSurveys, errorFetchingSurveys, mutate } =
+    useAllSurveys();
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -84,7 +86,7 @@ const Dashboard = () => {
               <CardTitle>Completed Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <p className="text-2xl font-bold">{completedSurveys}</p> */}
+              {/* <p className="text-2xl font-bold">{surveys.length}</p> */}
             </CardContent>
           </Card>
         </div>
