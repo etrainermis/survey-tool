@@ -243,7 +243,7 @@ const CreateSurvey = () => {
           numberOfTeachers: data.school.stats.teachers,
 
           // Trades Information
-          trades: data.school.trades?.map((trade) => ({
+          trades: data.school.trades?.map((trade: any) => ({
             tradeName: trade.name,
             levels: trade.levels.map((level) => ({
               level: level.level,

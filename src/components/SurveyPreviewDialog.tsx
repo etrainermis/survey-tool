@@ -19,7 +19,17 @@ export function SurveyPreviewDialog({
   onOpenChange,
 }: SurveyPreviewDialogProps) {
   if (!survey) return null;
+  const parseSchoolSurveyData = (data: string | null) => {
+    try {
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error("Error parsing schoolSurveyData:", error);
+      return null;
+    }
+  };
 
+  // Inside your component:
+  const schoolData = parseSchoolSurveyData(survey?.schoolSurveyData);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[80vh]">
@@ -38,7 +48,9 @@ export function SurveyPreviewDialog({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="font-medium">{survey.school.status}</p>
+                  <p className="font-medium">
+                    {schoolData?.school?.status ?? "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Category</p>
@@ -47,7 +59,7 @@ export function SurveyPreviewDialog({
                 <div>
                   <p className="text-sm text-muted-foreground">Contact</p>
                   <p className="font-medium">{survey.school.contact?.phone}</p>
-                  <p className="text-sm">{survey.school.contact?.email}</p>
+                  <p className="text-sm">{survey.school.phoneNumber}</p>
                 </div>
               </div>
             </section>
@@ -58,23 +70,33 @@ export function SurveyPreviewDialog({
             <section>
               <h3 className="text-lg font-semibold mb-4">Trades</h3>
               <div className="space-y-4">
-                {survey.school.trades?.map((trade: any) => (
-                  <div key={trade.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium mb-2">{trade.name}</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      {trade.levels?.map((level: any) => (
-                        <div key={level.level} className="space-y-2">
-                          <p className="text-sm font-medium">Level {level.level}</p>
-                          <div className="text-sm">
-                            <p>Classrooms: {level.classrooms}</p>
-                            <p>Male Students: {level.students.male}</p>
-                            <p>Female Students: {level.students.female}</p>
-                          </div>
-                        </div>
-                      ))}
+                {survey.school.trades?.map((trade: any, tradeIndex: number) => {
+                  const matchedTrade = schoolData.trades?.[tradeIndex]; // Match trade from schoolData
+
+                  return (
+                    <div key={tradeIndex} className="border rounded-lg p-4">
+                      {/* Display the correct trade name */}
+                      <h4 className="font-medium mb-2">{trade.trade.name}</h4>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        {matchedTrade?.levels?.map(
+                          (level: any, levelIndex: number) => (
+                            <div key={levelIndex} className="space-y-2">
+                              <p className="text-sm font-medium">
+                                Level {levelIndex + 3}
+                              </p>
+                              <div className="text-sm">
+                                <p>Classrooms: {level.classrooms}</p>
+                                <p>Male Students: {level.maleStudents}</p>
+                                <p>Female Students: {level.femaleStudents}</p>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -84,7 +106,7 @@ export function SurveyPreviewDialog({
             <section>
               <h3 className="text-lg font-semibold mb-4">Infrastructure</h3>
               <div className="grid grid-cols-2 gap-4">
-                {survey.infrastructure?.map((item: any, index: number) => (
+                {schoolData.infrastructure?.map((item: any, index: number) => (
                   <div key={index} className="border rounded-lg p-4">
                     <h4 className="font-medium capitalize mb-2">{item.type}</h4>
                     <div className="space-y-2 text-sm">
@@ -110,12 +132,35 @@ export function SurveyPreviewDialog({
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Computer Lab</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <p>Total Computers: {survey.it?.computerLab.totalComputers}</p>
-                    <p>Working: {survey.it?.computerLab.workingComputers}</p>
-                    <p>Has LAN: {survey.it?.computerLab.hasLAN ? "Yes" : "No"}</p>
+                    <p>
+                      Total Computers:{" "}
+                      {schoolData.itInfrastructure?.computerLab.totalComputers}
+                    </p>
+                    <p>
+                      Working:{" "}
+                      {
+                        schoolData.itInfrastructure?.computerLab
+                          .workingComputers
+                      }
+                    </p>
+                    <p>
+                      Working:{" "}
+                      {
+                        schoolData.itInfrastructure?.computerLab
+                          .nonWorkingComputers
+                      }
+                    </p>
+                    <p>
+                      Has LAN:{" "}
+                      {schoolData.itInfrastructure?.computerLab.hasLAN
+                        ? "Yes"
+                        : "No"}
+                    </p>
                     <p>
                       Has Projectors:{" "}
-                      {survey.it?.computerLab.hasProjectors ? "Yes" : "No"}
+                      {schoolData.itInfrastructure?.computerLab.hasProjectors
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
                 </div>
@@ -123,11 +168,18 @@ export function SurveyPreviewDialog({
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Internet & Equipment</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <p>Internet Available: {survey.it?.internet ? "Yes" : "No"}</p>
-                    <p>Has Server: {survey.it?.server?.exists ? "Yes" : "No"}</p>
+                    <p>
+                      Internet Available:{" "}
+                      {schoolData.it?.internet ? "Yes" : "No"}
+                    </p>
+                    <p>
+                      Has Server: {schoolData.it?.server?.exists ? "Yes" : "No"}
+                    </p>
                     <div className="col-span-2">
                       <p className="text-muted-foreground">Energy Sources:</p>
-                      <p>{survey.it?.energySources?.join(", ")}</p>
+                      <p>
+                        {schoolData.itInfrastructure?.energySources?.join(", ")}
+                      </p>
                     </div>
                   </div>
                 </div>
