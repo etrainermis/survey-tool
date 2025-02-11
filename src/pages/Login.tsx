@@ -1,34 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { authenticateUser, AuthState } from "@/lib/auth";
 import { Label } from "@/components/ui/label";
+import { AuthApi } from "@/lib/config/axios.config";
+import useAuth from "@/hooks/useAuth";
 
-interface LoginProps {
-  setAuthState: (state: AuthState) => void;
-}
-
-const Login = ({ setAuthState }: LoginProps) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Check authentication from localStorage
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const authState = authenticateUser(email, password);
-      setAuthState(authState);
+      const res = await AuthApi.post("/auth/signin", { email, password });
+      const data = res?.data?.data;
+      login(data);
+
       toast({
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
+      window.location.reload();
       navigate("/dashboard");
     } catch (error) {
       toast({
@@ -44,7 +53,8 @@ const Login = ({ setAuthState }: LoginProps) => {
   const handleForgotPassword = () => {
     toast({
       title: "Password Reset",
-      description: "Please Reset Your Password in the RTB TVET Management Platform and come back here with your new credentials",
+      description:
+        "Please reset your password in the RTB TVET Management Platform and come back here with your new credentials.",
     });
   };
 
@@ -52,9 +62,9 @@ const Login = ({ setAuthState }: LoginProps) => {
     <div className="min-h-screen flex items-center justify-center bg-[#1d5fad] p-4">
       <Card className="w-full max-w-md animate-fadeIn">
         <CardHeader className="space-y-4 flex flex-col items-center justify-center">
-          <img 
-            src="https://tvetmanagement.rtb.gov.rw/assets/logo-e1ac7bbe.png" 
-            alt="RTB Logo" 
+          <img
+            src="https://tvetmanagement.rtb.gov.rw/assets/logo-e1ac7bbe.png"
+            alt="RTB Logo"
             className="h-20 w-auto"
           />
           <h2 className="text-2xl font-bold text-[#1d5fad]">LOGIN</h2>
