@@ -357,7 +357,7 @@ const CreateSurvey = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="school-category">category</Label>
+          <Label htmlFor="school-category">Category</Label>
           <select
             id="school-category"
             className="w-full p-2 border rounded-md"
@@ -366,9 +366,9 @@ const CreateSurvey = () => {
             })}
           >
             <option value="">Select Category...</option>
-            <option value="public">TSS</option>
-            <option value="private">TVET WING</option>
-            <option value="private-govt">VTC</option>
+            <option value="public">Day</option>
+            <option value="private">Boarding</option>
+            <option value="private-govt">Mixed</option>
           </select>
           {form.formState.errors.school?.category && (
             <p className="text-red-500">
@@ -579,17 +579,19 @@ const CreateSurvey = () => {
               <Label>Construction Material</Label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  "ruriba",
-                  "amatafari ahiye",
-                  "block cement",
-                  "rukarakara",
-                  "ibiti n'ibyondo",
-                  "ibyuma",
-                  "amabati",
-                  "amategura",
-                  "amakaro",
-                  "cement",
-                  "pavement",
+                  "Ruriba bricks",
+                  "Burnt bricks",
+                  "Block cement",
+                  "Mud bricks",
+                  "Mud & Wood walls",
+                  "Metals",
+                  "Iron sheets",
+                  "Roof tiles",
+                  "Tiles",
+                  "Cement pavement",
+                  "Wall paint",
+                  "Steel trusses",
+                  "Wood trusses"
                 ].map((material) => (
                   <div key={material} className="flex items-center space-x-2">
                     <Checkbox
