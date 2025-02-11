@@ -25,26 +25,6 @@ const Dashboard = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const { logout, user } = useAuth();
 
-  useEffect(() => {
-    const fetchSurveys = async () => {
-      try {
-        const res = await AuthApi.get("/surveys");
-        const surveys = res?.data?.data || [];
-
-        setIncompleteSurveys(
-          surveys.filter((s: Survey) => s.status === "DRAFT")
-        );
-        setCompletedSurveys(
-          surveys.filter((s: Survey) => s.status === "COMPLETED")
-        );
-      } catch (error) {
-        console.error("Error fetching surveys:", error);
-      }
-    };
-
-    fetchSurveys();
-  }, []);
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -77,11 +57,7 @@ const Dashboard = () => {
               <PlusCircle className="mr-2 h-4 w-4" />
               New Survey
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleLogout()}
-              type="button"
-            >
+            <Button variant="outline" onClick={() => handleLogout()}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>

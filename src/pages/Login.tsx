@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -20,7 +20,7 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      navigate("/dashboard");
+      <Navigate to="/login" replace />;
     }
   }, [navigate]);
 
@@ -38,7 +38,7 @@ const Login = () => {
         description: "Successfully logged in.",
       });
       window.location.reload();
-      navigate("/dashboard");
+      <Navigate to="/login" replace />;
     } catch (error) {
       toast({
         title: "Error",
