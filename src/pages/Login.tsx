@@ -37,7 +37,7 @@ const Login = () => {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
-
+      window.location.reload();
       navigate("/dashboard");
     } catch (error) {
       toast({
