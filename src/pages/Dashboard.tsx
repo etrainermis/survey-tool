@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog";
 import { AuthApi } from "@/lib/config/axios.config";
 import useAuth from "@/hooks/useAuth";
+import DashboardLayout from "@/components/DashboardLayout";
 
 interface Survey {
   school: {
@@ -88,64 +89,31 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card
+            className="cursor-pointer transition-all hover:ring-2 ring-[#1d5fad]"
+            onClick={() => navigate("/incomplete-surveys")}
+          >
             <CardHeader>
               <CardTitle>Incomplete Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{incompleteSurveys.length}</p>
+              {/* <p className="text-2xl font-bold">{incompleteSurveys}</p> */}
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer transition-all hover:ring-2 ring-[#1d5fad]"
+            onClick={() => navigate("/completed-surveys")}
+          >
             <CardHeader>
               <CardTitle>Completed Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{completedSurveys.length}</p>
+              {/* <p className="text-2xl font-bold">{completedSurveys}</p> */}
             </CardContent>
           </Card>
         </div>
-
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Completed Surveys</h2>
-          <div className="bg-white rounded-lg shadow">
-            {completedSurveys.length > 0 ? (
-              completedSurveys.map((survey, index) => (
-                <div
-                  key={index}
-                  className="p-4 border-b last:border-b-0 flex items-center justify-between"
-                >
-                  <div>
-                    <h3 className="font-medium">{survey.school.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      Completed on{" "}
-                      {new Date(survey.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePreviewSurvey(survey)}
-                    className="text-[#1d5fad] hover:text-[#1d5fad]/90"
-                  >
-                    View Details
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-8">
-                No completed surveys yet.
-              </p>
-            )}
-          </div>
-        </div>
       </div>
-
-      <SurveyPreviewDialog
-        survey={selectedSurvey}
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-      />
+      <DashboardLayout />
     </div>
   );
 };
