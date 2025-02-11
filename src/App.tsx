@@ -8,10 +8,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CreateSurvey from "./pages/CreateSurvey";
 import NotFound from "./pages/NotFound";
-import { getAuthState, AuthState } from "./lib/auth";
 import CompletedSurveys from "./pages/CompleteSurvey";
 import IncompleteSurveys from "./pages/UncompleteSurvey";
-import { SurveyPreviewDialog } from "./components/SurveyPreviewDialog";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +70,8 @@ const App = () => {
             />
 
             <Route path="*" element={<NotFound />} />
+            <Route path="/completed-surveys" element={<CompletedSurveys />} />
+            <Route path="/incomplete-surveys" element={<IncompleteSurveys />} />
             <Route path="/completed-surveys" element={<CompletedSurveys />} />
             <Route path="/incomplete-surveys" element={<IncompleteSurveys />} />
           </Routes>
