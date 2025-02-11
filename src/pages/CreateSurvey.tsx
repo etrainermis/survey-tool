@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import useAuth from "@/hooks/useAuth";
+import { useAllSchools } from "@/hooks/useSchools";
 
 interface CreateSurveyProps {
   authState: AuthState;
@@ -38,7 +40,7 @@ interface SurveyData {
       phone: string;
       email: string;
       headteacher: string;
-      owner:string;
+      owner: string;
     };
     trades: Array<{
       id: string;
@@ -87,130 +89,16 @@ interface SurveyData {
   };
 }
 
-const sampleSchools = [
-  {
-    id: "1",
-    name: "IPRC Kigali",
-    status: "active",
-    category: "public",
-    location: {
-      province: "Kigali City",
-      district: "Nyarugenge",
-      sector: "Nyarugenge",
-      cell: "Nyarugenge",
-      village: "Nyarugenge",
-    },
-    stats: {
-      trades: 5,
-      students: 1200,
-      teachers: 80,
-    },
-    contact: {
-      phone: "+250789123456",
-      email: "info@iprckigali.rw",
-      headteacher: "Dr. John Doe",
-    },
-    trades: [
-      {
-        id: "t1",
-        name: "Information Technology",
-        levels: [
-          {
-            level: 3,
-            classrooms: 4,
-            students: { male: 60, female: 40 },
-          },
-          {
-            level: 4,
-            classrooms: 3,
-            students: { male: 45, female: 35 },
-          },
-          {
-            level: 5,
-            classrooms: 2,
-            students: { male: 30, female: 25 },
-          },
-        ],
-      },
-      {
-        id: "t2",
-        name: "Civil Engineering",
-        levels: [
-          {
-            level: 3,
-            classrooms: 3,
-            students: { male: 50, female: 30 },
-          },
-          {
-            level: 4,
-            classrooms: 2,
-            students: { male: 40, female: 20 },
-          },
-          {
-            level: 5,
-            classrooms: 2,
-            students: { male: 35, female: 15 },
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "IPRC Huye",
-    status: "active",
-    category: "public",
-    location: {
-      province: "Southern",
-      district: "Huye",
-      sector: "Huye",
-      cell: "Huye",
-      village: "Huye",
-    },
-    stats: {
-      trades: 4,
-      students: 800,
-      teachers: 60,
-    },
-    contact: {
-      phone: "+250789123457",
-      email: "info@iprchuye.rw",
-      headteacher: "Dr. Jane Smith",
-    },
-    trades: [
-      {
-        id: "t3",
-        name: "Mechanical Engineering",
-        levels: [
-          {
-            level: 3,
-            classrooms: 3,
-            students: { male: 55, female: 25 },
-          },
-          {
-            level: 4,
-            classrooms: 2,
-            students: { male: 45, female: 20 },
-          },
-          {
-            level: 5,
-            classrooms: 2,
-            students: { male: 35, female: 15 },
-          },
-        ],
-      },
-    ],
-  },
-];
-
-
-const CreateSurvey = ({ authState }: CreateSurveyProps) => {
-  const navigate = useNavigate();
+const CreateSurvey = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentInfraType, setCurrentInfraType] = useState(0);
   const { toast } = useToast();
   const form = useForm<SurveyData>();
-  const [schoolStatus, setSchoolStatus] = useState("");
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const { schools, fetchingSchools, errorFetchingSchools, mutate } =
+    useAllSchools();
 
   const infrastructureTypes = [
     "administration block",
@@ -227,14 +115,13 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   ];
 
   useEffect(() => {
-    const savedData = localStorage.getItem(
-      `survey_draft_${authState.user?.id}`
-    );
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      form.reset(parsedData);
+    if (user?.id) {
+      const savedData = localStorage.getItem(`survey_draft_${user.id}`);
+      if (savedData) {
+        form.reset(JSON.parse(savedData));
+      }
     }
-  }, [authState.user?.id, form]);
+  }, [user, form]);
 
   useEffect(() => {
     const currentData = form.getValues();
@@ -255,25 +142,18 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     }
   }, [currentInfraType, infrastructureTypes, form]);
 
-  const saveProgress = (data: Partial<SurveyData>) => {
-    if (authState.user?.id) {
-      localStorage.setItem(
-        `survey_draft_${authState.user.id}`,
-        JSON.stringify(data)
-      );
-      toast({
-        description: "Progress saved",
-        duration: 1000,
-        className: "bg-accent text-accent-foreground",
-      });
+  const saveProgress = (data) => {
+    if (user?.id) {
+      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data));
+      toast({ description: "Progress saved", duration: 1000 });
     }
   };
 
-  const onSubmit = (data: SurveyData) => {
+  const onSubmit = (data) => {
     const surveyData = {
       ...data,
       status: "completed",
-      createdBy: authState.user?.id,
+      createdBy: user?.id,
       createdAt: new Date().toISOString(),
     };
 
@@ -282,14 +162,12 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     );
     savedSurveys.push(surveyData);
     localStorage.setItem("completed_surveys", JSON.stringify(savedSurveys));
-
-    localStorage.removeItem(`survey_draft_${authState.user?.id}`);
+    localStorage.removeItem(`survey_draft_${user?.id}`);
 
     toast({
       title: "Survey completed",
       description: "Your survey has been saved successfully.",
     });
-
     navigate("/dashboard");
   };
 
@@ -302,7 +180,6 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
     });
   };
 
-
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -312,21 +189,17 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
   const nextInfraType = () => {
     if (currentInfraType < infrastructureTypes.length - 1) {
       const currentData = form.getValues();
-      const nextIndex = currentInfraType + 1;
-
-      if (currentData.infrastructure) {
-        currentData.infrastructure[nextIndex] = {
-          type: infrastructureTypes[nextIndex],
-          size: "",
-          capacity: "",
-          constructionYear: undefined,
-          materials: [],
-          status: "",
-        };
-      }
+      currentData.infrastructure[currentInfraType + 1] = {
+        type: infrastructureTypes[currentInfraType + 1],
+        size: "",
+        capacity: "",
+        constructionYear: undefined,
+        materials: [],
+        status: "",
+      };
 
       saveProgress(currentData);
-      setCurrentInfraType(nextIndex);
+      setCurrentInfraType(currentInfraType + 1);
     } else {
       nextStep();
     }
@@ -347,23 +220,34 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
         <select
           id="school-select"
           className="w-full p-2 border rounded-md"
-          {...form.register("school.id", { required: "Please select a school" })}
+          {...form.register("school.id", {
+            required: "Please select a school",
+          })}
           onChange={(e) => {
-            const selectedSchool = sampleSchools.find((s) => s.id === e.target.value);
-            if (selectedSchool) {
-              form.reset({ school: selectedSchool });
+            const school = schools.find((s) => s.id === e.target.value);
+            if (school) {
+              setSelectedSchool(school);
+              form.reset({ school });
             }
           }}
         >
           <option value="">Select a school...</option>
-          {sampleSchools.map((school) => (
-            <option key={school.id} value={school.id}>
-              {school.name}
-            </option>
-          ))}
+          {fetchingSchools ? (
+            <option disabled>Loading schools...</option>
+          ) : errorFetchingSchools ? (
+            <option disabled>Error fetching schools</option>
+          ) : (
+            schools.map((school) => (
+              <option key={school.id} value={school.id}>
+                {school.name}
+              </option>
+            ))
+          )}
         </select>
         {form.formState.errors.school?.id && (
-          <p className="text-red-500">{form.formState.errors.school.id.message}</p>
+          <p className="text-red-500">
+            {form.formState.errors.school.id.message}
+          </p>
         )}
       </div>
 
@@ -373,25 +257,30 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <select
             id="school-status"
             className="w-full p-2 border rounded-md"
-            {...form.register("school.status", { required: "Status is required" })}
+            {...form.register("school.status", {
+              required: "Status is required",
+            })}
           >
             <option value="">Select status...</option>
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-            <option value="private-govt">Private-Govt</option>
+            <option value="PUPLIC">PUBLIC</option>
+            <option value="PRIVATE">PRIVATE</option>
+            <option value="GOVERNMENT_AIDED">GOVERNMENT_AIDED</option>
           </select>
           {form.formState.errors.school?.status && (
-            <p className="text-red-500">{form.formState.errors.school.status.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.status.message}
+            </p>
           )}
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="school-category">category</Label>
           <select
             id="school-category"
             className="w-full p-2 border rounded-md"
-            {...form.register("school.category", { required: "school's category is required" })}
+            {...form.register("school.category", {
+              required: "school's category is required",
+            })}
           >
             <option value="">Select Category...</option>
             <option value="public">TSS</option>
@@ -399,13 +288,12 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             <option value="private-govt">VTC</option>
           </select>
           {form.formState.errors.school?.category && (
-            <p className="text-red-500">{form.formState.errors.school.category.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.category.message}
+            </p>
           )}
         </div>
-
-
       </div>
-
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -422,7 +310,9 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             })}
           />
           {form.formState.errors.school?.contact?.email && (
-            <p className="text-red-500">{form.formState.errors.school.contact.email.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.contact.email.message}
+            </p>
           )}
         </div>
         <div className="space-y-2">
@@ -430,10 +320,14 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <Input
             id="headTeacherName"
             type="text"
-            {...form.register("school.contact.headteacher", { required: "Head Teacher's name is required" })}
+            {...form.register("school.contact.headteacher", {
+              required: "Head Teacher's name is required",
+            })}
           />
           {form.formState.errors.school?.contact?.headteacher && (
-            <p className="text-red-500">{form.formState.errors.school.contact.headteacher.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.contact.headteacher.message}
+            </p>
           )}
         </div>
 
@@ -442,10 +336,14 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
           <Input
             id="school-phone"
             type="tel"
-            {...form.register("school.contact.phone", { required: "Phone number is required" })}
+            {...form.register("school.contact.phone", {
+              required: "Phone number is required",
+            })}
           />
           {form.formState.errors.school?.contact?.phone && (
-            <p className="text-red-500">{form.formState.errors.school.contact.phone.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.contact.phone.message}
+            </p>
           )}
         </div>
 
@@ -460,65 +358,103 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             })}
           />
           {form.formState.errors.school?.stats?.teachers && (
-            <p className="text-red-500">{form.formState.errors.school.stats.teachers.message}</p>
+            <p className="text-red-500">
+              {form.formState.errors.school.stats.teachers.message}
+            </p>
           )}
         </div>
       </div>
     </div>
   );
+  const renderTradesSection = () => {
+    const tradesData = selectedSchool?.trades || [];
 
+    const mappedTrades = tradesData.map((tradeItem) => ({
+      id: tradeItem.id,
+      name: tradeItem.trade.name,
+      certificationCode: tradeItem.trade.certificationCode,
+      totalStudents: tradeItem.totalNumberOfStudents,
+      status: tradeItem.status,
+    }));
 
-  const renderTradesSection = () => (
-    <div className="space-y-6">
-      {form.watch("school.trades")?.map((trade, tradeIndex) => (
-        <Card key={trade.id} className="p-4 space-y-4">
-          <h3 className="font-semibold">{trade.name}</h3>
+    return (
+      <div className="space-y-6">
+        {mappedTrades.map((trade, tradeIndex) => (
+          <Card key={trade.id} className="p-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">{trade.name}</h3>
+              <span className="text-sm text-gray-500">
+                Code: {trade.certificationCode}
+              </span>
+            </div>
 
-          {[3, 4, 5].map((level) => (
-            <div key={level} className="space-y-4 border-t pt-4">
-              <h4 className="font-medium">Level {level}</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Classrooms</Label>
-                  <Input
-                    type="number"
-                    {...form.register(
-                      `school.trades.${tradeIndex}.levels.${
-                        level - 3
-                      }.classrooms` as const
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Male Students</Label>
-                  <Input
-                    type="number"
-                    {...form.register(
-                      `school.trades.${tradeIndex}.levels.${
-                        level - 3
-                      }.students.male` as const
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Female Students</Label>
-                  <Input
-                    type="number"
-                    {...form.register(
-                      `school.trades.${tradeIndex}.levels.${
-                        level - 3
-                      }.students.female` as const
-                    )}
-                  />
+            {[3, 4, 5].map((level, levelIndex) => (
+              <div key={level} className="space-y-4 border-t pt-4">
+                <h4 className="font-medium">Level {level}</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Classrooms</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      {...form.register(
+                        `school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`,
+                        {
+                          valueAsNumber: true,
+                          required: "Number of classrooms is required",
+                        }
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Male Students</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      {...form.register(
+                        `school.trades.${tradeIndex}.levels.${levelIndex}.students.male`,
+                        {
+                          valueAsNumber: true,
+                          required: "Number of male students is required",
+                        }
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Female Students</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      {...form.register(
+                        `school.trades.${tradeIndex}.levels.${levelIndex}.students.female`,
+                        {
+                          valueAsNumber: true,
+                          required: "Number of female students is required",
+                        }
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </Card>
-      ))}
-    </div>
-  );
+            ))}
 
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>Status: {trade.status}</span>
+                <span>Total Students: {trade.totalStudents}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+
+        {mappedTrades.length === 0 && (
+          <div className="text-center p-8 text-gray-500">
+            Please select a school to view its trades
+          </div>
+        )}
+      </div>
+    );
+  };
   const renderInfrastructureSection = () => {
     const type = infrastructureTypes[currentInfraType];
     const infraIndex = currentInfraType;
@@ -845,6 +781,7 @@ const CreateSurvey = ({ authState }: CreateSurveyProps) => {
             {renderSchoolSection()}
           </div>
         );
+
       case 2:
         return (
           <div className="space-y-4">
