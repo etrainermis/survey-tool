@@ -7,6 +7,7 @@ import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog";
 import { AuthApi } from "@/lib/config/axios.config";
 import useAuth from "@/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAllSurveys } from "@/hooks/useAllSurveys";
 
 interface Survey {
   school: {
@@ -25,26 +26,6 @@ const Dashboard = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const { logout, user } = useAuth();
 
-  useEffect(() => {
-    const fetchSurveys = async () => {
-      try {
-        const res = await AuthApi.get("/surveys");
-        const surveys = res?.data?.data || [];
-
-        setIncompleteSurveys(
-          surveys.filter((s: Survey) => s.status === "DRAFT")
-        );
-        setCompletedSurveys(
-          surveys.filter((s: Survey) => s.status === "COMPLETED")
-        );
-      } catch (error) {
-        console.error("Error fetching surveys:", error);
-      }
-    };
-
-    fetchSurveys();
-  }, []);
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -54,7 +35,8 @@ const Dashboard = () => {
     setSelectedSurvey(survey);
     setPreviewOpen(true);
   };
-
+  const { surveys, fetchingSurveys, errorFetchingSurveys, mutate } =
+    useAllSurveys();
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -77,11 +59,7 @@ const Dashboard = () => {
               <PlusCircle className="mr-2 h-4 w-4" />
               New Survey
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleLogout()}
-              type="button"
-            >
+            <Button variant="outline" onClick={() => handleLogout()}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
@@ -108,7 +86,7 @@ const Dashboard = () => {
               <CardTitle>Completed Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <p className="text-2xl font-bold">{completedSurveys}</p> */}
+              {/* <p className="text-2xl font-bold">{surveys.length}</p> */}
             </CardContent>
           </Card>
         </div>
