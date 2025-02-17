@@ -2,7 +2,7 @@ import _ from "axios";
 
 const baseUrl =
   import.meta.env.BASE_API_URL ||
-  "https://api-beta.tvetmanagement.rtbdev.online/ETrainerBackend/api/v1";
+  "https://api.tvetmanagement.rtb.gov.rw/ETrainerBackend/api/v1/";
 
 const axios = _.create({
   baseURL: baseUrl,
