@@ -1,8 +1,10 @@
 import _ from "axios";
 
-const baseUrl =
-  import.meta.env.BASE_API_URL ||
-  "https://api.tvetmanagement.rtb.gov.rw/ETrainerBackend/api/v1/";
+const baseUrl = import.meta.env.DEV
+  ? import.meta.env.VITE_BASE_API_URL_DEV
+  : import.meta.env.VITE_BASE_API_URL;
+
+console.log({baseUrl});
 
 const axios = _.create({
   baseURL: baseUrl,

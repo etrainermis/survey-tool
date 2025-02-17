@@ -207,68 +207,69 @@ const CreateSurvey = () => {
       }
       const surveyPayload = {
         schoolId: selectedSchool.id,
-        schoolSurveyData: JSON.stringify({
-          // School Basic Info
-          schoolName: selectedSchool.name,
-          schoolStatus: data.school.status,
-          schoolCategory: data.school.category,
+        // schoolSurveyData: JSON.stringify({
+        //   // School Basic Info
+        //   schoolName: selectedSchool.name,
+        //   schoolStatus: data.school.status,
+        //   schoolCategory: data.school.category,
 
-          // Contact Information
-          contactEmail: data.school.contact.email,
-          contactPhone: data.school.contact.phone,
-          headTeacherName: data.school.contact.headteacher,
+        //   // Contact Information
+        //   contactEmail: data.school.contact.email,
+        //   contactPhone: data.school.contact.phone,
+        //   headTeacherName: data.school.contact.headteacher,
 
-          // Stats
-          numberOfTeachers: data.school.stats.teachers,
+        //   // Stats
+        //   numberOfTeachers: data.school.stats.teachers,
 
-          // Trades Information
-          trades: data.school.trades?.map((trade: any) => ({
-            tradeName: trade.name,
-            levels: trade.levels.map((level) => ({
-              level: level.level,
-              classrooms: level.classrooms,
-              maleStudents: level.students.male,
-              femaleStudents: level.students.female,
-            })),
-          })),
+        //   // Trades Information
+        //   trades: data.school.trades?.map((trade: any) => ({
+        //     tradeName: trade.name,
+        //     levels: trade.levels.map((level) => ({
+        //       level: level.level,
+        //       classrooms: level.classrooms,
+        //       maleStudents: level.students.male,
+        //       femaleStudents: level.students.female,
+        //     })),
+        //   })),
 
-          // Infrastructure
-          infrastructure: data.infrastructure?.map((infra) => ({
-            type: infra.type,
-            size: infra.size,
-            capacity: infra.capacity,
-            constructionYear: infra.constructionYear,
-            materials: infra.materials,
-            status: infra.status,
-          })),
+        //   // Infrastructure
+        //   infrastructure: data.infrastructure?.map((infra) => ({
+        //     type: infra.type,
+        //     size: infra.size,
+        //     capacity: infra.capacity,
+        //     constructionYear: infra.constructionYear,
+        //     materials: infra.materials,
+        //     status: infra.status,
+        //   })),
 
-          // IT Infrastructure
-          itInfrastructure: {
-            computerLab: {
-              totalComputers: data.it.computerLab.totalComputers,
-              workingComputers: data.it.computerLab.workingComputers,
-              nonWorkingComputers: data.it.computerLab.nonWorkingComputers,
-              hasLAN: data.it.computerLab.hasLAN,
-              hasProjectors: data.it.computerLab.hasProjectors,
-              totalProjectors: data.it.computerLab.totalProjectors,
-              workingProjectors: data.it.computerLab.workingProjectors,
-              nonWorkingProjectors: data.it.computerLab.nonWorkingProjectors,
-            },
-            internet: {
-              exists: data.it.exists,
-              type: data.it.type,
-            },
-            server: {
-              exists: data.it.exists,
-              specifications: data.it.specifications,
-            },
-            energySources: data.it.energySources,
-            equipment: {
-              hasAssetRegister: data.it.hasAssetRegister,
-              status: data.it.status,
-            },
-          },
-        }),
+        //   // IT Infrastructure
+        //   itInfrastructure: {
+        //     computerLab: {
+        //       totalComputers: data.it.computerLab.totalComputers,
+        //       workingComputers: data.it.computerLab.workingComputers,
+        //       nonWorkingComputers: data.it.computerLab.nonWorkingComputers,
+        //       hasLAN: data.it.computerLab.hasLAN,
+        //       hasProjectors: data.it.computerLab.hasProjectors,
+        //       totalProjectors: data.it.computerLab.totalProjectors,
+        //       workingProjectors: data.it.computerLab.workingProjectors,
+        //       nonWorkingProjectors: data.it.computerLab.nonWorkingProjectors,
+        //     },
+        //     internet: {
+        //       exists: data.it.exists,
+        //       type: data.it.type,
+        //     },
+        //     server: {
+        //       exists: data.it.exists,
+        //       specifications: data.it.specifications,
+        //     },
+        //     energySources: data.it.energySources,
+        //     equipment: {
+        //       hasAssetRegister: data.it.hasAssetRegister,
+        //       status: data.it.status,
+        //     },
+        //   },
+        // }),
+        schoolSurveyData: JSON.stringify(data),
       };
 
       // Submit to API

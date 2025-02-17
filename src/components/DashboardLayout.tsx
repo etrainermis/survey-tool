@@ -1,154 +1,109 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TradesSection from "./sections/TradesSection";
 import InfrastructureSection from "./sections/InfrastructureSection";
 import ITSection from "./sections/ITSection";
+import { useAllSurveys } from "@/hooks/useAllSurveys";
+import { Provinces, Districts, Sectors } from "rwanda";
 
 const DashboardLayout = () => {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
-
-  const provinces = [
-    { id: "kigali", name: "Kigali City" },
-    { id: "eastern", name: "Eastern Province" },
-    { id: "western", name: "Western Province" },
-    { id: "northern", name: "Northern Province" },
-    { id: "southern", name: "Southern Province" },
-  ];
+  const [filteredSurveys, setFilteredSurveys] = useState<any[]>([]);
+  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [availableSchools, setAvailableSchools] = useState<any[]>([]);
   
-  const districtsByProvince = {
-    kigali: ["Nyarugenge", "Gasabo", "Kicukiro"],
-    eastern: ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"],
-    western: ["Karongi", "Ngororero", "Nyabihu", "Nyamasheke", "Rubavu", "Rusizi", "Rutsiro"],
-    northern: ["Burera", "Gakenke", "Gicumbi", "Musanze", "Rulindo"],
-    southern: ["Gisagara", "Huye", "Kamonyi", "Muhanga", "Nyamagabe", "Nyanza", "Nyaruguru", "Ruhango"],
-  };
-  const schoolsByDistrict = {
-    Nyarugenge: [
-        "GS CYAHAFI", "Kigali Leading Technical School", "TVET KANYINYA",
-        
-    ],
-    Gasabo: [
-        "APAER Remera", "ETO Gasabo", "CFJ Jabana", "GS Kacyiru II",
-       
-    ],
-    Kicukiro: [
-        "Lycee de Kigali", "IPRC Kicukiro", "Groupe Scolaire Kicukiro",
-        
-    ],
-    Nyanza: [
-        "Ecole des Sciences de Nyanza", "Groupe Scolaire Notre Dame de Lourdes",
-       
-    ],
-    Gisagara: [
-        "Groupe Scolaire Save", "G.S. Kigembe", "G.S. Mugombwa",
+  const { surveys, fetchingSurveys } = useAllSurveys();
+
+  // Process surveys to get unique locations with data
+  useEffect(() => {
+    if (surveys) {
+      console.log(surveys);
+      const processed = surveys.map((survey: any) => {
+        const data = JSON.parse(survey.schoolSurveyData);
+        return {
+          ...survey,
+          processedData: data,
+          isComplete: data.school && data.school.districtId && data.school.id && data.school.name
+        };
+      });
+      setFilteredSurveys(processed.filter((survey: any) => survey.isComplete));
+    }
+  }, [surveys]);
+
+  // Get unique provinces that have data
+  const availableProvinces = React.useMemo(() => {
+    if (!filteredSurveys?.length) return [];
+    const uniqueProvinces = new Set();
+    const allProvinces = Provinces();
     
-    ],
-    Huye: [
-        "Ecole Secondaire de Karubanda", "Groupe Scolaire Officiel de Butare",
-        
-    ],
-    Nyamagabe: [
-        "G.S. Nyamagabe", "Saint Jean Bosco", "G.S. Kibeho",
-        
-    ],
-    Ruhango: [
-        "G.S. Ruhango", "Groupe Scolaire Indangaburezi", "G.S. Kinazi",
-        
-    ],
-    Muhanga: [
-        "Ecole des Sciences de Muhanga", "Groupe Scolaire Kabgayi",
-       
-    ],
-    Kamonyi: [
-        "Groupe Scolaire Remera Rukoma", "G.S. Musambira", "G.S. Ruyenzi",
-        
-    ],
-    Karongi: [
-        "Ecole Secondaire Saint Pierre", "G.S. Bumba", "G.S. Rubengera",
-        
-    ],
-    Rutsiro: [
-        "Groupe Scolaire Rutsiro", "G.S. Musasa", "G.S. Mukura",
-        
-    ],
-    Ngororero: [
-        "Groupe Scolaire Ngororero", "G.S. Kavumu", "G.S. Nyange",
-       
-    ],
-    Rubavu: [
-        "Groupe Scolaire Rubavu", "G.S. Rugerero", "G.S. Gisenyi",
-        
-    ],
-    Nyabihu: [
-        "Groupe Scolaire Nyabihu", "G.S. Jenda", "G.S. Rambura",
-        
-    ],
-    Musanze: [
-        "Ecole des Sciences de Musanze", "Groupe Scolaire Ruhengeri",
+    filteredSurveys.forEach(survey => {
+      // Find which province contains this district
+      allProvinces.forEach(province => {
+        const districtsInProvince = Districts(province);
+        if (districtsInProvince.includes(survey.processedData.school.districtId.name)) {
+          uniqueProvinces.add(province);
+        }
+      });
+    });
+    
+    return Array.from(uniqueProvinces) as string[];
+  }, [filteredSurveys]);
+
+  // Update available districts when province changes
+  useEffect(() => {
+    if (selectedProvince) {
+      const districtsInProvince = Districts(selectedProvince);
+      const districtsWithData = filteredSurveys
+        .filter(survey => survey.processedData.school.districtId)
+        .filter(survey => 
+          districtsInProvince.includes(survey.processedData.school.districtId.name)
+        )
+        .map(survey => survey.processedData.school.districtId.name);
       
-    ],
-    Burera: [
-        "Groupe Scolaire Burera", "G.S. Butaro", "G.S. Cyanika",
-        
-    ],
-    Gakenke: [
-        "Groupe Scolaire Gakenke", "G.S. Ruli", "G.S. Janja",
-        "Ecole Secondaire de Gakenke", "G.S. Muhondo", "G.S. Nemba"
-    ],
-    Rulindo: [
-        "Groupe Scolaire Rulindo", "G.S. Tumba", "G.S. Base",
-        "Ecole Secondaire de Rulindo", "G.S. Kinihira", "G.S. Shyorongi"
-    ],
-    Gicumbi: [
-        "Groupe Scolaire Gicumbi", "G.S. Byumba", "G.S. Rutare",
-        "Ecole Secondaire de Gicumbi", "G.S. Nyagatare", "G.S. Kaniga"
-    ],
-    Nyagatare: [
-        "Ecole Secondaire de Nyagatare", "G.S. Matimba", "G.S. Rwimiyaga",
-        "Groupe Scolaire Nyagatare", "G.S. Mimuri", "G.S. Rukomo"
-    ],
-    Gatsibo: [
-        "Groupe Scolaire Gatsibo", "G.S. Kiziguro", "G.S. Kiramuruzi",
-        "Ecole Secondaire de Gatsibo", "G.S. Rugarama", "G.S. Ngarama"
-    ],
-    Kayonza: [
-        "Groupe Scolaire Kayonza", "G.S. Mukarange", "G.S. Kabarondo",
-        "Ecole Secondaire de Kayonza", "G.S. Nyamirama", "G.S. Rukara"
-    ],
-    Rwamagana: [
-        "Groupe Scolaire Rwamagana", "G.S. Musha", "G.S. Rubona",
-        "Ecole Secondaire de Rwamagana", "G.S. Muhazi", "G.S. Kigabiro"
-    ],
-    Ngoma: [
-        "Groupe Scolaire Ngoma", "G.S. Kibungo", "G.S. Zaza",
-        "Ecole Secondaire de Ngoma", "G.S. Remera", "G.S. Mutenderi"
-    ],
-    Kirehe: [
-        "Groupe Scolaire Kirehe", "G.S. Nyakarambi", "G.S. Nasho",
-        "Ecole Secondaire de Kirehe", "G.S. Mahama", "G.S. Rusumo"
-    ],
-    Bugesera: [
-        "Groupe Scolaire Bugesera", "G.S. Nyamata", "G.S. Ntarama",
-        "Ecole Secondaire de Bugesera", "G.S. Mayange", "G.S. Ruhuha"
-    ]
-};
-
-
-
-
-  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const province = e.target.value;
-    setSelectedProvince(province);
+      setAvailableDistricts([...new Set(districtsWithData)]);
+    } else {
+      setAvailableDistricts([]);
+    }
     setSelectedDistrict("");
     setSelectedSchool("");
-  };
+  }, [selectedProvince, filteredSurveys]);
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const district = e.target.value;
-    setSelectedDistrict(district);
+  // Update available schools when district changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      const schoolsInDistrict = filteredSurveys
+        .filter(survey => 
+          survey.processedData.school.districtId.name === selectedDistrict
+        )
+        .map(survey => ({
+          id: survey.processedData.school.id,
+          name: survey.processedData.school.name
+        }));
+      
+      setAvailableSchools(schoolsInDistrict);
+    } else {
+      setAvailableSchools([]);
+    }
     setSelectedSchool("");
-  };
+  }, [selectedDistrict, filteredSurveys]);
+
+  // Filter surveys based on selection
+  const getFilteredData = React.useMemo(() => {
+    if (selectedSchool) {
+      return filteredSurveys.filter(s => s.processedData.school.id === selectedSchool);
+    }
+    if (selectedDistrict) {
+      return filteredSurveys.filter(s => s.processedData.school.districtId.name === selectedDistrict);
+    }
+    if (selectedProvince) {
+      const districtsInProvince = Districts(selectedProvince);
+      return filteredSurveys.filter(s => 
+        districtsInProvince.includes(s.processedData.school.districtId.name)
+      );
+    }
+    return filteredSurveys;
+  }, [selectedProvince, selectedDistrict, selectedSchool, filteredSurveys]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,13 +120,13 @@ const DashboardLayout = () => {
               <select
                 id="province"
                 value={selectedProvince}
-                onChange={handleProvinceChange}
+                onChange={(e) => setSelectedProvince(e.target.value)}
                 className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select Province</option>
-                {provinces.map((province) => (
-                  <option key={province.id} value={province.id}>
-                    {province.name}
+                {availableProvinces.map((province) => (
+                  <option key={province} value={province}>
+                    {province}
                   </option>
                 ))}
               </select>
@@ -186,11 +141,11 @@ const DashboardLayout = () => {
                 <select
                   id="district"
                   value={selectedDistrict}
-                  onChange={handleDistrictChange}
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
                   className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">Select District</option>
-                  {districtsByProvince[selectedProvince as keyof typeof districtsByProvince]?.map((district) => (
+                  {availableDistricts.map((district) => (
                     <option key={district} value={district}>
                       {district}
                     </option>
@@ -212,9 +167,9 @@ const DashboardLayout = () => {
                   className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">Select School</option>
-                  {schoolsByDistrict[selectedDistrict as keyof typeof schoolsByDistrict]?.map((school) => (
-                    <option key={school} value={school}>
-                      {school}
+                  {availableSchools.map((school) => (
+                    <option key={school.id} value={school.id}>
+                      {school.name}
                     </option>
                   ))}
                 </select>
@@ -225,14 +180,12 @@ const DashboardLayout = () => {
 
         {/* Sections */}
         <div className="grid gap-6">
-        <h2 className="Bold text-[30px]">Infrastucture section</h2>
-        <InfrastructureSection />
-        <h2 className="Bold text-[30px]">IT section</h2>
-          <ITSection />
+          <h2 className="Bold text-[30px]">Infrastructure section</h2>
+          <InfrastructureSection data={getFilteredData} />
+          <h2 className="Bold text-[30px]">IT section</h2>
+          <ITSection data={getFilteredData} />
           <h2 className="SemiBold text-[30px]">Trade section</h2>
-          <TradesSection />
-         
-          
+          <TradesSection data={getFilteredData} />
         </div>
       </div>
     </div>

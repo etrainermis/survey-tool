@@ -1,59 +1,69 @@
 import React from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
-const InfrastructureSection = () => {
+interface InfrastructureSectionProps {
+  data: any[];
+}
+
+const InfrastructureSection: React.FC<InfrastructureSectionProps> = ({ data }) => {
+  const processedData = React.useMemo(() => {
+    if (!data?.length) return null;
+
+    const infrastructureStatusMap = new Map();
+    const materialsCountMap = new Map();
+
+    data.forEach(survey => {
+      const infrastructure = survey.processedData.infrastructure;
+      infrastructure.forEach((item: any) => {
+        // Count infrastructure by status
+        if (!infrastructureStatusMap.has(item.type)) {
+          infrastructureStatusMap.set(item.type, {
+            good: 0,
+            moderate: 0,
+            poor: 0
+          });
+        }
+        infrastructureStatusMap.get(item.type)[item.status]++;
+
+        // Count materials usage
+        item.materials.forEach((material: string) => {
+          materialsCountMap.set(material, (materialsCountMap.get(material) || 0) + 1);
+        });
+      });
+    });
+
+    return {
+      infrastructureStatus: Array.from(infrastructureStatusMap.entries()),
+      materialsCount: Array.from(materialsCountMap.entries())
+    };
+  }, [data]);
+
   const infrastructureStatus = {
-    labels: [
-      'Administration Block',
-      'Classroom Block',
-      'Computer Lab',
-      'Library',
-      'Kitchen',
-      'Refectory',
-      'Smart Classroom',
-      'Dormitories',
-      'Washrooms',
-      'Playgrounds',
-      'School Garden',
-    ],
+    labels: processedData?.infrastructureStatus.map(([type]) => type) || [],
     datasets: [
       {
         label: 'Good',
-        data: [60, 70, 55, 20, 18, 23, 43, 28, 46, 24, 5],
+        data: processedData?.infrastructureStatus.map(([, counts]) => counts.good) || [],
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
       },
       {
         label: 'Moderate',
-        data: [10, 6, 4, 30, 10, 8, 9, 3, 4, 3, 4],
+        data: processedData?.infrastructureStatus.map(([, counts]) => counts.moderate) || [],
         backgroundColor: 'rgba(255, 206, 86, 0.5)',
       },
       {
         label: 'Poor',
-        data: [20, 15, 10, 8, 10, 3, 5, 16, 13, 19, 4],
+        data: processedData?.infrastructureStatus.map(([, counts]) => counts.poor) || [],
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
       },
     ],
   };
 
   const constructionMaterials = {
-    labels: [
-      'Ruriba bricks',
-      'Amatafari ahiye',
-      'Block cement',
-      'Mud bricks',
-      'Mud & Wood walls',
-      'Metals',
-      'Iron sheets',
-      'Roof tiles',
-      'Tiles',
-      'Cement pavement',
-      'Wall Paint',
-      'Steel trusses',
-      'Wood trusses'
-    ],
+    labels: processedData?.materialsCount.map(([material]) => material) || [],
     datasets: [
       {
-        data: [12, 19, 3, 5, 2, 3, 8, 14, 6, 9,7,13,10],
+        data: processedData?.materialsCount.map(([, count]) => count) || [],
         backgroundColor: [
           'rgba(255, 99, 132, 0.5)',
           'rgba(54, 162, 235, 0.5)',
@@ -97,4 +107,4 @@ const InfrastructureSection = () => {
   );
 };
 
-export default InfrastructureSection
+export default InfrastructureSection;

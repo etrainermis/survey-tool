@@ -61,6 +61,7 @@
     "react-spinners": "^0.15.0",
     "recharts": "^2.12.7",
     "recoil": "^0.7.7",
+    "rwanda": "^2.1.6",
     "sonner": "^1.5.0",
     "swr": "^2.3.2",
     "tailwind-merge": "^2.5.2",
