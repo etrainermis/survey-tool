@@ -8,7 +8,6 @@ const DashboardLayout = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
 
-  // Sample data for provinces and their districts
   const provinces = [
     { id: "kigali", name: "Kigali City" },
     { id: "eastern", name: "Eastern Province" },
@@ -16,7 +15,7 @@ const DashboardLayout = () => {
     { id: "northern", name: "Northern Province" },
     { id: "southern", name: "Southern Province" },
   ];
-
+  
   const districtsByProvince = {
     kigali: ["Nyarugenge", "Gasabo", "Kicukiro"],
     eastern: ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"],
@@ -24,15 +23,119 @@ const DashboardLayout = () => {
     northern: ["Burera", "Gakenke", "Gicumbi", "Musanze", "Rulindo"],
     southern: ["Gisagara", "Huye", "Kamonyi", "Muhanga", "Nyamagabe", "Nyanza", "Nyaruguru", "Ruhango"],
   };
-
-  // Sample schools data (you can replace this with real data)
   const schoolsByDistrict = {
-    Nyarugenge: ["IPRC Kigali", "ETO Nyarugenge", "CFJ Gatenga"],
-    Gasabo: ["APAER Remera", "ETO Gasabo", "CFJ Jabana"],
-    Kicukiro: ["IPRC Kicukiro", "ETO Kicukiro", "CFJ Gahanga"],
-    eastern: ["GS Catholique", "Maranyundo Girls School", "Nyamata TTS", "ETO", "APEBU"],
-    // Add more districts and schools as needed
-  };
+    Nyarugenge: [
+        "GS CYAHAFI", "Kigali Leading Technical School", "TVET KANYINYA",
+        
+    ],
+    Gasabo: [
+        "APAER Remera", "ETO Gasabo", "CFJ Jabana", "GS Kacyiru II",
+       
+    ],
+    Kicukiro: [
+        "Lycee de Kigali", "IPRC Kicukiro", "Groupe Scolaire Kicukiro",
+        
+    ],
+    Nyanza: [
+        "Ecole des Sciences de Nyanza", "Groupe Scolaire Notre Dame de Lourdes",
+       
+    ],
+    Gisagara: [
+        "Groupe Scolaire Save", "G.S. Kigembe", "G.S. Mugombwa",
+    
+    ],
+    Huye: [
+        "Ecole Secondaire de Karubanda", "Groupe Scolaire Officiel de Butare",
+        
+    ],
+    Nyamagabe: [
+        "G.S. Nyamagabe", "Saint Jean Bosco", "G.S. Kibeho",
+        
+    ],
+    Ruhango: [
+        "G.S. Ruhango", "Groupe Scolaire Indangaburezi", "G.S. Kinazi",
+        
+    ],
+    Muhanga: [
+        "Ecole des Sciences de Muhanga", "Groupe Scolaire Kabgayi",
+       
+    ],
+    Kamonyi: [
+        "Groupe Scolaire Remera Rukoma", "G.S. Musambira", "G.S. Ruyenzi",
+        
+    ],
+    Karongi: [
+        "Ecole Secondaire Saint Pierre", "G.S. Bumba", "G.S. Rubengera",
+        
+    ],
+    Rutsiro: [
+        "Groupe Scolaire Rutsiro", "G.S. Musasa", "G.S. Mukura",
+        
+    ],
+    Ngororero: [
+        "Groupe Scolaire Ngororero", "G.S. Kavumu", "G.S. Nyange",
+       
+    ],
+    Rubavu: [
+        "Groupe Scolaire Rubavu", "G.S. Rugerero", "G.S. Gisenyi",
+        
+    ],
+    Nyabihu: [
+        "Groupe Scolaire Nyabihu", "G.S. Jenda", "G.S. Rambura",
+        
+    ],
+    Musanze: [
+        "Ecole des Sciences de Musanze", "Groupe Scolaire Ruhengeri",
+      
+    ],
+    Burera: [
+        "Groupe Scolaire Burera", "G.S. Butaro", "G.S. Cyanika",
+        
+    ],
+    Gakenke: [
+        "Groupe Scolaire Gakenke", "G.S. Ruli", "G.S. Janja",
+        "Ecole Secondaire de Gakenke", "G.S. Muhondo", "G.S. Nemba"
+    ],
+    Rulindo: [
+        "Groupe Scolaire Rulindo", "G.S. Tumba", "G.S. Base",
+        "Ecole Secondaire de Rulindo", "G.S. Kinihira", "G.S. Shyorongi"
+    ],
+    Gicumbi: [
+        "Groupe Scolaire Gicumbi", "G.S. Byumba", "G.S. Rutare",
+        "Ecole Secondaire de Gicumbi", "G.S. Nyagatare", "G.S. Kaniga"
+    ],
+    Nyagatare: [
+        "Ecole Secondaire de Nyagatare", "G.S. Matimba", "G.S. Rwimiyaga",
+        "Groupe Scolaire Nyagatare", "G.S. Mimuri", "G.S. Rukomo"
+    ],
+    Gatsibo: [
+        "Groupe Scolaire Gatsibo", "G.S. Kiziguro", "G.S. Kiramuruzi",
+        "Ecole Secondaire de Gatsibo", "G.S. Rugarama", "G.S. Ngarama"
+    ],
+    Kayonza: [
+        "Groupe Scolaire Kayonza", "G.S. Mukarange", "G.S. Kabarondo",
+        "Ecole Secondaire de Kayonza", "G.S. Nyamirama", "G.S. Rukara"
+    ],
+    Rwamagana: [
+        "Groupe Scolaire Rwamagana", "G.S. Musha", "G.S. Rubona",
+        "Ecole Secondaire de Rwamagana", "G.S. Muhazi", "G.S. Kigabiro"
+    ],
+    Ngoma: [
+        "Groupe Scolaire Ngoma", "G.S. Kibungo", "G.S. Zaza",
+        "Ecole Secondaire de Ngoma", "G.S. Remera", "G.S. Mutenderi"
+    ],
+    Kirehe: [
+        "Groupe Scolaire Kirehe", "G.S. Nyakarambi", "G.S. Nasho",
+        "Ecole Secondaire de Kirehe", "G.S. Mahama", "G.S. Rusumo"
+    ],
+    Bugesera: [
+        "Groupe Scolaire Bugesera", "G.S. Nyamata", "G.S. Ntarama",
+        "Ecole Secondaire de Bugesera", "G.S. Mayange", "G.S. Ruhuha"
+    ]
+};
+
+
+
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const province = e.target.value;
@@ -137,3 +240,5 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
+
+

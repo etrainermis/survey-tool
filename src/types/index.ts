@@ -1,42 +1,61 @@
-export interface TradeData {
-    tradeName: string;
-    levels: {
-      level: string;
-      classrooms: number;
-      students: {
-        boys: number;
-        girls: number;
-      };
-    }[];
-  }
-  
-  export interface Infrastructure {
+export interface SchoolSurveyData {
+  school: {
+    id: string;
+    name: string;
+    status: string;
+    category: string;
+    location: {
+      province: string;
+      district: string;
+      sector: string;
+      cell: string;
+      village: string;
+    };
+    stats: {
+      trades: number;
+      students: number;
+      teachers: number;
+    };
+    contact: {
+      phone: string;
+      email: string;
+      headteacher: string;
+    };
+  };
+  infrastructure: Array<{
     type: string;
-    constructionYear: number;
     size: string;
     capacity: string;
-    constructionMaterial: string;
-    status: 'Good' | 'Moderate' | 'Poor';
-  }
-  
-  export interface ITInfrastructure {
-    computerLabs: {
-      totalComputers: number;
-      workingComputers: number;
+    constructionYear?: string;
+    materials: string[];
+    status: string;
+  }>;
+  it: {
+    computerLab: {
+      totalComputers: string;
+      workingComputers: string;
       hasLAN: boolean;
+      hasProjectors: boolean;
     };
-    projectors: {
-      total: number;
-      working: number;
-    };
-    internet: boolean;
-    server: boolean;
-    serverSpecs?: string;
-    hasElearning: boolean;
-    energySource: ('Solar' | 'Grid' | 'Renewable')[];
+    energySources: string[];
     equipment: {
       hasAssetRegister: boolean;
-      status: 'Good' | 'Moderate' | 'Poor';
-      available: boolean;
+      status: string;
     };
-  }
+  };
+  trades: Array<{
+    id: string;
+    name: string;
+    levels: Array<{
+      level: number;
+      classrooms: number;
+      students: {
+        male: number;
+        female: number;
+      };
+    }>;
+  }>;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+}

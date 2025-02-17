@@ -21,10 +21,19 @@ interface Survey {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [incompleteSurveys, setIncompleteSurveys] = useState<Survey[]>([]);
-  const [completedSurveys, setCompletedSurveys] = useState<Survey[]>([]);
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const { logout, user } = useAuth();
+  const { surveys, fetchingSurveys } = useAllSurveys();
+
+  useEffect(() => {
+    // Load draft surveys for current user
+    const draftKey = `survey_draft_${user?.id}`;
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      setIncompleteSurveys([JSON.parse(draft)]);
+    }
+  }, [user?.id]);
 
   const handleLogout = () => {
     logout();
@@ -35,8 +44,7 @@ const Dashboard = () => {
     setSelectedSurvey(survey);
     setPreviewOpen(true);
   };
-  const { surveys, fetchingSurveys, errorFetchingSurveys, mutate } =
-    useAllSurveys();
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -75,7 +83,7 @@ const Dashboard = () => {
               <CardTitle>Incomplete Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <p className="text-2xl font-bold">{incompleteSurveys}</p> */}
+              <p className="text-2xl font-bold">{incompleteSurveys.length}</p>
             </CardContent>
           </Card>
           <Card
@@ -86,7 +94,13 @@ const Dashboard = () => {
               <CardTitle>Completed Surveys</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <p className="text-2xl font-bold">{surveys.length}</p> */}
+              <p className="text-2xl font-bold">
+                {fetchingSurveys ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  surveys?.length || 0
+                )}
+              </p>
             </CardContent>
           </Card>
         </div>
