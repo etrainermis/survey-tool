@@ -380,7 +380,7 @@ const CreateSurvey = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="school-email">Email</Label>
+          <Label htmlFor="school-email"> School Email</Label>
           <Input
             id="school-email"
             type="email"
@@ -415,7 +415,7 @@ const CreateSurvey = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="school-phone">Phone</Label>
+          <Label htmlFor="school-phone">Phone Number</Label>
           <Input
             id="school-phone"
             type="tel"
