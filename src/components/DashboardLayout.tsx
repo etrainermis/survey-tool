@@ -184,7 +184,7 @@ const DashboardLayout = () => {
           <InfrastructureSection data={getFilteredData} />
           <h2 className="Bold text-[30px]">IT section</h2>
           <ITSection data={getFilteredData} />
-          <h2 className="SemiBold text-[30px]">Trade section</h2>
+          <h2 className="SemiBold text-[30px]">Statistics per trade</h2>
           <TradesSection data={getFilteredData} />
         </div>
       </div>

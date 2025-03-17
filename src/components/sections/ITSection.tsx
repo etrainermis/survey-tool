@@ -1,88 +1,84 @@
-import React from 'react';
-import { Doughnut, Bar, Pie } from 'react-chartjs-2';
+"use client"
+
+import React from "react"
+import { Doughnut, Bar, Pie } from "react-chartjs-2"
 
 interface ITSectionProps {
-  data: any[];
+  data: any[]
 }
 
 const ITSection: React.FC<ITSectionProps> = ({ data }) => {
   const processedData = React.useMemo(() => {
-    if (!data?.length) return null;
+    if (!data?.length) return null
 
     const computerStats = {
       working: 0,
-      notWorking: 0
-    };
+      notWorking: 0,
+    }
 
-    const energySources = new Map();
+    const energySources = new Map()
 
-    data.forEach(survey => {
-      const it = survey.processedData.it;
-      
+    data.forEach((survey) => {
+      const it = survey.processedData?.it
+
+      // Skip if it doesn't have the expected structure
+      if (!it) return
+
       // Computer stats
-      computerStats.working += parseInt(it.computerLab.workingComputers) || 0;
-      computerStats.notWorking += parseInt(it.computerLab.nonWorkingComputers) || 0;
+      computerStats.working += Number.parseInt(it.computerLab?.workingComputers) || 0
+      computerStats.notWorking += Number.parseInt(it.computerLab?.nonWorkingComputers) || 0
 
-      // Energy sources
-      it.energySources.forEach((source: string) => {
-        energySources.set(source, (energySources.get(source) || 0) + 1);
-      });
-    });
+      // Energy sources - Check if energySources exists and is an array
+      if (Array.isArray(it.energySources)) {
+        it.energySources.forEach((source: string) => {
+          energySources.set(source, (energySources.get(source) || 0) + 1)
+        })
+      }
+    })
 
     return {
       computerStats,
-      energySources: Array.from(energySources.entries())
-    };
-  }, [data]);
+      energySources: Array.from(energySources.entries()),
+    }
+  }, [data])
 
   const computerStatus = {
-    labels: ['Working', 'Not Working'],
+    labels: ["Working", "Not Working"],
     datasets: [
       {
-        data: [
-          processedData?.computerStats.working || 0,
-          processedData?.computerStats.notWorking || 0
-        ],
-        backgroundColor: ['rgba(75, 192, 192, 0.5)', 'rgba(255, 99, 132, 0.5)'],
-        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+        data: [processedData?.computerStats.working || 0, processedData?.computerStats.notWorking || 0],
+        backgroundColor: ["rgba(75, 192, 192, 0.5)", "rgba(255, 99, 132, 0.5)"],
+        borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"],
       },
     ],
-  };
+  }
 
   const connectivityData = {
-    labels: ['Internet', 'Projectors', 'Server'],
+    labels: ["Internet", "Projectors", "Server"],
     datasets: [
       {
-        label: 'Yes',
+        label: "Yes",
         data: [15, 12, 8],
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
       },
       {
-        label: 'No',
+        label: "No",
         data: [5, 8, 12],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
     ],
-  };
+  }
 
   const energySourceData = {
     labels: processedData?.energySources.map(([source]) => source) || [],
     datasets: [
       {
         data: processedData?.energySources.map(([, count]) => count) || [],
-        backgroundColor: [
-          'rgba(255, 206, 86, 0.5)',
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(75, 192, 192, 0.5)',
-        ],
-        borderColor: [
-          'rgba(255, 206, 86, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(75, 192, 192, 1)',
-        ],
+        backgroundColor: ["rgba(255, 206, 86, 0.5)", "rgba(54, 162, 235, 0.5)", "rgba(75, 192, 192, 0.5)"],
+        borderColor: ["rgba(255, 206, 86, 1)", "rgba(54, 162, 235, 1)", "rgba(75, 192, 192, 1)"],
       },
     ],
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -115,7 +111,8 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ITSection;
+export default ITSection
+

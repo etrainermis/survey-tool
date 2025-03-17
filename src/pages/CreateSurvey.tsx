@@ -415,7 +415,7 @@ const CreateSurvey = () => {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 ">
           <Label htmlFor="school-phone">Phone Number</Label>
           <Input
             id="school-phone"
@@ -431,8 +431,11 @@ const CreateSurvey = () => {
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="number-of-teachers">Number of Teachers</Label>
+        <div className="space-x-4 py-2 flex ">
+          <div>
+
+        
+          <Label htmlFor="number-of-teachers">N of Male Teachers</Label>
           <Input
             id="number-of-teachers"
             type="number"
@@ -446,6 +449,25 @@ const CreateSurvey = () => {
               {form.formState.errors.school.stats.teachers.message}
             </p>
           )}
+            </div>
+            <div>
+
+            
+           <Label htmlFor="number-of-teachers">N of  Female Teachers</Label>
+          <Input
+            id="number-of-teachers"
+            type="number"
+            {...form.register("school.stats.teachers", {
+              required: "Number of teachers is required",
+              min: { value: 1, message: "Must be at least 1" },
+            })}
+          />
+          {form.formState.errors.school?.stats?.teachers && (
+            <p className="text-red-500">
+              {form.formState.errors.school.stats.teachers.message}
+            </p>
+          )}
+          </div>
         </div>
       </div>
     </div>

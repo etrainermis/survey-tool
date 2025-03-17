@@ -10,6 +10,7 @@ import CreateSurvey from "./pages/CreateSurvey";
 import NotFound from "./pages/NotFound";
 import CompletedSurveys from "./pages/CompleteSurvey";
 import IncompleteSurveys from "./pages/UncompleteSurvey";
+import Page from "@/components/evaluation/page"
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => {
             />
 
             <Route path="*" element={<NotFound />} />
+            <Route path="/evaluation" element={<Page />} />
             <Route path="/completed-surveys" element={<CompletedSurveys />} />
             <Route path="/incomplete-surveys" element={<IncompleteSurveys />} />
             <Route path="/completed-surveys" element={<CompletedSurveys />} />
