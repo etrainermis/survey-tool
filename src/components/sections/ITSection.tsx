@@ -47,8 +47,9 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
     datasets: [
       {
         data: [processedData?.computerStats.working || 0, processedData?.computerStats.notWorking || 0],
-        backgroundColor: ["rgba(75, 192, 192, 0.5)", "rgba(255, 99, 132, 0.5)"],
-        borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"],
+        backgroundColor: ["rgba(66, 133, 244, 0.6)", "rgba(234, 67, 53, 0.6)"],
+        borderColor: ["rgba(66, 133, 244, 1)", "rgba(234, 67, 53, 1)"],
+        borderWidth: 1,
       },
     ],
   }
@@ -59,12 +60,16 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
       {
         label: "Yes",
         data: [15, 12, 8],
-        backgroundColor: "rgba(75, 192, 192, 0.5)",
+        backgroundColor: "rgba(66, 133, 244, 0.6)",
+        borderColor: "rgba(66, 133, 244, 1)",
+        borderWidth: 1,
       },
       {
         label: "No",
         data: [5, 8, 12],
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        backgroundColor: "rgba(234, 67, 53, 0.6)",
+        borderColor: "rgba(234, 67, 53, 1)",
+        borderWidth: 1,
       },
     ],
   }
@@ -74,8 +79,9 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
     datasets: [
       {
         data: processedData?.energySources.map(([, count]) => count) || [],
-        backgroundColor: ["rgba(255, 206, 86, 0.5)", "rgba(54, 162, 235, 0.5)", "rgba(75, 192, 192, 0.5)"],
-        borderColor: ["rgba(255, 206, 86, 1)", "rgba(54, 162, 235, 1)", "rgba(75, 192, 192, 1)"],
+        backgroundColor: ["rgba(251, 188, 5, 0.6)", "rgba(66, 133, 244, 0.6)", "rgba(52, 168, 83, 0.6)"],
+        borderColor: ["rgba(251, 188, 5, 1)", "rgba(66, 133, 244, 1)", "rgba(52, 168, 83, 1)"],
+        borderWidth: 1,
       },
     ],
   }
@@ -84,14 +90,23 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Computer Status */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Computer Status</h3>
-          <Doughnut data={computerStatus} />
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
+          <h3 className="text-lg font-semibold mb-4 text-blue-700">Computer Status</h3>
+          <Doughnut
+            data={computerStatus}
+            options={{
+              plugins: {
+                legend: {
+                  position: "bottom",
+                },
+              },
+            }}
+          />
         </div>
 
         {/* Connectivity Status */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Connectivity Status</h3>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
+          <h3 className="text-lg font-semibold mb-4 text-blue-700">Connectivity Status</h3>
           <Bar
             data={connectivityData}
             options={{
@@ -100,14 +115,28 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
                   beginAtZero: true,
                 },
               },
+              plugins: {
+                legend: {
+                  position: "top",
+                },
+              },
             }}
           />
         </div>
 
         {/* Energy Sources */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Energy Sources</h3>
-          <Pie data={energySourceData} />
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
+          <h3 className="text-lg font-semibold mb-4 text-blue-700">Energy Sources</h3>
+          <Pie
+            data={energySourceData}
+            options={{
+              plugins: {
+                legend: {
+                  position: "right",
+                },
+              },
+            }}
+          />
         </div>
       </div>
     </div>

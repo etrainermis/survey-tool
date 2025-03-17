@@ -1,108 +1,111 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { AuthState } from "@/lib/auth";
-import { Form } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { useToast } from "@/components/ui/use-toast";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import useAuth from "@/hooks/useAuth";
-import { useAllSchools } from "@/hooks/useSchools";
-import { AuthApi } from "@/lib/config/axios.config";
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ArrowLeft, ArrowRight } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import type { AuthState } from "@/lib/auth"
+import { Form } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import useAuth from "@/hooks/useAuth"
+import { useAllSchools } from "@/hooks/useSchools"
+import { AuthApi } from "@/lib/config/axios.config"
 
 interface CreateSurveyProps {
-  authState: AuthState;
+  authState: AuthState
 }
 
 interface SurveyData {
   school: {
-    id: string;
-    name: string;
-    status: string;
-    category: string;
+    id: string
+    name: string
+    status: string
+    category: string
     location: {
-      province: string;
-      district: string;
-      sector: string;
-      cell: string;
-      village: string;
-    };
+      province: string
+      district: string
+      sector: string
+      cell: string
+      village: string
+    }
     stats: {
-      trades: number;
-      students: number;
-      teachers: number;
-    };
+      trades: number
+      students: number
+      teachers: number
+      maleTeachers?: number // Add this line
+      femaleTeachers?: number // Add this line
+    }
     contact: {
-      phone: string;
-      email: string;
-      headteacher: string;
-      owner: string;
-    };
+      phone: string
+      email: string
+      headteacher: string
+      owner: string
+    }
     trades: Array<{
-      id: string;
-      name: string;
+      id: string
+      name: string
       levels: Array<{
-        level: number;
-        classrooms: number;
+        level: number
+        classrooms: number
         students: {
-          male: number;
-          female: number;
-        };
-      }>;
-    }>;
-  };
+          male: number
+          female: number
+        }
+      }>
+    }>
+  }
   infrastructure: Array<{
-    type: string;
-    size: string;
-    capacity: string;
-    constructionYear: number;
-    materials: string[];
-    status: string;
-  }>;
+    type: string
+    size: string
+    capacity: string
+    constructionYear: number
+    materials: string[]
+    status: string
+  }>
   it: {
     computerLab: {
-      totalComputers: number;
-      hasLAN: boolean;
-      workingComputers: number;
-      nonWorkingComputers: number;
-      hasProjectors: boolean;
-      totalProjectors: number;
-      workingProjectors: number;
-      nonWorkingProjectors: number;
-    };
+      totalComputers: number
+      hasLAN: boolean
+      workingComputers: number
+      nonWorkingComputers: number
+      hasProjectors: boolean
+      totalProjectors: number
+      workingProjectors: number
+      nonWorkingProjectors: number
+    }
     internet: {
-      exists: boolean;
-      type?: "4G" | "Fiber"; // Add this field
-    };
+      exists: boolean
+      type?: "4G" | "Fiber" // Add this field
+    }
     server: {
-      exists: boolean;
-      specifications: string;
-    };
-    hasElearning: boolean;
-    energySources: string[];
+      exists: boolean
+      specifications: string
+    }
+    hasElearning: boolean
+    energySources: string[]
     equipment: {
-      hasAssetRegister: boolean;
-      status: string;
-      isAvailable: boolean;
-    };
-  };
+      hasAssetRegister: boolean
+      status: string
+      isAvailable: boolean
+    }
+  }
 }
 
 const CreateSurvey = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [currentInfraType, setCurrentInfraType] = useState(0);
-  const { toast } = useToast();
-  const form = useForm<SurveyData>();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [selectedSchool, setSelectedSchool] = useState(null);
-  const { schools, fetchingSchools, errorFetchingSchools, mutate } =
-    useAllSchools();
+  const [currentStep, setCurrentStep] = useState(1)
+  const [currentInfraType, setCurrentInfraType] = useState(0)
+  const { toast } = useToast()
+  const form = useForm<SurveyData>()
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [selectedSchool, setSelectedSchool] = useState(null)
+  const { schools, fetchingSchools, errorFetchingSchools, mutate } = useAllSchools()
 
   const infrastructureTypes = [
     "administration block",
@@ -116,21 +119,21 @@ const CreateSurvey = () => {
     "washrooms",
     "playgrounds",
     "school garden",
-  ];
+  ]
 
   useEffect(() => {
     if (user?.id) {
-      const savedData = localStorage.getItem(`survey_draft_${user.id}`);
+      const savedData = localStorage.getItem(`survey_draft_${user.id}`)
       if (savedData) {
-        form.reset(JSON.parse(savedData));
+        form.reset(JSON.parse(savedData))
       }
     }
-  }, [user, form]);
+  }, [user, form])
 
   useEffect(() => {
-    const currentData = form.getValues();
+    const currentData = form.getValues()
     if (!currentData.infrastructure) {
-      currentData.infrastructure = [];
+      currentData.infrastructure = []
     }
     if (!currentData.infrastructure[currentInfraType]) {
       currentData.infrastructure[currentInfraType] = {
@@ -140,37 +143,36 @@ const CreateSurvey = () => {
         constructionYear: undefined,
         materials: [],
         status: "",
-      };
-      form.reset(currentData);
+      }
+      form.reset(currentData)
     }
-  }, [currentInfraType, infrastructureTypes, form]);
+  }, [currentInfraType, infrastructureTypes, form])
 
   const saveProgress = (data) => {
     if (user?.id) {
-      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data));
-      toast({ description: "Progress saved", duration: 1000 });
+      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data))
+      toast({ description: "Progress saved", duration: 1000 })
     }
-  };
-
+  }
 
   const nextStep = () => {
     form.trigger().then((isValid) => {
       if (isValid) {
-        saveProgress(form.getValues());
-        setCurrentStep((prev) => prev + 1);
+        saveProgress(form.getValues())
+        setCurrentStep((prev) => prev + 1)
       }
-    });
-  };
+    })
+  }
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(currentStep - 1)
     }
-  };
+  }
 
   const nextInfraType = () => {
     if (currentInfraType < infrastructureTypes.length - 1) {
-      const currentData = form.getValues();
+      const currentData = form.getValues()
       currentData.infrastructure[currentInfraType + 1] = {
         type: infrastructureTypes[currentInfraType + 1],
         size: "",
@@ -178,22 +180,22 @@ const CreateSurvey = () => {
         constructionYear: undefined,
         materials: [],
         status: "",
-      };
+      }
 
-      saveProgress(currentData);
-      setCurrentInfraType(currentInfraType + 1);
+      saveProgress(currentData)
+      setCurrentInfraType(currentInfraType + 1)
     } else {
-      nextStep();
+      nextStep()
     }
-  };
+  }
 
   const prevInfraType = () => {
     if (currentInfraType > 0) {
-      setCurrentInfraType(currentInfraType - 1);
+      setCurrentInfraType(currentInfraType - 1)
     } else {
-      prevStep();
+      prevStep()
     }
-  };
+  }
   const onSubmit = async (data: any) => {
     try {
       // Validate that a school is selected
@@ -202,116 +204,54 @@ const CreateSurvey = () => {
           title: "Error",
           description: "Please select a school first",
           variant: "destructive",
-        });
-        return;
+        })
+        return
       }
       const surveyPayload = {
         schoolId: selectedSchool.id,
-        // schoolSurveyData: JSON.stringify({
-        //   // School Basic Info
-        //   schoolName: selectedSchool.name,
-        //   schoolStatus: data.school.status,
-        //   schoolCategory: data.school.category,
-
-        //   // Contact Information
-        //   contactEmail: data.school.contact.email,
-        //   contactPhone: data.school.contact.phone,
-        //   headTeacherName: data.school.contact.headteacher,
-
-        //   // Stats
-        //   numberOfTeachers: data.school.stats.teachers,
-
-        //   // Trades Information
-        //   trades: data.school.trades?.map((trade: any) => ({
-        //     tradeName: trade.name,
-        //     levels: trade.levels.map((level) => ({
-        //       level: level.level,
-        //       classrooms: level.classrooms,
-        //       maleStudents: level.students.male,
-        //       femaleStudents: level.students.female,
-        //     })),
-        //   })),
-
-        //   // Infrastructure
-        //   infrastructure: data.infrastructure?.map((infra) => ({
-        //     type: infra.type,
-        //     size: infra.size,
-        //     capacity: infra.capacity,
-        //     constructionYear: infra.constructionYear,
-        //     materials: infra.materials,
-        //     status: infra.status,
-        //   })),
-
-        //   // IT Infrastructure
-        //   itInfrastructure: {
-        //     computerLab: {
-        //       totalComputers: data.it.computerLab.totalComputers,
-        //       workingComputers: data.it.computerLab.workingComputers,
-        //       nonWorkingComputers: data.it.computerLab.nonWorkingComputers,
-        //       hasLAN: data.it.computerLab.hasLAN,
-        //       hasProjectors: data.it.computerLab.hasProjectors,
-        //       totalProjectors: data.it.computerLab.totalProjectors,
-        //       workingProjectors: data.it.computerLab.workingProjectors,
-        //       nonWorkingProjectors: data.it.computerLab.nonWorkingProjectors,
-        //     },
-        //     internet: {
-        //       exists: data.it.exists,
-        //       type: data.it.type,
-        //     },
-        //     server: {
-        //       exists: data.it.exists,
-        //       specifications: data.it.specifications,
-        //     },
-        //     energySources: data.it.energySources,
-        //     equipment: {
-        //       hasAssetRegister: data.it.hasAssetRegister,
-        //       status: data.it.status,
-        //     },
-        //   },
-        // }),
         schoolSurveyData: JSON.stringify(data),
-      };
+      }
 
       // Submit to API
-      const response = await AuthApi.post("/school-survey/add", surveyPayload);
+      const response = await AuthApi.post("/school-survey/add", surveyPayload)
 
       // Handle successful submission
       toast({
         title: "Survey Submitted",
         description: "Your survey has been successfully submitted.",
-      });
+      })
 
       // Clear local storage and navigate
-      localStorage.removeItem(`survey_draft_${user?.id}`);
-      navigate("/dashboard");
+      localStorage.removeItem(`survey_draft_${user?.id}`)
+      navigate("/dashboard")
     } catch (error) {
-      console.log(error);
+      console.log(error)
 
       // Handle submission error
       toast({
         title: "Submission Error",
-        description:
-          error.response?.data?.message ||
-          "Failed to submit survey. Please try again.",
+        description: error.response?.data?.message || "Failed to submit survey. Please try again.",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
   const renderSchoolSection = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="school-select">Select School</Label>
+        <Label htmlFor="school-select" className="text-blue-700">
+          Select School
+        </Label>
         <select
           id="school-select"
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           {...form.register("school.id", {
             required: "Please select a school",
           })}
           onChange={(e) => {
-            const school = schools.find((s) => s.id === e.target.value);
+            const school = schools.find((s) => s.id === e.target.value)
             if (school) {
-              setSelectedSchool(school);
-              form.reset({ school });
+              setSelectedSchool(school)
+              form.reset({ school })
             }
           }}
         >
@@ -328,19 +268,17 @@ const CreateSurvey = () => {
             ))
           )}
         </select>
-        {form.formState.errors.school?.id && (
-          <p className="text-red-500">
-            {form.formState.errors.school.id.message}
-          </p>
-        )}
+        {form.formState.errors.school?.id && <p className="text-red-500">{form.formState.errors.school.id.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="school-status">Status</Label>
+          <Label htmlFor="school-status" className="text-blue-700">
+            Status
+          </Label>
           <select
             id="school-status"
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             {...form.register("school.status", {
               required: "Status is required",
             })}
@@ -351,17 +289,17 @@ const CreateSurvey = () => {
             <option value="GOVERNMENT_AIDED">GOVERNMENT_AIDED</option>
           </select>
           {form.formState.errors.school?.status && (
-            <p className="text-red-500">
-              {form.formState.errors.school.status.message}
-            </p>
+            <p className="text-red-500">{form.formState.errors.school.status.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="school-category">Category</Label>
+          <Label htmlFor="school-category" className="text-blue-700">
+            Category
+          </Label>
           <select
             id="school-category"
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             {...form.register("school.category", {
               required: "school's category is required",
             })}
@@ -372,19 +310,20 @@ const CreateSurvey = () => {
             <option value="private-govt">Mixed</option>
           </select>
           {form.formState.errors.school?.category && (
-            <p className="text-red-500">
-              {form.formState.errors.school.category.message}
-            </p>
+            <p className="text-red-500">{form.formState.errors.school.category.message}</p>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="school-email"> School Email</Label>
+          <Label htmlFor="school-email" className="text-blue-700">
+            School Email
+          </Label>
           <Input
             id="school-email"
             type="email"
+            className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
             {...form.register("school.contact.email", {
               required: "Email is required",
               pattern: {
@@ -394,86 +333,85 @@ const CreateSurvey = () => {
             })}
           />
           {form.formState.errors.school?.contact?.email && (
-            <p className="text-red-500">
-              {form.formState.errors.school.contact.email.message}
-            </p>
+            <p className="text-red-500">{form.formState.errors.school.contact.email.message}</p>
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="headTeacherName">Head Teacher's Name</Label>
+          <Label htmlFor="headTeacherName" className="text-blue-700">
+            Head Teacher's Name
+          </Label>
           <Input
             id="headTeacherName"
             type="text"
+            className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
             {...form.register("school.contact.headteacher", {
               required: "Head Teacher's name is required",
             })}
           />
           {form.formState.errors.school?.contact?.headteacher && (
-            <p className="text-red-500">
-              {form.formState.errors.school.contact.headteacher.message}
-            </p>
+            <p className="text-red-500">{form.formState.errors.school.contact.headteacher.message}</p>
           )}
         </div>
 
-        <div className="space-y-2 ">
-          <Label htmlFor="school-phone">Phone Number</Label>
+        <div className="space-y-2">
+          <Label htmlFor="school-phone" className="text-blue-700">
+            Phone Number
+          </Label>
           <Input
             id="school-phone"
             type="tel"
+            className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
             {...form.register("school.contact.phone", {
               required: "Phone number is required",
             })}
           />
           {form.formState.errors.school?.contact?.phone && (
-            <p className="text-red-500">
-              {form.formState.errors.school.contact.phone.message}
-            </p>
+            <p className="text-red-500">{form.formState.errors.school.contact.phone.message}</p>
           )}
         </div>
 
-        <div className="space-x-4 py-2 flex ">
+        <div className="space-x-4 py-2 flex">
           <div>
-
-        
-          <Label htmlFor="number-of-teachers">N of Male Teachers</Label>
-          <Input
-            id="number-of-teachers"
-            type="number"
-            {...form.register("school.stats.teachers", {
-              required: "Number of teachers is required",
-              min: { value: 1, message: "Must be at least 1" },
-            })}
-          />
-          {form.formState.errors.school?.stats?.teachers && (
-            <p className="text-red-500">
-              {form.formState.errors.school.stats.teachers.message}
-            </p>
-          )}
-            </div>
-            <div>
-
-            
-           <Label htmlFor="number-of-teachers">N of  Female Teachers</Label>
-          <Input
-            id="number-of-teachers"
-            type="number"
-            {...form.register("school.stats.teachers", {
-              required: "Number of teachers is required",
-              min: { value: 1, message: "Must be at least 1" },
-            })}
-          />
-          {form.formState.errors.school?.stats?.teachers && (
-            <p className="text-red-500">
-              {form.formState.errors.school.stats.teachers.message}
-            </p>
-          )}
+            <Label htmlFor="number-of-male-teachers" className="text-blue-700">
+              N of Male Teachers
+            </Label>
+            <Input
+              id="number-of-male-teachers"
+              type="number"
+              className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+              {...form.register("school.stats.maleTeachers", {
+                required: "Number of male teachers is required",
+                min: { value: 0, message: "Cannot be negative" },
+              })}
+            />
+            {form.formState.errors.school?.stats?.maleTeachers && (
+              <p className="text-red-500">{form.formState.errors.school.stats.maleTeachers.message}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="number-of-female-teachers" className="text-blue-700">
+              N of Female Teachers
+            </Label>
+            <Input
+              id="number-of-female-teachers"
+              type="number"
+              className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+              {...form.register("school.stats.femaleTeachers", {
+                required: "Number of female teachers is required",
+                min: { value: 0, message: "Cannot be negative" },
+              })}
+            />
+            {form.formState.errors.school?.stats?.femaleTeachers && (
+              <p className="text-red-500">{form.formState.errors.school.stats.femaleTeachers.message}</p>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
+
   const renderTradesSection = () => {
-    const tradesData = selectedSchool?.trades || [];
+    const tradesData = selectedSchool?.trades || []
 
     const mappedTrades = tradesData.map((tradeItem) => ({
       id: tradeItem.id,
@@ -481,71 +419,63 @@ const CreateSurvey = () => {
       certificationCode: tradeItem.trade.certificationCode,
       totalStudents: tradeItem.totalNumberOfStudents,
       status: tradeItem.status,
-    }));
+    }))
 
     return (
       <div className="space-y-6">
         {mappedTrades.map((trade, tradeIndex) => (
-          <Card key={trade.id} className="p-4 space-y-4">
+          <Card key={trade.id} className="p-4 space-y-4 border-blue-200">
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold">{trade.name}</h3>
-              <span className="text-sm text-gray-500">
-                Code: {trade.certificationCode}
-              </span>
+              <h3 className="font-semibold text-blue-700">{trade.name}</h3>
+              <span className="text-sm text-blue-600">Code: {trade.certificationCode}</span>
             </div>
 
             {[3, 4, 5].map((level, levelIndex) => (
-              <div key={level} className="space-y-4 border-t pt-4">
-                <h4 className="font-medium">Level {level}</h4>
+              <div key={level} className="space-y-4 border-t border-blue-100 pt-4">
+                <h4 className="font-medium text-blue-600">Level {level}</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Classrooms</Label>
+                    <Label className="text-blue-700">Classrooms</Label>
                     <Input
                       type="number"
                       min="0"
-                      {...form.register(
-                        `school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`,
-                        {
-                          valueAsNumber: true,
-                          required: "Number of classrooms is required",
-                        }
-                      )}
+                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`, {
+                        valueAsNumber: true,
+                        required: "Number of classrooms is required",
+                      })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Male Students</Label>
+                    <Label className="text-blue-700">Male Students</Label>
                     <Input
                       type="number"
                       min="0"
-                      {...form.register(
-                        `school.trades.${tradeIndex}.levels.${levelIndex}.students.male`,
-                        {
-                          valueAsNumber: true,
-                          required: "Number of male students is required",
-                        }
-                      )}
+                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.students.male`, {
+                        valueAsNumber: true,
+                        required: "Number of male students is required",
+                      })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Female Students</Label>
+                    <Label className="text-blue-700">Female Students</Label>
                     <Input
                       type="number"
                       min="0"
-                      {...form.register(
-                        `school.trades.${tradeIndex}.levels.${levelIndex}.students.female`,
-                        {
-                          valueAsNumber: true,
-                          required: "Number of female students is required",
-                        }
-                      )}
+                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.students.female`, {
+                        valueAsNumber: true,
+                        required: "Number of female students is required",
+                      })}
                     />
                   </div>
                 </div>
               </div>
             ))}
 
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex justify-between text-sm text-gray-500">
+            <div className="mt-4 pt-4 border-t border-blue-100">
+              <div className="flex justify-between text-sm text-blue-600">
                 <span>Status: {trade.status}</span>
                 <span>Total Students: {trade.totalStudents}</span>
               </div>
@@ -554,28 +484,27 @@ const CreateSurvey = () => {
         ))}
 
         {mappedTrades.length === 0 && (
-          <div className="text-center p-8 text-gray-500">
+          <div className="text-center p-8 text-blue-500 bg-blue-50 rounded-lg border border-blue-200">
             Please select a school to view its trades
           </div>
         )}
       </div>
-    );
-  };
+    )
+  }
+
   const renderInfrastructureSection = () => {
-    const type = infrastructureTypes[currentInfraType];
-    const infraIndex = currentInfraType;
+    const type = infrastructureTypes[currentInfraType]
+    const infraIndex = currentInfraType
 
     return (
       <div className="space-y-6">
-        <Card className="p-4 space-y-4">
-          <h3 className="font-semibold capitalize">{type}</h3>
+        <Card className="p-4 space-y-4 border-blue-200">
+          <h3 className="font-semibold capitalize text-blue-700">{type}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Size (sq. m)</Label>
+              <Label className="text-blue-700">Size (sq. m)</Label>
               <RadioGroup
-                onValueChange={(value) =>
-                  form.setValue(`infrastructure.${infraIndex}.size`, value)
-                }
+                onValueChange={(value) => form.setValue(`infrastructure.${infraIndex}.size`, value)}
                 value={form.watch(`infrastructure.${infraIndex}.size`)}
               >
                 {[
@@ -591,15 +520,17 @@ const CreateSurvey = () => {
                   "600-more",
                 ].map((size) => (
                   <div key={size} className="flex items-center space-x-2">
-                    <RadioGroupItem value={size} id={`size-${size}`} />
-                    <Label htmlFor={`size-${size}`}>{size}</Label>
+                    <RadioGroupItem value={size} id={`size-${size}`} className="text-blue-600" />
+                    <Label htmlFor={`size-${size}`} className="text-blue-600">
+                      {size}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-              <Label>Construction Material</Label>
+              <Label className="text-blue-700">Construction Material</Label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   "Ruriba bricks",
@@ -614,33 +545,28 @@ const CreateSurvey = () => {
                   "Cement pavement",
                   "Wall paint",
                   "Steel trusses",
-                  "Wood trusses"
+                  "Wood trusses",
                 ].map((material) => (
                   <div key={material} className="flex items-center space-x-2">
                     <Checkbox
                       id={`material-${material}`}
-                      checked={form
-                        .watch(`infrastructure.${infraIndex}.materials`)
-                        ?.includes(material)}
+                      className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      checked={form.watch(`infrastructure.${infraIndex}.materials`)?.includes(material)}
                       onCheckedChange={(checked) => {
-                        const currentMaterials =
-                          form.watch(
-                            `infrastructure.${infraIndex}.materials`
-                          ) || [];
+                        const currentMaterials = form.watch(`infrastructure.${infraIndex}.materials`) || []
                         if (checked) {
-                          form.setValue(
-                            `infrastructure.${infraIndex}.materials`,
-                            [...currentMaterials, material]
-                          );
+                          form.setValue(`infrastructure.${infraIndex}.materials`, [...currentMaterials, material])
                         } else {
                           form.setValue(
                             `infrastructure.${infraIndex}.materials`,
-                            currentMaterials.filter((m) => m !== material)
-                          );
+                            currentMaterials.filter((m) => m !== material),
+                          )
                         }
                       }}
                     />
-                    <Label htmlFor={`material-${material}`}>{material}</Label>
+                    <Label htmlFor={`material-${material}`} className="text-blue-600">
+                      {material}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -649,26 +575,25 @@ const CreateSurvey = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Construction Year</Label>
+              <Label className="text-blue-700">Construction Year</Label>
               <Input
                 type="number"
-                {...form.register(
-                  `infrastructure.${infraIndex}.constructionYear` as const
-                )}
+                className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                {...form.register(`infrastructure.${infraIndex}.constructionYear` as const)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-blue-700">Status</Label>
               <RadioGroup
-                onValueChange={(value) =>
-                  form.setValue(`infrastructure.${infraIndex}.status`, value)
-                }
+                onValueChange={(value) => form.setValue(`infrastructure.${infraIndex}.status`, value)}
                 value={form.watch(`infrastructure.${infraIndex}.status`)}
               >
                 {["good", "moderate", "poor"].map((status) => (
                   <div key={status} className="flex items-center space-x-2">
-                    <RadioGroupItem value={status} id={`status-${status}`} />
-                    <Label htmlFor={`status-${status}`}>{status}</Label>
+                    <RadioGroupItem value={status} id={`status-${status}`} className="text-blue-600" />
+                    <Label htmlFor={`status-${status}`} className="text-blue-600">
+                      {status}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -677,12 +602,17 @@ const CreateSurvey = () => {
         </Card>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" variant="outline" onClick={prevInfraType}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevInfraType}
+            className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-400"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Previous
           </Button>
 
-          <Button type="button" onClick={nextInfraType}>
+          <Button type="button" onClick={nextInfraType} className="bg-blue-600 hover:bg-blue-700 text-white">
             {currentInfraType < infrastructureTypes.length - 1 ? (
               <>
                 Next
@@ -695,85 +625,87 @@ const CreateSurvey = () => {
         </div>
 
         <div className="mt-4">
-          <p className="text-sm text-gray-500">
-            Infrastructure {currentInfraType + 1} of{" "}
-            {infrastructureTypes.length}
+          <p className="text-sm text-blue-600">
+            Infrastructure {currentInfraType + 1} of {infrastructureTypes.length}
           </p>
-          <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+          <div className="w-full bg-blue-100 h-2 rounded-full mt-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{
-                width: `${
-                  ((currentInfraType + 1) / infrastructureTypes.length) * 100
-                }%`,
+                width: `${((currentInfraType + 1) / infrastructureTypes.length) * 100}%`,
               }}
             />
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderITSection = () => (
     <div className="space-y-6">
-      <Card className="p-4 space-y-4">
-        <h3 className="font-semibold">Computer Lab</h3>
+      <Card className="p-4 space-y-4 border-blue-200">
+        <h3 className="font-semibold text-blue-700">Computer Lab</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Total Computers</Label>
+            <Label className="text-blue-700">Total Computers</Label>
             <Input
               type="number"
+              className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
               {...form.register("it.computerLab.totalComputers")}
             />
           </div>
           <div className="space-y-2">
-            <Label>Working Computers</Label>
+            <Label className="text-blue-700">Working Computers</Label>
             <Input
               type="number"
+              className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
               {...form.register("it.computerLab.workingComputers")}
             />
           </div>
           {/* Not Working Computers */}
           <div className="space-y-2">
-            <Label>Not Working Computers</Label>
+            <Label className="text-blue-700">Not Working Computers</Label>
             <Input
               type="number"
+              className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
               {...form.register("it.computerLab.nonWorkingComputers")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Connected with LAN</Label>
+            <Label className="text-blue-700">Connected with LAN</Label>
             <RadioGroup
-              onValueChange={(value) =>
-                form.setValue("it.computerLab.hasLAN", value === "yes")
-              }
+              onValueChange={(value) => form.setValue("it.computerLab.hasLAN", value === "yes")}
               defaultValue={form.watch("it.computerLab.hasLAN") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-lan-yes" />
-                <Label htmlFor="has-lan-yes">Yes</Label>
-                <RadioGroupItem value="no" id="has-lan-no" />
-                <Label htmlFor="has-lan-no">No</Label>
+                <RadioGroupItem value="yes" id="has-lan-yes" className="text-blue-600" />
+                <Label htmlFor="has-lan-yes" className="text-blue-600">
+                  Yes
+                </Label>
+                <RadioGroupItem value="no" id="has-lan-no" className="text-blue-600" />
+                <Label htmlFor="has-lan-no" className="text-blue-600">
+                  No
+                </Label>
               </div>
             </RadioGroup>
           </div>
 
           <div className="space-y-2">
-            <Label>Do you have projectors?</Label>
+            <Label className="text-blue-700">Do you have projectors?</Label>
             <RadioGroup
-              onValueChange={(value) =>
-                form.setValue("it.computerLab.hasProjectors", value === "yes")
-              }
-              defaultValue={
-                form.watch("it.computerLab.hasProjectors") ? "yes" : "no"
-              }
+              onValueChange={(value) => form.setValue("it.computerLab.hasProjectors", value === "yes")}
+              defaultValue={form.watch("it.computerLab.hasProjectors") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-projectors-yes" />
-                <Label htmlFor="has-projectors-yes">Yes</Label>
-                <RadioGroupItem value="no" id="has-projectors-no" />
-                <Label htmlFor="has-projectors-no">No</Label>
+                <RadioGroupItem value="yes" id="has-projectors-yes" className="text-blue-600" />
+                <Label htmlFor="has-projectors-yes" className="text-blue-600">
+                  Yes
+                </Label>
+                <RadioGroupItem value="no" id="has-projectors-no" className="text-blue-600" />
+                <Label htmlFor="has-projectors-no" className="text-blue-600">
+                  No
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -783,25 +715,28 @@ const CreateSurvey = () => {
             <div className="grid grid-cols-2 gap-4">
               {/* Total Projectors */}
               <div className="space-y-2">
-                <Label>Total Projectors</Label>
+                <Label className="text-blue-700">Total Projectors</Label>
                 <Input
                   type="number"
+                  className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                   {...form.register("it.computerLab.totalProjectors")}
                 />
               </div>
               {/* Working Projectors */}
               <div className="space-y-2">
-                <Label>Working Projectors</Label>
+                <Label className="text-blue-700">Working Projectors</Label>
                 <Input
                   type="number"
+                  className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                   {...form.register("it.computerLab.workingProjectors")}
                 />
               </div>
               {/* Not Working Projectors */}
               <div className="space-y-2">
-                <Label>Not Working Projectors</Label>
+                <Label className="text-blue-700">Not Working Projectors</Label>
                 <Input
                   type="number"
+                  className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                   {...form.register("it.computerLab.nonWorkingProjectors")}
                 />
               </div>
@@ -810,22 +745,24 @@ const CreateSurvey = () => {
         </div>
       </Card>
 
-      <Card className="p-4 space-y-4">
-        <h3 className="font-semibold">Internet & Server</h3>
+      <Card className="p-4 space-y-4 border-blue-200">
+        <h3 className="font-semibold text-blue-700">Internet & Server</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Internet Available</Label>
+            <Label className="text-blue-700">Internet Available</Label>
             <RadioGroup
-              onValueChange={(value) =>
-                form.setValue("it.internet.exists", value === "yes")
-              }
+              onValueChange={(value) => form.setValue("it.internet.exists", value === "yes")}
               defaultValue={form.watch("it.internet.exists") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-internet-yes" />
-                <Label htmlFor="has-internet-yes">Yes</Label>
-                <RadioGroupItem value="no" id="has-internet-no" />
-                <Label htmlFor="has-internet-no">No</Label>
+                <RadioGroupItem value="yes" id="has-internet-yes" className="text-blue-600" />
+                <Label htmlFor="has-internet-yes" className="text-blue-600">
+                  Yes
+                </Label>
+                <RadioGroupItem value="no" id="has-internet-no" className="text-blue-600" />
+                <Label htmlFor="has-internet-no" className="text-blue-600">
+                  No
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -833,9 +770,9 @@ const CreateSurvey = () => {
           {/* Show Internet Type dropdown only if "Yes" is selected */}
           {form.watch("it.internet.exists") === true && (
             <div className="space-y-2">
-              <Label>Internet Type</Label>
+              <Label className="text-blue-700">Internet Type</Label>
               <select
-                className="w-full p-2 border rounded-md"
+                className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 {...form.register("it.internet.type")}
               >
                 <option value="4G">4G</option>
@@ -845,18 +782,20 @@ const CreateSurvey = () => {
           )}
 
           <div className="space-y-2">
-            <Label>Has Server</Label>
+            <Label className="text-blue-700">Has Server</Label>
             <RadioGroup
-              onValueChange={(value) =>
-                form.setValue("it.server.exists", value === "yes")
-              }
+              onValueChange={(value) => form.setValue("it.server.exists", value === "yes")}
               defaultValue={form.watch("it.server.exists") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-server-yes" />
-                <Label htmlFor="has-server-yes">Yes</Label>
-                <RadioGroupItem value="no" id="has-server-no" />
-                <Label htmlFor="has-server-no">No</Label>
+                <RadioGroupItem value="yes" id="has-server-yes" className="text-blue-600" />
+                <Label htmlFor="has-server-yes" className="text-blue-600">
+                  Yes
+                </Label>
+                <RadioGroupItem value="no" id="has-server-no" className="text-blue-600" />
+                <Label htmlFor="has-server-no" className="text-blue-600">
+                  No
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -864,74 +803,64 @@ const CreateSurvey = () => {
 
         {form.watch("it.server.exists") && (
           <div className="space-y-2">
-            <Label>Server Specifications</Label>
+            <Label className="text-blue-700">Server Specifications</Label>
             <textarea
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               {...form.register("it.server.specifications")}
             />
           </div>
         )}
       </Card>
-      <Card className="p-4 space-y-4">
-        <h3 className="font-semibold">Additional Information</h3>
+      <Card className="p-4 space-y-4 border-blue-200">
+        <h3 className="font-semibold text-blue-700">Additional Information</h3>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Energy Sources</Label>
+            <Label className="text-blue-700">Energy Sources</Label>
             <div className="grid grid-cols-3 gap-2">
               {["Solar", "Grid", "Renewable Energy"].map((source) => (
                 <div key={source} className="flex items-center space-x-2">
                   <Checkbox
                     id={`energy-${source}`}
+                    className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     onCheckedChange={(checked) => {
-                      const currentSources =
-                        form.getValues("it.energySources") || [];
+                      const currentSources = form.getValues("it.energySources") || []
                       if (checked) {
-                        form.setValue("it.energySources", [
-                          ...currentSources,
-                          source,
-                        ]);
+                        form.setValue("it.energySources", [...currentSources, source])
                       } else {
                         form.setValue(
                           "it.energySources",
-                          currentSources.filter((s) => s !== source)
-                        );
+                          currentSources.filter((s) => s !== source),
+                        )
                       }
                     }}
                   />
-                  <Label htmlFor={`energy-${source}`}>{source}</Label>
+                  <Label htmlFor={`energy-${source}`} className="text-blue-600">
+                    {source}
+                  </Label>
                 </div>
               ))}
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Equipment Status</Label>
+            <Label className="text-blue-700">Equipment Status</Label>
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="has-asset-register"
-                  onCheckedChange={(checked) =>
-                    form.setValue(
-                      "it.equipment.hasAssetRegister",
-                      checked as boolean
-                    )
-                  }
+                  className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  onCheckedChange={(checked) => form.setValue("it.equipment.hasAssetRegister", checked as boolean)}
                 />
-                <Label htmlFor="has-asset-register">Has Asset Register</Label>
+                <Label htmlFor="has-asset-register" className="text-blue-600">
+                  Has Asset Register
+                </Label>
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
-                <RadioGroup
-                  onValueChange={(value) =>
-                    form.setValue("it.equipment.status", value)
-                  }
-                >
+                <Label className="text-blue-700">Status</Label>
+                <RadioGroup onValueChange={(value) => form.setValue("it.equipment.status", value)}>
                   {["good", "moderate", "poor"].map((status) => (
                     <div key={status} className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value={status}
-                        id={`equipment-status-${status}`}
-                      />
-                      <Label htmlFor={`equipment-status-${status}`}>
+                      <RadioGroupItem value={status} id={`equipment-status-${status}`} className="text-blue-600" />
+                      <Label htmlFor={`equipment-status-${status}`} className="text-blue-600">
                         {status}
                       </Label>
                     </div>
@@ -943,77 +872,69 @@ const CreateSurvey = () => {
         </div>
       </Card>
     </div>
-  );
+  )
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">School Information</h2>
-            <p className="text-gray-500">
-              Select a school and verify its information
-            </p>
+            <h2 className="text-xl font-semibold text-blue-800">School Information</h2>
+            <p className="text-blue-600">Select a school and verify its information</p>
             {renderSchoolSection()}
           </div>
-        );
+        )
 
       case 2:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Trade Information</h2>
-            <p className="text-gray-500">
-              Enter information about school trades and students
-            </p>
+            <h2 className="text-xl font-semibold text-blue-800">Trade Information</h2>
+            <p className="text-blue-600">Enter information about school trades and students</p>
             {renderTradesSection()}
           </div>
-        );
+        )
       case 3:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Infrastructure</h2>
-            <p className="text-gray-500">
-              Enter details about school infrastructure
-            </p>
+            <h2 className="text-xl font-semibold text-blue-800">Infrastructure</h2>
+            <p className="text-blue-600">Enter details about school infrastructure</p>
             {renderInfrastructureSection()}
           </div>
-        );
+        )
       case 4:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">IT Infrastructure</h2>
-            <p className="text-gray-500">
-              Enter information about IT equipment and facilities
-            </p>
+            <h2 className="text-xl font-semibold text-blue-800">IT Infrastructure</h2>
+            <p className="text-blue-600">Enter information about IT equipment and facilities</p>
             {renderITSection()}
           </div>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-blue-50 p-6">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate("/dashboard")}
-          className="mb-6"
+          className="mb-6 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
 
-        <Card className="p-6">
+        <Card className="p-6 border-blue-200">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold">Create New Survey</h1>
-            <p className="text-gray-500">Step {currentStep} of 4</p>
+            <h1 className="text-2xl font-bold text-blue-800">Create New Survey</h1>
+            <p className="text-blue-600">Step {currentStep} of 4</p>
           </div>
 
-          <div className="w-full bg-gray-200 h-2 rounded-full mb-8">
+          <div className="w-full bg-blue-100 h-2 rounded-full mb-8">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
@@ -1029,18 +950,21 @@ const CreateSurvey = () => {
                     variant="outline"
                     onClick={prevStep}
                     disabled={currentStep === 1}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-400"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Previous
                   </Button>
 
                   {currentStep < 4 ? (
-                    <Button type="button" onClick={nextStep}>
+                    <Button type="button" onClick={nextStep} className="bg-blue-600 hover:bg-blue-700 text-white">
                       Next
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit">Submit Survey</Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Submit Survey
+                    </Button>
                   )}
                 </div>
               )}
@@ -1049,7 +973,8 @@ const CreateSurvey = () => {
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CreateSurvey;
+export default CreateSurvey
+
