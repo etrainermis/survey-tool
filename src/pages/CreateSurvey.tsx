@@ -221,9 +221,19 @@ const CreateSurvey = () => {
         description: "Your survey has been successfully submitted.",
       })
 
-      // Clear local storage and navigate
+      // Clear local storage
       localStorage.removeItem(`survey_draft_${user?.id}`)
-      navigate("/dashboard")
+
+      // Store the selected school ID in localStorage for the evaluation page
+      localStorage.setItem("currentEvaluationSchool", selectedSchool.id)
+
+      // Navigate to evaluation page instead of dashboard
+      navigate("/evaluation", {
+        state: {
+          schoolId: selectedSchool.id,
+          schoolName: selectedSchool.name,
+        },
+      })
     } catch (error) {
       console.log(error)
 
