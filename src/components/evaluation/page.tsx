@@ -16,10 +16,12 @@ import { AuthApi } from "@/lib/config/axios.config"
 import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
 import { toast } from "sonner"
 import { escape } from "querystring"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Home() {
   const [schoolType, setSchoolType] = useState<"day" | "boarding" | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     strategicPlanning: {},
     operationalManagement: {},
@@ -154,8 +156,21 @@ export default function Home() {
     }
   }
 
-  const handleSubmit = () => {    
+  const handleSubmit = async () => {    
     // Here you would typically send the data to a server
+    const surveyPayload = {
+      schoolId: localStorage.getItem("currentEvaluationSchool"),
+      generalInformation: JSON.stringify(formData),
+    }
+
+    // Submit to API
+    const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`, surveyPayload)
+
+    // Handle successful submission
+    toast({
+      title: "Survey Submitted",
+      description: "Your survey has been successfully submitted.",
+    })
     alert(`Evaluation submitted successfully! Total marks: ${totalMarks.toFixed(2)} out of 100`)
     // Reset form or redirect as needed
   }
