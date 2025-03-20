@@ -12,6 +12,10 @@ import StakeholdersEngagement from "./stakeholders-engagement"
 import ContinuousImprovement from "./continuous-improvement"
 import Infrastructure from "./infrastructure"
 import SummaryPreview from "./summary-preview"
+import { AuthApi } from "@/lib/config/axios.config"
+import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
+import { toast } from "sonner"
+import { escape } from "querystring"
 
 export default function Home() {
   const [schoolType, setSchoolType] = useState<"day" | "boarding" | null>(null)
@@ -59,13 +63,20 @@ export default function Home() {
     { id: "summary", title: "Summary and Preview" },
   ]
 
-  const updateFormData = (section, data) => {
+  const updateFormData = async ( type,section, data) => {
     setFormData((prev) => ({
       ...prev,
       [section]: data,
     }))
+  //  await saveSectionData(data, type);
   }
-
+  const saveSectionData = async (data, type)=>{
+    try{
+   const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${type}`, data)
+    }catch(error){
+      console.log(error);
+    }
+  }
   const updateSectionMarks = (section, marks) => {
     setSectionMarks((prev) => {
       // Only update if the value has changed
@@ -143,7 +154,7 @@ export default function Home() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = () => {    
     // Here you would typically send the data to a server
     alert(`Evaluation submitted successfully! Total marks: ${totalMarks.toFixed(2)} out of 100`)
     // Reset form or redirect as needed
@@ -157,7 +168,7 @@ export default function Home() {
         return (
           <StrategicPlanning
             formData={formData.strategicPlanning}
-            updateFormData={(data) => updateFormData("strategicPlanning", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.STRATEGIC_PLANNING, "strategicPlanning", data)}
             updateSectionMarks={(marks) => updateSectionMarks("strategicPlanning", marks)}
           />
         )
@@ -165,7 +176,7 @@ export default function Home() {
         return (
           <OperationalManagement
             formData={formData.operationalManagement}
-            updateFormData={(data) => updateFormData("operationalManagement", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.OPERATIONAL_MANAGEMENT, "operationalManagement", data)}
             updateSectionMarks={(marks) => updateSectionMarks("operationalManagement", marks)}
             schoolType={schoolType}
           />
@@ -174,7 +185,7 @@ export default function Home() {
         return (
           <TeachingLearning
             formData={formData.teachingLearning}
-            updateFormData={(data) => updateFormData("teachingLearning", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.LEARNING_AND_TEACHING,"teachingLearning", data)}
             updateSectionMarks={(marks) => updateSectionMarks("teachingLearning", marks)}
           />
         )
@@ -182,7 +193,7 @@ export default function Home() {
         return (
           <StakeholdersEngagement
             formData={formData.stakeholdersEngagement}
-            updateFormData={(data) => updateFormData("stakeholdersEngagement", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.STAKEHOLDERS_ENGAGEMENT, "stakeholdersEngagement",data)}
             updateSectionMarks={(marks) => updateSectionMarks("stakeholdersEngagement", marks)}
           />
         )
@@ -190,7 +201,7 @@ export default function Home() {
         return (
           <ContinuousImprovement
             formData={formData.continuousImprovement}
-            updateFormData={(data) => updateFormData("continuousImprovement", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.CONTINOUS_IMPROVEMENT, "continuousImprovement", data)}
             updateSectionMarks={(marks) => updateSectionMarks("continuousImprovement", marks)}
           />
         )
@@ -198,7 +209,7 @@ export default function Home() {
         return (
           <Infrastructure
             formData={formData.infrastructure}
-            updateFormData={(data) => updateFormData("infrastructure", data)}
+            updateFormData={(data) => updateFormData(ESchoolSurveyDataType.INFRASTRUCTURE, "infrastructure", data)}
             updateSectionMarks={(marks) => updateSectionMarks("infrastructure", marks)}
             schoolType={schoolType}
           />

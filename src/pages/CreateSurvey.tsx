@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import useAuth from "@/hooks/useAuth"
 import { useAllSchools } from "@/hooks/useSchools"
 import { AuthApi } from "@/lib/config/axios.config"
+import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
 
 interface CreateSurveyProps {
   authState: AuthState
@@ -209,11 +210,11 @@ const CreateSurvey = () => {
       }
       const surveyPayload = {
         schoolId: selectedSchool.id,
-        schoolSurveyData: JSON.stringify(data),
+        generalInformation: JSON.stringify(data),
       }
 
       // Submit to API
-      const response = await AuthApi.post("/school-survey/add", surveyPayload)
+      const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`, surveyPayload)
 
       // Handle successful submission
       toast({

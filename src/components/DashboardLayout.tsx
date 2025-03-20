@@ -22,11 +22,12 @@ const DashboardLayout = () => {
     if (surveys) {
       console.log(surveys)
       const processed = surveys.map((survey: any) => {
-        const data = JSON.parse(survey.schoolSurveyData)
+        const data = JSON.parse(survey.generalInformation)
         return {
           ...survey,
           processedData: data,
-          isComplete: data.school && data.school.districtId && data.school.id && data.school.name,
+          //TODO : uncomment
+          // isComplete: data.school && data.school.districtId && data.school.id && data.school.name,
         }
       })
       setFilteredSurveys(processed.filter((survey: any) => survey.isComplete))

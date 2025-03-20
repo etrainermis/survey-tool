@@ -1,0 +1,225 @@
+{
+  "school": {
+    "id": "1",
+    "name": "IPRC Kigali",
+    "status": "active",
+    "category": "public",
+    "location": {
+      "province": "Kigali City",
+      "district": "Nyarugenge",
+      "sector": "Nyarugenge",
+      "cell": "Nyarugenge",
+      "village": "Nyarugenge"
+    },
+    "stats": {
+      "trades": 5,
+      "students": 1200,
+      "teachers": 80
+    },
+    "contact": {
+      "phone": "+250789123456",
+      "email": "info@iprckigali.rw",
+      "headteacher": "Dr. John Doe"
+    },
+    "trades": [
+      {
+        "id": "t1",
+        "name": "Information Technology",
+        "levels": [
+          {
+            "level": 3,
+            "classrooms": 4,
+            "students": {
+              "male": 60,
+              "female": 40
+            }
+          },
+          {
+            "level": 4,
+            "classrooms": 3,
+            "students": {
+              "male": 45,
+              "female": 35
+            }
+          },
+          {
+            "level": 5,
+            "classrooms": 2,
+            "students": {
+              "male": 30,
+              "female": 25
+            }
+          }
+        ]
+      },
+      {
+        "id": "t2",
+        "name": "Civil Engineering",
+        "levels": [
+          {
+            "level": 3,
+            "classrooms": 3,
+            "students": {
+              "male": 50,
+              "female": 30
+            }
+          },
+          {
+            "level": 4,
+            "classrooms": 2,
+            "students": {
+              "male": 40,
+              "female": 20
+            }
+          },
+          {
+            "level": 5,
+            "classrooms": 2,
+            "students": {
+              "male": 35,
+              "female": 15
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "infrastructure": [
+    {
+      "type": "administration block",
+      "size": "1-20",
+      "capacity": "",
+      "constructionYear": "2001",
+      "materials": [
+        "ruriba"
+      ],
+      "status": "good"
+    },
+    {
+      "type": "classroom block",
+      "size": "50-100",
+      "capacity": "",
+      "materials": [
+        "ruriba",
+        "block cement"
+      ],
+      "status": ""
+    },
+    {
+      "type": "computer lab",
+      "size": "250-300",
+      "capacity": "",
+      "constructionYear": "2006",
+      "materials": [
+        "block cement",
+        "rukarakara"
+      ],
+      "status": "good"
+    },
+    {
+      "type": "library",
+      "size": "20-50",
+      "capacity": "",
+      "constructionYear": "2006",
+      "materials": [
+        "ruriba"
+      ],
+      "status": "good"
+    },
+    {
+      "type": "kitchen",
+      "size": "300-400",
+      "capacity": "",
+      "constructionYear": "2006",
+      "materials": [
+        "rukarakara"
+      ],
+      "status": "good"
+    },
+    {
+      "type": "refectory",
+      "size": "200-250",
+      "capacity": "",
+      "constructionYear": "2006",
+      "materials": [
+        "amabati",
+        "amakara",
+        "rukarakara"
+      ],
+      "status": "poor"
+    },
+    {
+      "type": "smart classroom",
+      "size": "20-50",
+      "capacity": "",
+      "constructionYear": "2003",
+      "materials": [
+        "ruriba",
+        "block cement"
+      ],
+      "status": "moderate"
+    },
+    {
+      "type": "dormitories",
+      "size": "1-20",
+      "capacity": "",
+      "constructionYear": "2008",
+      "materials": [
+        "amabati",
+        "amakara"
+      ],
+      "status": "moderate"
+    },
+    {
+      "type": "washrooms",
+      "size": "1-20",
+      "capacity": "",
+      "constructionYear": "2007",
+      "materials": [
+        "pavement",
+        "cement",
+        "amategura"
+      ],
+      "status": "poor"
+    },
+    {
+      "type": "playgrounds",
+      "size": "20-50",
+      "capacity": "",
+      "constructionYear": "2007",
+      "materials": [
+        "ruriba",
+        "amatafari ahiye"
+      ],
+      "status": "moderate"
+    },
+    {
+      "type": "school garden",
+      "size": "50-100",
+      "capacity": "",
+      "constructionYear": "2007",
+      "materials": [
+        "cement"
+      ],
+      "status": "poor"
+    }
+  ],
+  "it": {
+    "computerLab": {
+      "totalComputers": "1",
+      "workingComputers": "0",
+      "hasLAN": true,
+      "hasProjectors": true
+    },
+    "energySources": [
+      "Grid"
+    ],
+    "equipment": {
+      "hasAssetRegister": true,
+      "status": "poor"
+    }
+  },
+  "status": "completed",
+  "createdBy": "1",
+  "createdAt": "2025-02-09T11:01:20.278Z"
+}
