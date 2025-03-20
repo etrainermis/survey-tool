@@ -80,6 +80,8 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
     strength: "",
     weakness: "",
     improvement: "",
+    totalMarks : 0,
+    weight : 20,
     ...formData,
   })
 

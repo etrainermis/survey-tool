@@ -219,6 +219,9 @@ export default function OperationalManagement({
     strength: "",
     weakness: "",
     improvement: "",
+
+    totalMarks : 0,
+    weight : 30,
     ...formData,
   })
 

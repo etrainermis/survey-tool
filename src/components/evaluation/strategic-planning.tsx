@@ -52,6 +52,10 @@ export default function StrategicPlanning({ formData, updateFormData, updateSect
     strength: "",
     weakness: "",
     improvement: "",
+
+    //section marks
+    totalMarks : 0,
+    weight : 10,
     ...formData,
   })
 

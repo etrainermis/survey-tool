@@ -69,6 +69,8 @@ export default function StakeholdersEngagement({
     strength: "",
     weakness: "",
     improvement: "",
+    totalMarks : 0,
+    weight : 10,
     ...formData,
   })
 

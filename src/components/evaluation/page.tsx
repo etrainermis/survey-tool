@@ -74,7 +74,7 @@ export default function Home() {
   }
   const saveSectionData = async (data, type)=>{
     try{
-   const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${type}`, data)
+   const response = await AuthApi.post(`/school-survey/add`, data)
     }catch(error){
       console.log(error);
     }
@@ -160,18 +160,22 @@ export default function Home() {
     // Here you would typically send the data to a server
     const surveyPayload = {
       schoolId: localStorage.getItem("currentEvaluationSchool"),
-      generalInformation: JSON.stringify(formData),
+      strategicPlanning : JSON.stringify(formData.strategicPlanning),
+      operationalManagement: JSON.stringify(formData.operationalManagement),
+      teachingAndLearning : JSON.stringify(formData.teachingLearning),
+      continuousImprovement : JSON.stringify(formData.continuousImprovement),
+      infrastructureAndEnvironment : JSON.stringify(formData.infrastructure),
+      stakeholdersEngagement : JSON.stringify(formData.stakeholdersEngagement)
     }
 
     // Submit to API
-    const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`, surveyPayload)
+    const response = await AuthApi.post(`/school-survey/add`, surveyPayload)
 
     // Handle successful submission
     toast({
-      title: "Survey Submitted",
+      title: `Evaluation submitted successfully! Total marks: ${totalMarks.toFixed(2)} out of 100`,
       description: "Your survey has been successfully submitted.",
     })
-    alert(`Evaluation submitted successfully! Total marks: ${totalMarks.toFixed(2)} out of 100`)
     // Reset form or redirect as needed
   }
 
