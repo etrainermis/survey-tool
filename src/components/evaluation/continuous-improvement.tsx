@@ -59,6 +59,9 @@ export default function ContinuousImprovement({
     strength: "",
     weakness: "",
     improvement: "",
+
+    totalMarks : 0,
+    weight : 10,
     ...formData,
   })
 

@@ -182,6 +182,9 @@ export default function Infrastructure({
     strength: "",
     weakness: "",
     improvement: "",
+
+    totalMarks : 0,
+    weight : 20,
     ...formData,
   })
 
