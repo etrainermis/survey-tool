@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EvaluationItemWithWeights from "./evaluation-item";
 import { EvaluationType } from "./common/evaluation-item-type";
+import { EvaluationItemWeights } from "./common/evaluation-item-weights";
 
 interface StrategicPlanningProps {
   formData: any;
@@ -33,7 +34,7 @@ interface LocalData {
   businessPlan: EvaluationField;
   tenderCommittee: EvaluationField;
 
-  // strategicPlan: EvaluationField;
+  strategicPlan: EvaluationField;
   overview: {
     strength: string;
     weakness: string;
@@ -60,27 +61,33 @@ export default function StrategicPlanning({
   updateSectionMarks,
 }: StrategicPlanningProps) {
   const [localData, setLocalData] = useState<LocalData>({
+    strategicPlan: {
+      availability: EvaluationItemWeights.AVAILABILITY,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      observation: "",
+      label: "Approved Strategic plan (Signed by the right authority)",
+    },
     schoolVision: {
-      availability: -1,
-      quality: 0,
+      availability: EvaluationItemWeights.NOT_APPLICABLE,
+      quality: EvaluationItemWeights.QUALITY,
       observation: "",
       label: "School Vision",
     },
     schoolMission: {
-      availability: -1,
-      quality: 0,
+      availability: EvaluationItemWeights.NOT_APPLICABLE,
+      quality: EvaluationItemWeights.QUALITY,
       observation: "",
       label: "School mission",
     },
     organizationalStructure: {
-      availability: -1,
-      quality: 0,
+      availability: EvaluationItemWeights.NOT_APPLICABLE,
+      quality: EvaluationItemWeights.QUALITY,
       observation: "",
       label: "Organizational structure",
     },
     operationalBudget: {
-      availability: -1,
-      quality: 0,
+      availability: EvaluationItemWeights.NOT_APPLICABLE,
+      quality: EvaluationItemWeights.QUALITY,
       observation: "",
       label: "Operational budget",
     },
@@ -177,7 +184,8 @@ export default function StrategicPlanning({
     updateFormData(localData);
   }, [localData, updateFormData, updateSectionMarks]);
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
+
     setLocalData((prev) => {
       if (prev[field] !== value) {
         return { ...prev, [field]: value };
@@ -185,7 +193,19 @@ export default function StrategicPlanning({
       return prev;
     });
   };
-
+  useEffect(() => {
+    Object.entries(localData)
+                  .filter(
+                    ([_, value]) =>
+                      typeof value === "object" &&
+                      value !== null &&
+                      "label" in value
+                  )
+                  .slice(0, 4)
+                  .map(([key, value]) => (
+                    console.log(value )  
+                  ))
+  }, []);
   return (
     <div className="space-y-6">
       <Tabs defaultValue="strategic" className="w-full">
@@ -222,10 +242,16 @@ export default function StrategicPlanning({
                       onQualityChange={(value) =>
                         handleChange(`${key}Quality`, value)
                       }
+                      isAvailabilityNA={
+                        value.availability ==
+                        EvaluationItemWeights.NOT_APPLICABLE
+                      }
+                      isQualityNA={
+                        value.quality == EvaluationItemWeights.NOT_APPLICABLE
+                      }
                       marksAllocated={2}
                       qualityWeight="60%"
                       availabilityWeight="40%"
-                      isQualityNA={true}
                       observation={localData[`${key}Observation`]}
                       onObservationChange={(value) =>
                         handleChange(`${key}Observation`, value)
@@ -244,29 +270,43 @@ export default function StrategicPlanning({
                 1.2 Annual budget and Procurement plan (4 marks)
               </h3>
               <div className="space-y-4">
-              {Object.entries(localData).filter(([_, value]) => typeof value === "object" && value !== null && "label" in value).slice(4, 8).map(([key, value]) => (
-                  <EvaluationItemWithWeights
-                    key={key} // Ensure each element has a unique key
-                    id={key}
-                    label={value.label}
-                    availabilityValue={localData[`${key}Availability`]}
-                    qualityValue={localData[`${key}Quality`]}
-                    onAvailabilityChange={(value) =>
-                      handleChange(`${key}Availability`, value)
-                    }
-                    onQualityChange={(value) =>
-                      handleChange(`${key}Quality`, value)
-                    }
-                    marksAllocated={2}
-                    qualityWeight="60%"
-                    availabilityWeight="40%"
-                    isQualityNA={true}
-                    observation={localData[`${key}Observation`]}
-                    onObservationChange={(value) =>
-                      handleChange(`${key}Observation`, value)
-                    }
-                  />
-                ))}
+                {Object.entries(localData)
+                  .filter(
+                    ([_, value]) =>
+                      typeof value === "object" &&
+                      value !== null &&
+                      "label" in value
+                  )
+                  .slice(4, 8)
+                  .map(([key, value]) => (
+                    <EvaluationItemWithWeights
+                      key={key} // Ensure each element has a unique key
+                      id={key}
+                      label={value.label}
+                      availabilityValue={localData[`${key}Availability`]}
+                      qualityValue={localData[`${key}Quality`]}
+                      onAvailabilityChange={(value) =>
+                        handleChange(`${key}Availability`, value)
+                      }
+                      onQualityChange={(value) =>
+                        handleChange(`${key}Quality`, value)
+                      }
+                      marksAllocated={2}
+                      qualityWeight="60%"
+                      isAvailabilityNA={
+                        value.availability !=
+                        EvaluationItemWeights.NOT_APPLICABLE
+                      }
+                      isQualityNA={
+                        value.quality != EvaluationItemWeights.NOT_APPLICABLE
+                      }
+                      availabilityWeight="40%"
+                      observation={localData[`${key}Observation`]}
+                      onObservationChange={(value) =>
+                        handleChange(`${key}Observation`, value)
+                      }
+                    />
+                  ))}
               </div>
             </CardContent>
           </Card>

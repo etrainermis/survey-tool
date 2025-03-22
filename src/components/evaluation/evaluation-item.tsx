@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ESelectedRadioEvaluationOption } from "./common/eselected-radio-evaluation-option"
 import { EvaluationItemWeights } from "./common/evaluation-item-weights"
+import { useEffect } from "react"
 
 interface EvaluationItemWithWeightsProps {
     id: string
@@ -33,8 +34,8 @@ interface EvaluationItemWithWeightsProps {
     marksAllocated,
     qualityWeight,
     availabilityWeight,
-    isAvailabilityNA = false,
-    isQualityNA = false,
+    isAvailabilityNA ,
+    isQualityNA,
     observation = "",
     onObservationChange = () => {},
   }: EvaluationItemWithWeightsProps) {
@@ -53,15 +54,19 @@ interface EvaluationItemWithWeightsProps {
       // Calculate partial marks based on availability (40%) and quality (60%)
       let marks = 0
       if (availabilityValue === ESelectedRadioEvaluationOption.YES) {
-        marks += marksAllocated 
+        marks += marksAllocated * EvaluationItemWeights.AVAILABILITY
       }
       if (qualityValue === ESelectedRadioEvaluationOption.NO) {
-        marks += marksAllocated 
+        marks += marksAllocated * EvaluationItemWeights.QUALITY 
       }
   
       return marks
     }
-  
+    // useEffect(()=>{
+    //   console.log(isAvailabilityNA);
+    //   console.log(isQualityNA);
+      
+    // })
     return (
       <div className="grid grid-cols-1 gap-2 p-2 rounded-md hover:bg-blue-50">
         <div className="grid grid-cols-[2fr,1fr,1fr,0.5fr,0.5fr,1fr] gap-4 items-start">
@@ -82,13 +87,13 @@ interface EvaluationItemWithWeightsProps {
                 className="flex justify-center space-x-4"
               >
                 <div className="flex items-center space-x-1">
-                  <RadioGroupItem value="yes" id={`${id}-availability-yes`} />
+                  <RadioGroupItem value={ESelectedRadioEvaluationOption.YES} id={`${id}-availability-yes`} />
                   <Label htmlFor={`${id}-availability-yes`} className="text-sm">
                     Yes
                   </Label>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <RadioGroupItem value="no" id={`${id}-availability-no`} />
+                  <RadioGroupItem value={ESelectedRadioEvaluationOption.NO} id={`${id}-availability-no`} />
                   <Label htmlFor={`${id}-availability-no`} className="text-sm">
                     No
                   </Label>
