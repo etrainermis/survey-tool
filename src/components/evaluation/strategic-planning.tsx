@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EvaluationItemWithWeights from "./evaluation-item";
 import { EvaluationType } from "./common/evaluation-item-type";
 import { EvaluationItemWeights } from "./common/evaluation-item-weights";
+import useAuth from "@/hooks/useAuth";
 
 interface StrategicPlanningProps {
   formData: any;
@@ -20,6 +21,7 @@ interface EvaluationField {
   quality: number;
   observation: string;
   label: string;
+  marksAllocated: number;
 }
 
 interface LocalData {
@@ -49,10 +51,11 @@ interface LocalData {
 }
 
 const defaultEvaluation: EvaluationField = {
-  availability: 0,
-  quality: 0,
+  availability: EvaluationItemWeights.NOT_SELECTED,
+  quality: EvaluationItemWeights.NOT_SELECTED,
   observation: "",
   label: "",
+  marksAllocated: 1,
 };
 
 export default function StrategicPlanning({
@@ -60,67 +63,112 @@ export default function StrategicPlanning({
   updateFormData,
   updateSectionMarks,
 }: StrategicPlanningProps) {
-  const [localData, setLocalData] = useState<LocalData>({
-    strategicPlan: {
-      availability: EvaluationItemWeights.AVAILABILITY,
-      quality: EvaluationItemWeights.NOT_APPLICABLE,
-      observation: "",
-      label: "Approved Strategic plan (Signed by the right authority)",
-    },
-    schoolVision: {
-      availability: EvaluationItemWeights.NOT_APPLICABLE,
-      quality: EvaluationItemWeights.QUALITY,
-      observation: "",
-      label: "School Vision",
-    },
-    schoolMission: {
-      availability: EvaluationItemWeights.NOT_APPLICABLE,
-      quality: EvaluationItemWeights.QUALITY,
-      observation: "",
-      label: "School mission",
-    },
-    organizationalStructure: {
-      availability: EvaluationItemWeights.NOT_APPLICABLE,
-      quality: EvaluationItemWeights.QUALITY,
-      observation: "",
-      label: "Organizational structure",
-    },
-    operationalBudget: {
-      availability: EvaluationItemWeights.NOT_APPLICABLE,
-      quality: EvaluationItemWeights.QUALITY,
-      observation: "",
-      label: "Operational budget",
-    },
-    annualBudgetPlan: {
-      ...defaultEvaluation,
-      label: "Approved annual budget and plan",
-    },
-    procurementPlan: {
-      ...defaultEvaluation,
-      label: "Approved procurement plan",
-    },
-    businessPlan: {
-      ...defaultEvaluation,
-      label: "Business Plan for production unit",
-    },
-    tenderCommittee: {
-      ...defaultEvaluation,
-      label:
-        "Tender and receiving committee appointed (Valid appointment letter)",
-    },
-    overview: {
-      strength: "",
-      weakness: "",
-      improvement: "",
-    },
-    sectionMarks: {
-      totalMarks: 0,
-      weight: 10,
-    },
-    // ...formData, // merge in any additional formData if needed
-  });
+  const getInitialData = (): LocalData => {
+    const storedData = localStorage.getItem("survey_data");
+    return storedData ? JSON.parse(storedData).strategicPlan : {
+      strategicPlan: {
+        availability: EvaluationItemWeights.NOT_SELECTED,
+        quality: EvaluationItemWeights.NOT_APPLICABLE,
+        observation: "",
+        label: "Approved Strategic plan (Signed by the right authority)",
+        marksAllocated: 2,
+      },
+      schoolVision: {
+        availability: EvaluationItemWeights.NOT_APPLICABLE,
+        quality: EvaluationItemWeights.NOT_SELECTED,
+        observation: "",
+        label: "School Vision",
+        marksAllocated: 1,
+      },
+      schoolMission: {
+        availability: EvaluationItemWeights.NOT_APPLICABLE,
+        quality: EvaluationItemWeights.NOT_SELECTED,
+        observation: "",
+        label: "School mission",
+        marksAllocated: 1,
+      },
+      organizationalStructure: {
+        availability: EvaluationItemWeights.NOT_APPLICABLE,
+        quality: EvaluationItemWeights.NOT_SELECTED,
+        observation: "",
+        label: "Organizational structure",
+        marksAllocated: 1,
+      },
+      operationalBudget: {
+        availability: EvaluationItemWeights.NOT_APPLICABLE,
+        quality: EvaluationItemWeights.NOT_SELECTED,
+        observation: "",
+        label: "Operational budget",
+        marksAllocated: 1,
+      },
+      annualBudgetPlan: {
+        ...defaultEvaluation,
+        label: "Approved annual budget and plan",
+      },
+      procurementPlan: {
+        ...defaultEvaluation,
+        label: "Approved procurement plan",
+      },
+      businessPlan: {
+        ...defaultEvaluation,
+        label: "Business Plan for production unit",
+      },
+      tenderCommittee: {
+        ...defaultEvaluation,
+        label: "Tender and receiving committee appointed (Valid appointment letter)",
+      },
+      overview: {
+        strength: "",
+        weakness: "",
+        improvement: "",
+      },
+      sectionMarks: {
+        totalMarks: 0,
+        weight: 10,
+      },
+    };
+  };
+  
+  // Initialize state with data from localStorage (if available)
+  const [localData, setLocalData] = useState<LocalData>(getInitialData());
+  
+  // Update local storage whenever localData changes
+  // useEffect(() => {
+  //   localStorage.setItem("localData", JSON.stringify(localData));
+  // }, [localData]);
+  
   const initialRender = useRef(true);
   const prevMarks = useRef(0);
+  const {user} = useAuth();
+  const calculateTotalMarks = (data: LocalData): number => {
+    let totalMarks = 0;
+  
+    Object.keys(data).forEach((key) => {
+      const item = data[key as keyof LocalData];
+  
+      if (typeof item === "object" && "marksAllocated" in item) {
+        if (item.quality !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.quality ?? 0; // Ensure undefined doesn't cause issues
+        } 
+        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) { 
+          totalMarks += item.availability ?? 0; // Correctly add availability when applicable
+        }
+      }
+    });
+  
+    return totalMarks;
+  };
+  
+  
+  // Update localData with calculated totalMarks
+  // setLocalData((prevData) => ({
+  //   ...prevData,
+  //   sectionMarks: {
+  //     ...prevData.sectionMarks,
+  //     totalMarks: calculateTotalMarks(prevData),
+  //   },
+  // }));
+  
 
   const calculateMarks = () => {
     let total = 0;
@@ -183,9 +231,16 @@ export default function StrategicPlanning({
 
     updateFormData(localData);
   }, [localData, updateFormData, updateSectionMarks]);
+  useEffect(()=>{
+    console.log(user?.id);
+    
+    const localData = localStorage.getItem(`survey_draft`);
+    // const parsedData: LocalData | null = localData ? JSON.parse(localData) as LocalData : null;
+    console.log(JSON.parse(localData));
+    // setLocalData(parsedData);
+  },[])
 
   const handleChange = (field: string, value: any) => {
-
     setLocalData((prev) => {
       if (prev[field] !== value) {
         return { ...prev, [field]: value };
@@ -193,19 +248,51 @@ export default function StrategicPlanning({
       return prev;
     });
   };
-  useEffect(() => {
-    Object.entries(localData)
-                  .filter(
-                    ([_, value]) =>
-                      typeof value === "object" &&
-                      value !== null &&
-                      "label" in value
-                  )
-                  .slice(0, 4)
-                  .map(([key, value]) => (
-                    console.log(value )  
-                  ))
-  }, []);
+  const handleAvailabilityChange = (baseId: keyof LocalData, availabilityValue: any) => {
+    setLocalData((prevData) => {
+      console.log("Before update:", baseId, prevData[baseId]?.availability, availabilityValue);
+  
+      const updatedData = {
+        ...prevData,
+        [baseId]: {
+          ...prevData[baseId],
+          availability: availabilityValue,
+        },
+      };
+  
+      console.log("After update:", baseId, updatedData[baseId]?.availability, availabilityValue);
+      return updatedData;
+    });
+  };
+  const handleObservationChange = (baseId: keyof LocalData, observationValue: string) => {
+    setLocalData((prevData) => {  
+      const updatedData = {
+        ...prevData,
+        [baseId]: {
+          ...prevData[baseId],
+          observation: observationValue,
+        },
+      };
+      return updatedData;
+    });
+  };
+  const handleQualityChange = (baseId: keyof LocalData, qualityValue: any) => {
+    setLocalData((prevData) => {
+      console.log("Before update:", baseId, prevData[baseId]?.quality, qualityValue);
+  
+      const updatedData = {
+        ...prevData,
+        [baseId]: {
+          ...prevData[baseId],
+          quality: qualityValue,
+        },
+      };
+  
+      console.log("After update:", baseId, updatedData[baseId]?.quality, qualityValue);
+      return updatedData;
+    });
+  };
+  
   return (
     <div className="space-y-6">
       <Tabs defaultValue="strategic" className="w-full">
@@ -228,20 +315,16 @@ export default function StrategicPlanning({
                       value !== null &&
                       "label" in value
                   )
-                  .slice(0, 4)
+                  .slice(0, 5)
                   .map(([key, value]) => (
                     <EvaluationItemWithWeights
                       key={key} // Ensure each element has a unique key
                       id={key}
                       label={value.label}
-                      availabilityValue={localData[`${key}Availability`]}
-                      qualityValue={localData[`${key}Quality`]}
-                      onAvailabilityChange={(value) =>
-                        handleChange(`${key}Availability`, value)
-                      }
-                      onQualityChange={(value) =>
-                        handleChange(`${key}Quality`, value)
-                      }
+                      availabilityValue={value.availability}
+                      qualityValue={value.quality}
+                      onAvailabilityChange={handleAvailabilityChange}
+                      onQualityChange={handleQualityChange}
                       isAvailabilityNA={
                         value.availability ==
                         EvaluationItemWeights.NOT_APPLICABLE
@@ -249,12 +332,12 @@ export default function StrategicPlanning({
                       isQualityNA={
                         value.quality == EvaluationItemWeights.NOT_APPLICABLE
                       }
-                      marksAllocated={2}
+                      marksAllocated={value.marksAllocated}
                       qualityWeight="60%"
                       availabilityWeight="40%"
-                      observation={localData[`${key}Observation`]}
+                      observation={value.observation}
                       onObservationChange={(value) =>
-                        handleChange(`${key}Observation`, value)
+                        handleObservationChange(key, value)
                       }
                     />
                   ))}
@@ -277,33 +360,29 @@ export default function StrategicPlanning({
                       value !== null &&
                       "label" in value
                   )
-                  .slice(4, 8)
+                  .slice(5, 9)
                   .map(([key, value]) => (
                     <EvaluationItemWithWeights
                       key={key} // Ensure each element has a unique key
                       id={key}
                       label={value.label}
-                      availabilityValue={localData[`${key}Availability`]}
-                      qualityValue={localData[`${key}Quality`]}
-                      onAvailabilityChange={(value) =>
-                        handleChange(`${key}Availability`, value)
-                      }
-                      onQualityChange={(value) =>
-                        handleChange(`${key}Quality`, value)
-                      }
-                      marksAllocated={2}
+                      availabilityValue={value.availability}
+                      qualityValue={value.quality}
+                      onAvailabilityChange={handleAvailabilityChange}
+                      onQualityChange={handleQualityChange}
+                      marksAllocated={value.marksAllocated}
                       qualityWeight="60%"
                       isAvailabilityNA={
-                        value.availability !=
+                        value.availability ==
                         EvaluationItemWeights.NOT_APPLICABLE
                       }
                       isQualityNA={
-                        value.quality != EvaluationItemWeights.NOT_APPLICABLE
+                        value.quality == EvaluationItemWeights.NOT_APPLICABLE
                       }
                       availabilityWeight="40%"
-                      observation={localData[`${key}Observation`]}
+                      observation={value.observation}
                       onObservationChange={(value) =>
-                        handleChange(`${key}Observation`, value)
+                        handleObservationChange(key, value)
                       }
                     />
                   ))}
@@ -365,7 +444,7 @@ export default function StrategicPlanning({
             Total marks for Strategic Planning:
           </span>
           <span className="text-xl font-bold text-blue-800">
-            {calculateMarks().toFixed(1)} / 10
+            {calculateTotalMarks(localData).toFixed(1)} / 10
           </span>
         </div>
       </div>
