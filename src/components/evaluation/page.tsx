@@ -14,6 +14,8 @@ import Infrastructure from "./infrastructure";
 import SummaryPreview from "./summary-preview";
 import { AuthApi } from "@/lib/config/axios.config";
 import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType";
+import { toast } from "sonner";
+import { escape } from "querystring";
 import { useToast } from "@/hooks/use-toast";
 import useAuth from "@/hooks/useAuth";
 
@@ -55,6 +57,7 @@ export default function Home() {
   }, [sectionMarks]);
 
   const steps = [
+    { id: "school-type", title: "School Type" },
     { id: "strategic-planning", title: "1. Strategic Planning" },
     { id: "operational-management", title: "2. School Operational Management" },
     { id: "teaching-learning", title: "3. Leading Teaching and Learning" },
@@ -92,10 +95,10 @@ export default function Home() {
   };
 
   const validateCurrentStep = () => {
-    // if (currentStep === 0 && !schoolType) {
-    //   setValidationError("Please select a school type before proceeding.");
-    //   return false;
-    // }
+    if (currentStep === 0 && !schoolType) {
+      setValidationError("Please select a school type before proceeding.");
+      return false;
+    }
 
     // For other steps, check if all required fields are filled
     const currentStepId = steps[currentStep].id;
@@ -142,7 +145,7 @@ export default function Home() {
   };
   const saveProgress = (data) => {
     if (user?.id) {
-      localStorage.setItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`, JSON.stringify(data));
+      localStorage.setItem(`survey_draft`, JSON.stringify(data));
       toast({ description: "Progress saved", duration: 1000 });
     }
   };
@@ -189,7 +192,13 @@ export default function Home() {
 
   const renderStep = () => {
     switch (steps[currentStep].id) {
-
+      case "school-type":
+        return (
+          <SchoolTypeSelection
+            schoolType={schoolType}
+            setSchoolType={setSchoolType}
+          />
+        );
       case "strategic-planning":
         return (
           <StrategicPlanning
@@ -352,7 +361,7 @@ export default function Home() {
                 <Button
                   onClick={handleNext}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  // disabled={currentStep === 0 && !schoolType}
+                  disabled={currentStep === 0 && !schoolType}
                 >
                   Next
                 </Button>
@@ -361,7 +370,7 @@ export default function Home() {
                   onClick={handleSubmit}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  Submit Evaluation 
+                  Submit Evaluation
                 </Button>
               )}
             </div>
