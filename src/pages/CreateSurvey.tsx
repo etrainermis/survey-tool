@@ -214,7 +214,7 @@ const CreateSurvey = () => {
       }
 
       // Submit to API
-      const response = await AuthApi.post(`/school-survey/add?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`, surveyPayload)
+      const response = await AuthApi.post(`/school-survey/add-specific?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`, surveyPayload)
 
       // Handle successful submission
       toast({

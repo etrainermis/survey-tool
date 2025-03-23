@@ -1,154 +1,259 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EvaluationItemWithWeights from "./evaluation-item";
+import { EvaluationItemWeights } from "./common/evaluation-item-weights";
 
 interface StakeholdersEngagementProps {
-  formData: any
-  updateFormData: (data: any) => void
-  updateSectionMarks: (marks: number) => void
+  formData: any;
+  updateFormData: (data: any) => void;
+  updateSectionMarks: (marks: number) => void;
 }
+
+interface EvaluationField {
+  availability: number;
+  quality: number;
+  observation: string;
+  label: string;
+  marksAllocated: number;
+}
+
+interface LocalData {
+  // 4.1 Partnership Development
+  mous: EvaluationField;
+  employersFeedback: EvaluationField;
+  trainingAdjustments: EvaluationField;
+
+  // 4.2 Community and Alumni engagement
+  stakeholderMeetings: EvaluationField;
+  planningSessions: EvaluationField;
+  graduateFiling: EvaluationField;
+  alumniRecords: EvaluationField;
+
+  // 4.3 Adaptability to Trends
+  industryEngagement: EvaluationField;
+  trainingRelevance: EvaluationField;
+  staffTraining: EvaluationField;
+
+  // 4.4 Relationship with Subordinates
+  subordinateFeedback: EvaluationField;
+  conflictResolution: EvaluationField;
+
+  overview: {
+    strength: string;
+    weakness: string;
+    improvement: string;
+  };
+  sectionMarks: {
+    totalMarks: number;
+    weight: number;
+  };
+  [key: string]: any;
+}
+
+const defaultEvaluation: EvaluationField = {
+  availability: EvaluationItemWeights.NOT_SELECTED,
+  quality: EvaluationItemWeights.NOT_SELECTED,
+  observation: "",
+  label: "",
+  marksAllocated: 1,
+};
 
 export default function StakeholdersEngagement({
   formData,
   updateFormData,
   updateSectionMarks,
 }: StakeholdersEngagementProps) {
-  const [localData, setLocalData] = useState({
+  const defaultData = {
     // 4.1 Partnership Development
-    mousAvailability: "",
-    mousQuality: "na", // N/A
-    employersFeedbackAvailability: "",
-    employersFeedbackQuality: "",
-    trainingAdjustmentsAvailability: "",
-    trainingAdjustmentsQuality: "",
+    mous: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "At Least 3 MoUs With Relevant Private Companies Per Each Trade",
+    },
+    employersFeedback: {
+      ...defaultEvaluation,
+      label: "Employers feedback/ satisfaction survey results",
+    },
+    trainingAdjustments: {
+      ...defaultEvaluation,
+      label: "Training adjustments evidence based on feedback",
+    },
 
     // 4.2 Community and Alumni engagement
-    stakeholderMeetingsAvailability: "",
-    stakeholderMeetingsQuality: "",
-    planningSessionsAvailability: "",
-    planningSessionsQuality: "",
-    graduateFilingAvailability: "",
-    graduateFilingQuality: "",
-    alumniRecordsAvailability: "",
-    alumniRecordsQuality: "",
+    stakeholderMeetings: {
+      ...defaultEvaluation,
+      label: "Records of meetings and planning sessions with stakeholders",
+    },
+    planningSessions: {
+      ...defaultEvaluation,
+      label: "Minutes of meeting and records of planning sessions Evidence of partnerships with local organizations",
+    },
+    graduateFiling: {
+      ...defaultEvaluation,
+      label: "Graduate Filing System for atleast previous 4 years",
+    },
+    alumniRecords: {
+      ...defaultEvaluation,
+      label: "Records of alumni meetings, events, and or other communications",
+    },
 
     // 4.3 Adaptability to Trends
-    industryEngagementAvailability: "",
-    industryEngagementQuality: "",
-    trainingRelevanceAvailability: "",
-    trainingRelevanceQuality: "",
-    staffTrainingAvailability: "",
-    staffTrainingQuality: "",
+    industryEngagement: {
+      ...defaultEvaluation,
+      label: "Industry engagement in training (contract, MoUs...)",
+    },
+    trainingRelevance: {
+      ...defaultEvaluation,
+      label: "Feedback on training relevance",
+      marksAllocated: 0.5,
+    },
+    staffTraining: {
+      ...defaultEvaluation,
+      label: "Staff training sessions held",
+      marksAllocated: 0.5,
+    },
 
     // 4.4 Relationship with Subordinates
-    subordinateFeedbackAvailability: "",
-    subordinateFeedbackQuality: "",
-    conflictResolutionAvailability: "",
-    conflictResolutionQuality: "",
+    subordinateFeedback: {
+      ...defaultEvaluation,
+      label: "Feedback from subordinates",
+      marksAllocated: 0.5,
+    },
+    conflictResolution: {
+      ...defaultEvaluation,
+      label: "Records of conflict resolution",
+      marksAllocated: 0.5,
+    },
 
-    // Add observation fields for each item
-    mousObservation: "",
-    employersFeedbackObservation: "",
-    trainingAdjustmentsObservation: "",
-    stakeholderMeetingsObservation: "",
-    planningSessionsObservation: "",
-    graduateFilingObservation: "",
-    alumniRecordsObservation: "",
-    industryEngagementObservation: "",
-    trainingRelevanceObservation: "",
-    staffTrainingObservation: "",
-    subordinateFeedbackObservation: "",
-    conflictResolutionObservation: "",
+    overview: {
+      strength: "",
+      weakness: "",
+      improvement: "",
+    },
+    sectionMarks: {
+      totalMarks: 0,
+      weight: 10,
+    },
+  };
 
-    // Overview
-    strength: "",
-    weakness: "",
-    improvement: "",
-    totalMarks : 0,
-    weight : 10,
-    ...formData,
-  })
+  const getInitialData = (): LocalData => {
+    try {
+      const storedData = localStorage.getItem("survey_draft");
+      if (!storedData) return defaultData;
 
-  const initialRender = useRef(true)
-  const prevMarks = useRef(0)
-
-  const calculateMarks = () => {
-    let total = 0
-
-    // Helper function to calculate marks for an item
-    const calculateItemMarks = (baseId, marksAllocated) => {
-      const availabilityValue = localData[`${baseId}Availability`]
-      const qualityValue = localData[`${baseId}Quality`]
-
-      // If quality is N/A, only consider availability (100% of marks)
-      if (qualityValue === "na") {
-        return availabilityValue === "yes" ? marksAllocated : 0
+      const parsedData = JSON.parse(storedData);
+      if (!parsedData || !parsedData.stakeholdersEngagement || Object.keys(parsedData.stakeholdersEngagement).length === 0) {
+        return defaultData;
       }
 
-      // Calculate partial marks based on availability (40%) and quality (60%)
-      let marks = 0
-      if (availabilityValue === "yes") {
-        marks += marksAllocated * 0.4
-      }
-      if (qualityValue === "yes") {
-        marks += marksAllocated * 0.6
-      }
-
-      return marks
+      return parsedData.stakeholdersEngagement;
+    } catch (error) {
+      console.error("Error parsing stored data:", error);
+      return defaultData;
     }
+  };
 
-    // 4.1 Partnership Development (3 marks)
-    total += calculateItemMarks("mous", 1)
-    total += calculateItemMarks("employersFeedback", 1)
-    total += calculateItemMarks("trainingAdjustments", 1)
+  const [localData, setLocalData] = useState<LocalData>(getInitialData());
+  const initialRender = useRef(true);
+  const prevMarks = useRef(0);
 
-    // 4.2 Community and Alumni engagement (4 marks)
-    total += calculateItemMarks("stakeholderMeetings", 1)
-    total += calculateItemMarks("planningSessions", 1)
-    total += calculateItemMarks("graduateFiling", 1)
-    total += calculateItemMarks("alumniRecords", 1)
+  const calculateTotalMarks = (data: LocalData): number => {
+    let totalMarks = 0;
 
-    // 4.3 Adaptability to Trends (2 marks)
-    total += calculateItemMarks("industryEngagement", 1)
-    total += calculateItemMarks("trainingRelevance", 0.5)
-    total += calculateItemMarks("staffTraining", 0.5)
+    Object.keys(data).forEach((key) => {
+      const item = data[key as keyof LocalData];
+      
+      if (typeof item === "object" && "marksAllocated" in item) {
+        if (item.quality !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.quality ?? 0;
+        } 
+        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.availability ?? 0;
+        }
+      }
+    });
 
-    // 4.4 Relationship with Subordinates (1 mark)
-    total += calculateItemMarks("subordinateFeedback", 0.5)
-    total += calculateItemMarks("conflictResolution", 0.5)
-
-    // Cap at 10 marks maximum
-    return Math.min(total, 10)
-  }
+    return Math.min(totalMarks, 10);
+  };
 
   useEffect(() => {
     if (initialRender.current) {
-      initialRender.current = false
-      return
+      initialRender.current = false;
+      return;
     }
 
-    const currentMarks = calculateMarks()
+    const currentMarks = calculateTotalMarks(localData);
+    setLocalData((prevData) => ({
+      ...prevData,
+      sectionMarks: {
+        ...prevData.sectionMarks,
+        totalMarks : currentMarks
+      },
+    }));
     if (currentMarks !== prevMarks.current) {
-      prevMarks.current = currentMarks
-      updateSectionMarks(currentMarks)
+      prevMarks.current = currentMarks;
+      updateSectionMarks(currentMarks);
     }
 
-    updateFormData(localData)
-  }, [localData, updateFormData, updateSectionMarks])
+    updateFormData(localData);
+  }, [localData, updateFormData, updateSectionMarks]);
 
-  const handleChange = (field: string, value: string) => {
-    setLocalData((prev) => {
-      if (prev[field] !== value) {
-        return { ...prev, [field]: value }
-      }
-      return prev
-    })
-  }
+  const handleAvailabilityChange = (baseId: keyof LocalData, availabilityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        availability: availabilityValue,
+      },
+    }));
+  };
+
+  const handleQualityChange = (baseId: keyof LocalData, qualityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        quality: qualityValue,
+      },
+    }));
+  };
+
+  const handleObservationChange = (baseId: keyof LocalData, observationValue: string) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        observation: observationValue,
+      },
+    }));
+  };
+
+  const renderEvaluationItems = (startIndex: number, endIndex: number) => {
+    return Object.entries(localData)
+      .filter(([_, value]) => typeof value === "object" && value !== null && "label" in value)
+      .slice(startIndex, endIndex)
+      .map(([key, value]) => (
+        <EvaluationItemWithWeights
+          key={key}
+          id={key}
+          label={value.label}
+          availabilityValue={value.availability}
+          qualityValue={value.quality}
+          onAvailabilityChange={handleAvailabilityChange}
+          onQualityChange={handleQualityChange}
+          isAvailabilityNA={value.availability === EvaluationItemWeights.NOT_APPLICABLE}
+          isQualityNA={value.quality === EvaluationItemWeights.NOT_APPLICABLE}
+          marksAllocated={value.marksAllocated}
+          qualityWeight="60%"
+          availabilityWeight="40%"
+          observation={value.observation}
+          onObservationChange={(value) => handleObservationChange(key, value)}
+        />
+      ));
+  };
 
   return (
     <div className="space-y-6">
@@ -164,50 +269,8 @@ export default function StakeholdersEngagement({
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">4.1 Partnership Development (3 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="mous"
-                  label="At Least 3 MoUs With Relevant Private Companies Per Each Trade"
-                  availabilityValue={localData.mousAvailability}
-                  qualityValue={localData.mousQuality}
-                  onAvailabilityChange={(value) => handleChange("mousAvailability", value)}
-                  onQualityChange={(value) => handleChange("mousQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.mousObservation}
-                  onObservationChange={(value) => handleChange("mousObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="employersFeedback"
-                  label="Employers feedback/ satisfaction survey results"
-                  availabilityValue={localData.employersFeedbackAvailability}
-                  qualityValue={localData.employersFeedbackQuality}
-                  onAvailabilityChange={(value) => handleChange("employersFeedbackAvailability", value)}
-                  onQualityChange={(value) => handleChange("employersFeedbackQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.employersFeedbackObservation}
-                  onObservationChange={(value) => handleChange("employersFeedbackObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="trainingAdjustments"
-                  label="Training adjustments evidence based on feedback"
-                  availabilityValue={localData.trainingAdjustmentsAvailability}
-                  qualityValue={localData.trainingAdjustmentsQuality}
-                  onAvailabilityChange={(value) => handleChange("trainingAdjustmentsAvailability", value)}
-                  onQualityChange={(value) => handleChange("trainingAdjustmentsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.trainingAdjustmentsObservation}
-                  onObservationChange={(value) => handleChange("trainingAdjustmentsObservation", value)}
-                />
+                {renderEvaluationItems(0, 3)}
               </div>
             </CardContent>
           </Card>
@@ -219,63 +282,8 @@ export default function StakeholdersEngagement({
               <h3 className="text-lg font-semibold text-blue-700 mb-4">
                 4.2 Community and Alumni engagement (4 marks)
               </h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="stakeholderMeetings"
-                  label="Records of meetings and planning sessions with stakeholders"
-                  availabilityValue={localData.stakeholderMeetingsAvailability}
-                  qualityValue={localData.stakeholderMeetingsQuality}
-                  onAvailabilityChange={(value) => handleChange("stakeholderMeetingsAvailability", value)}
-                  onQualityChange={(value) => handleChange("stakeholderMeetingsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.stakeholderMeetingsObservation}
-                  onObservationChange={(value) => handleChange("stakeholderMeetingsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="planningSessions"
-                  label="Minutes of meeting and records of planning sessions Evidence of partnerships with local organizations"
-                  availabilityValue={localData.planningSessionsAvailability}
-                  qualityValue={localData.planningSessionsQuality}
-                  onAvailabilityChange={(value) => handleChange("planningSessionsAvailability", value)}
-                  onQualityChange={(value) => handleChange("planningSessionsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.planningSessionsObservation}
-                  onObservationChange={(value) => handleChange("planningSessionsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="graduateFiling"
-                  label="Graduate Filing System for atleast previous 4 years"
-                  availabilityValue={localData.graduateFilingAvailability}
-                  qualityValue={localData.graduateFilingQuality}
-                  onAvailabilityChange={(value) => handleChange("graduateFilingAvailability", value)}
-                  onQualityChange={(value) => handleChange("graduateFilingQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.graduateFilingObservation}
-                  onObservationChange={(value) => handleChange("graduateFilingObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="alumniRecords"
-                  label="Records of alumni meetings, events, and or other communications"
-                  availabilityValue={localData.alumniRecordsAvailability}
-                  qualityValue={localData.alumniRecordsQuality}
-                  onAvailabilityChange={(value) => handleChange("alumniRecordsAvailability", value)}
-                  onQualityChange={(value) => handleChange("alumniRecordsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.alumniRecordsObservation}
-                  onObservationChange={(value) => handleChange("alumniRecordsObservation", value)}
-                />
+                {renderEvaluationItems(3, 7)}
               </div>
             </CardContent>
           </Card>
@@ -285,49 +293,8 @@ export default function StakeholdersEngagement({
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">4.3 Adaptability to Trends (2 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="industryEngagement"
-                  label="Industry engagement in training (contract, MoUs...)"
-                  availabilityValue={localData.industryEngagementAvailability}
-                  qualityValue={localData.industryEngagementQuality}
-                  onAvailabilityChange={(value) => handleChange("industryEngagementAvailability", value)}
-                  onQualityChange={(value) => handleChange("industryEngagementQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.industryEngagementObservation}
-                  onObservationChange={(value) => handleChange("industryEngagementObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="trainingRelevance"
-                  label="Feedback on training relevance"
-                  availabilityValue={localData.trainingRelevanceAvailability}
-                  qualityValue={localData.trainingRelevanceQuality}
-                  onAvailabilityChange={(value) => handleChange("trainingRelevanceAvailability", value)}
-                  onQualityChange={(value) => handleChange("trainingRelevanceQuality", value)}
-                  marksAllocated={0.5}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.trainingRelevanceObservation}
-                  onObservationChange={(value) => handleChange("trainingRelevanceObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="staffTraining"
-                  label="Staff training sessions held"
-                  availabilityValue={localData.staffTrainingAvailability}
-                  qualityValue={localData.staffTrainingQuality}
-                  onAvailabilityChange={(value) => handleChange("staffTrainingAvailability", value)}
-                  onQualityChange={(value) => handleChange("staffTrainingQuality", value)}
-                  marksAllocated={0.5}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.staffTrainingObservation}
-                  onObservationChange={(value) => handleChange("staffTrainingObservation", value)}
-                />
+                {renderEvaluationItems(7, 10)}
               </div>
             </CardContent>
           </Card>
@@ -337,35 +304,8 @@ export default function StakeholdersEngagement({
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">4.4 Relationship with Subordinates (1 mark)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="subordinateFeedback"
-                  label="Feedback from subordinates"
-                  availabilityValue={localData.subordinateFeedbackAvailability}
-                  qualityValue={localData.subordinateFeedbackQuality}
-                  onAvailabilityChange={(value) => handleChange("subordinateFeedbackAvailability", value)}
-                  onQualityChange={(value) => handleChange("subordinateFeedbackQuality", value)}
-                  marksAllocated={0.5}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.subordinateFeedbackObservation}
-                  onObservationChange={(value) => handleChange("subordinateFeedbackObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="conflictResolution"
-                  label="Records of conflict resolution"
-                  availabilityValue={localData.conflictResolutionAvailability}
-                  qualityValue={localData.conflictResolutionQuality}
-                  onAvailabilityChange={(value) => handleChange("conflictResolutionAvailability", value)}
-                  onQualityChange={(value) => handleChange("conflictResolutionQuality", value)}
-                  marksAllocated={0.5}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.conflictResolutionObservation}
-                  onObservationChange={(value) => handleChange("conflictResolutionObservation", value)}
-                />
+                {renderEvaluationItems(10, 12)}
               </div>
             </CardContent>
           </Card>
@@ -377,7 +317,6 @@ export default function StakeholdersEngagement({
           <h3 className="text-lg font-semibold text-blue-700 mb-4">
             Overview of the findings (kindly be brief and specific)
           </h3>
-
           <div className="space-y-4">
             <div>
               <Label htmlFor="strength" className="text-sm font-medium">
@@ -385,8 +324,13 @@ export default function StakeholdersEngagement({
               </Label>
               <Textarea
                 id="strength"
-                value={localData.strength}
-                onChange={(e) => handleChange("strength", e.target.value)}
+                value={localData.overview.strength}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, strength: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -397,8 +341,13 @@ export default function StakeholdersEngagement({
               </Label>
               <Textarea
                 id="weakness"
-                value={localData.weakness}
-                onChange={(e) => handleChange("weakness", e.target.value)}
+                value={localData.overview.weakness}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, weakness: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -409,8 +358,13 @@ export default function StakeholdersEngagement({
               </Label>
               <Textarea
                 id="improvement"
-                value={localData.improvement}
-                onChange={(e) => handleChange("improvement", e.target.value)}
+                value={localData.overview.improvement}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, improvement: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -420,140 +374,14 @@ export default function StakeholdersEngagement({
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-blue-800">Total marks for Stakeholders' Engagement:</span>
-          <span className="text-xl font-bold text-blue-800">{calculateMarks().toFixed(1)} / 10</span>
+          <span className="font-medium text-blue-800">
+            Total marks for Stakeholders' Engagement:
+          </span>
+          <span className="text-xl font-bold text-blue-800">
+            {calculateTotalMarks(localData).toFixed(1)} / 10
+          </span>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-interface EvaluationItemWithWeightsProps {
-  id: string
-  label: string
-  availabilityValue: string
-  qualityValue: string
-  onAvailabilityChange: (value: string) => void
-  onQualityChange: (value: string) => void
-  marksAllocated: number
-  qualityWeight: string
-  availabilityWeight: string
-  isQualityNA?: boolean
-  observation?: string
-  onObservationChange?: (value: string) => void
-}
-
-function EvaluationItemWithWeights({
-  id,
-  label,
-  availabilityValue,
-  qualityValue,
-  onAvailabilityChange,
-  onQualityChange,
-  marksAllocated,
-  qualityWeight,
-  availabilityWeight,
-  isQualityNA = false,
-  observation = "",
-  onObservationChange = () => {},
-}: EvaluationItemWithWeightsProps) {
-  // Calculate marks obtained for this item
-  const calculateMarksObtained = () => {
-    // If quality is N/A, only consider availability (100% of marks)
-    if (qualityValue === "na") {
-      return availabilityValue === "yes" ? marksAllocated : 0
-    }
-
-    // Calculate partial marks based on availability (40%) and quality (60%)
-    let marks = 0
-    if (availabilityValue === "yes") {
-      marks += marksAllocated * 0.4
-    }
-    if (qualityValue === "yes") {
-      marks += marksAllocated * 0.6
-    }
-
-    return marks
-  }
-
-  // Add useEffect to ensure quality value is set to "na" when isQualityNA is true
-  useEffect(() => {
-    if (isQualityNA && qualityValue !== "na") {
-      onQualityChange("na")
-    }
-  }, [isQualityNA, qualityValue, onQualityChange])
-
-  return (
-    <div className="grid grid-cols-1 gap-2 p-2 rounded-md hover:bg-blue-50">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr,1fr,0.5fr,0.5fr,1fr] gap-4 items-start">
-        <div className="text-sm font-medium">{label}</div>
-
-        <div className="flex flex-col">
-          <div className="text-center text-xs text-gray-500 mb-1">
-            <div>Availability ({availabilityWeight})</div>
-          </div>
-          <RadioGroup
-            value={availabilityValue}
-            onValueChange={onAvailabilityChange}
-            className="flex justify-center space-x-4"
-          >
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="yes" id={`${id}-availability-yes`} />
-              <Label htmlFor={`${id}-availability-yes`} className="text-sm">
-                Yes
-              </Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="no" id={`${id}-availability-no`} />
-              <Label htmlFor={`${id}-availability-no`} className="text-sm">
-                No
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div className="flex flex-col">
-          <div className="text-center text-xs text-gray-500 mb-1">
-            <div>Quality ({qualityWeight})</div>
-          </div>
-          {isQualityNA ? (
-            <div className="flex justify-center">
-              <span className="text-sm font-medium text-gray-600">N/A</span>
-            </div>
-          ) : (
-            <RadioGroup value={qualityValue} onValueChange={onQualityChange} className="flex justify-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="yes" id={`${id}-quality-yes`} />
-                <Label htmlFor={`${id}-quality-yes`} className="text-sm">
-                  Yes
-                </Label>
-              </div>
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="no" id={`${id}-quality-no`} />
-                <Label htmlFor={`${id}-quality-no`} className="text-sm">
-                  No
-                </Label>
-              </div>
-            </RadioGroup>
-          )}
-        </div>
-
-        <div className="text-center text-sm font-medium">{marksAllocated}</div>
-
-        <div className="text-center text-sm font-medium">{calculateMarksObtained().toFixed(1)}</div>
-
-        <div>
-          <Textarea
-            value={observation}
-            onChange={(e) => onObservationChange(e.target.value)}
-            placeholder="Add observation..."
-            className="min-h-[60px] text-sm"
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-
-
