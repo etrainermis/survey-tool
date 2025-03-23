@@ -314,6 +314,7 @@ const CreateSurvey = () => {
             {...form.register("school.category", {
               required: "school's category is required",
             })}
+            onChange={(e)=>localStorage.setItem("surveyType",e.target.value )}
           >
             <option value="">Select Category...</option>
             <option value="public">Day</option>
