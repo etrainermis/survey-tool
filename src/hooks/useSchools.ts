@@ -43,3 +43,24 @@ export const useSchoolsByDistrict = (districtId: string | null) => {
     error,
   };
 };
+
+export const useSchoolsById = (id: string | null) => {
+  const { data, isLoading, error } = useSWR(
+    id ? `/schools/${id}` : null,
+    async (url) => {
+      try {
+        const response = await AuthApi.get(url);
+        return response.data.data;
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    }
+  );
+
+  return {
+    schools: data,
+    isLoading,
+    error,
+  };
+};

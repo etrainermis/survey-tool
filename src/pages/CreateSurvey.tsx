@@ -124,7 +124,7 @@ const CreateSurvey = () => {
 
   useEffect(() => {
     if (user?.id) {
-      const savedData = localStorage.getItem(`survey_draft_${user.id}`)
+      const savedData = localStorage.getItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`)
       if (savedData) {
         form.reset(JSON.parse(savedData))
       }
@@ -151,6 +151,7 @@ const CreateSurvey = () => {
 
   const saveProgress = (data) => {
     if (user?.id) {
+      localStorage.setItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`, JSON.stringify(data))
       localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data))
       toast({ description: "Progress saved", duration: 1000 })
     }
@@ -223,7 +224,7 @@ const CreateSurvey = () => {
       })
 
       // Clear local storage
-      localStorage.removeItem(`survey_draft_${user?.id}`)
+      localStorage.removeItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`)
 
       // Store the selected school ID in localStorage for the evaluation page
       localStorage.setItem("currentEvaluationSchool", selectedSchool.id)
@@ -314,6 +315,7 @@ const CreateSurvey = () => {
             {...form.register("school.category", {
               required: "school's category is required",
             })}
+            onChange={(e)=>localStorage.setItem("surveyType",e.target.value )}
           >
             <option value="">Select Category...</option>
             <option value="public">Day</option>
