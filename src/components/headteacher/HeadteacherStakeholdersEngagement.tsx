@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -49,171 +49,81 @@ export default function HeadteacherStakeholdersEngagement({
   // Load data from parent component if available
   useEffect(() => {
     if (data?.stakeholdersEngagement) {
-      // Ensure all required properties exist by merging with default state
       const mergedData = {
+        ...stakeholdersEngagementData,
         partnershipDevelopment: {
           mous: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.partnershipDevelopment.mous,
             ...data.stakeholdersEngagement.partnershipDevelopment?.mous,
           },
           employersFeedback: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.partnershipDevelopment.employersFeedback,
             ...data.stakeholdersEngagement.partnershipDevelopment?.employersFeedback,
           },
           trainingAdjustments: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.partnershipDevelopment.trainingAdjustments,
             ...data.stakeholdersEngagement.partnershipDevelopment?.trainingAdjustments,
           },
         },
         communityAlumniEngagement: {
           meetingRecords: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.communityAlumniEngagement.meetingRecords,
             ...data.stakeholdersEngagement.communityAlumniEngagement?.meetingRecords,
           },
           minutesOfMeeting: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.communityAlumniEngagement.minutesOfMeeting,
             ...data.stakeholdersEngagement.communityAlumniEngagement?.minutesOfMeeting,
           },
           graduateFilingSystem: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.communityAlumniEngagement.graduateFilingSystem,
             ...data.stakeholdersEngagement.communityAlumniEngagement?.graduateFilingSystem,
           },
           alumniRecords: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.communityAlumniEngagement.alumniRecords,
             ...data.stakeholdersEngagement.communityAlumniEngagement?.alumniRecords,
           },
         },
         adaptabilityToTrends: {
           industryEngagement: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.adaptabilityToTrends.industryEngagement,
             ...data.stakeholdersEngagement.adaptabilityToTrends?.industryEngagement,
           },
           trainingRelevanceFeedback: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.adaptabilityToTrends.trainingRelevanceFeedback,
             ...data.stakeholdersEngagement.adaptabilityToTrends?.trainingRelevanceFeedback,
           },
           staffTrainingSessions: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.adaptabilityToTrends.staffTrainingSessions,
             ...data.stakeholdersEngagement.adaptabilityToTrends?.staffTrainingSessions,
           },
         },
         relationshipWithSubordinates: {
           subordinatesFeedback: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.relationshipWithSubordinates.subordinatesFeedback,
             ...data.stakeholdersEngagement.relationshipWithSubordinates?.subordinatesFeedback,
           },
           conflictResolutionRecords: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...stakeholdersEngagementData.relationshipWithSubordinates.conflictResolutionRecords,
             ...data.stakeholdersEngagement.relationshipWithSubordinates?.conflictResolutionRecords,
           },
         },
         overview: {
-          strengths: data.stakeholdersEngagement.overview?.strengths || "",
-          weaknesses: data.stakeholdersEngagement.overview?.weaknesses || "",
-          areasOfImprovement: data.stakeholdersEngagement.overview?.areasOfImprovement || "",
+          strengths: data.stakeholdersEngagement.overview?.strengths || stakeholdersEngagementData.overview.strengths,
+          weaknesses:
+            data.stakeholdersEngagement.overview?.weaknesses || stakeholdersEngagementData.overview.weaknesses,
+          areasOfImprovement:
+            data.stakeholdersEngagement.overview?.areasOfImprovement ||
+            stakeholdersEngagementData.overview.areasOfImprovement,
         },
-        totalMarks: data.stakeholdersEngagement.totalMarks || 0,
+        totalMarks: data.stakeholdersEngagement.totalMarks || stakeholdersEngagementData.totalMarks,
       }
 
       setStakeholdersEngagementData(mergedData)
     }
   }, [data])
 
-  // Calculate total marks whenever data changes
-  useEffect(() => {
-    calculateTotalMarks()
-  }, [stakeholdersEngagementData])
-
-  // Update parent component with changes
-  const updateParent = (updatedData: StakeholdersEngagementData) => {
-    onDataChange({
-      stakeholdersEngagement: updatedData,
-    })
-  }
-
-  // Handle changes to evaluation items
-  const handleEvaluationChange = (
-    section: keyof Omit<StakeholdersEngagementData, "overview" | "totalMarks">,
-    field: string,
-    type: "availability" | "quality",
-    value: number,
-  ) => {
-    setStakeholdersEngagementData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            [type]: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to observations
-  const handleObservationChange = (
-    section: keyof Omit<StakeholdersEngagementData, "overview" | "totalMarks">,
-    field: string,
-    value: string,
-  ) => {
-    setStakeholdersEngagementData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            observation: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to overview fields
-  const handleOverviewChange = (field: keyof StakeholdersEngagementData["overview"], value: string) => {
-    setStakeholdersEngagementData((prev) => {
-      const updated = {
-        ...prev,
-        overview: {
-          ...prev.overview,
-          [field]: value,
-        },
-      }
-      return updated
-    })
-  }
-
-  // Calculate total marks for all sections
-  const calculateTotalMarks = () => {
+  // Calculate total marks
+  const calculateTotalMarks = useCallback(() => {
     // Define marks allocation for each item
     const marksAllocation = {
       partnershipDevelopment: {
@@ -306,17 +216,90 @@ export default function HeadteacherStakeholdersEngagement({
       }
     })
 
-    // Update state without calling updateParent inside setState
+    return totalMarks
+  }, [stakeholdersEngagementData])
+
+  // Update total marks whenever data changes
+  useEffect(() => {
+    const newTotalMarks = calculateTotalMarks()
+
     setStakeholdersEngagementData((prev) => ({
       ...prev,
-      totalMarks,
+      totalMarks: newTotalMarks,
     }))
+
+    // Update parent component with changes
+    onDataChange({
+      stakeholdersEngagement: {
+        ...stakeholdersEngagementData,
+        totalMarks: newTotalMarks,
+      },
+    })
+  }, [
+    stakeholdersEngagementData.partnershipDevelopment,
+    stakeholdersEngagementData.communityAlumniEngagement,
+    stakeholdersEngagementData.adaptabilityToTrends,
+    calculateTotalMarks,
+    onDataChange,
+    stakeholdersEngagementData.relationshipWithSubordinates,
+  ])
+
+  // Handle changes to evaluation items
+  const handleEvaluationChange = (
+    section: keyof Omit<StakeholdersEngagementData, "overview" | "totalMarks">,
+    field: string,
+    type: "availability" | "quality",
+    value: number,
+  ) => {
+    setStakeholdersEngagementData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            [type]: value,
+          },
+        },
+      }
+      return updated
+    })
   }
 
-  // Add a separate useEffect to update the parent when totalMarks changes
-  useEffect(() => {
-    updateParent(stakeholdersEngagementData)
-  }, [stakeholdersEngagementData])
+  // Handle changes to observations
+  const handleObservationChange = (
+    section: keyof Omit<StakeholdersEngagementData, "overview" | "totalMarks">,
+    field: string,
+    value: string,
+  ) => {
+    setStakeholdersEngagementData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            observation: value,
+          },
+        },
+      }
+      return updated
+    })
+  }
+
+  // Handle changes to overview fields
+  const handleOverviewChange = (field: keyof StakeholdersEngagementData["overview"], value: string) => {
+    setStakeholdersEngagementData((prev) => {
+      const updated = {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          [field]: value,
+        },
+      }
+      return updated
+    })
+  }
 
   return (
     <div className="space-y-6">

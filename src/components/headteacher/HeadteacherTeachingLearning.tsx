@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,191 +51,99 @@ export default function HeadteacherTeachingLearning({ data, onDataChange }: Head
   // Load data from parent component if available
   useEffect(() => {
     if (data?.teachingLearning) {
-      // Ensure all required properties exist by merging with default state
       const mergedData = {
+        ...teachingLearningData,
         cbtCba: {
-          validatedCBC: { availability: 0, quality: 0, observation: "", ...data.teachingLearning.cbtCba?.validatedCBC },
+          validatedCBC: {
+            ...teachingLearningData.cbtCba.validatedCBC,
+            ...data.teachingLearning.cbtCba?.validatedCBC,
+          },
           guidingDocuments: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbtCba.guidingDocuments,
             ...data.teachingLearning.cbtCba?.guidingDocuments,
           },
         },
         trainingPlanning: {
           validatedChronogram: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.trainingPlanning.validatedChronogram,
             ...data.teachingLearning.trainingPlanning?.validatedChronogram,
           },
           trainingTimetable: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.trainingPlanning.trainingTimetable,
             ...data.teachingLearning.trainingPlanning?.trainingTimetable,
           },
           trainerPortfolios: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.trainingPlanning.trainerPortfolios,
             ...data.teachingLearning.trainingPlanning?.trainerPortfolios,
           },
           pedagogicalDocuments: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.trainingPlanning.pedagogicalDocuments,
             ...data.teachingLearning.trainingPlanning?.pedagogicalDocuments,
           },
-          iapPlan: { availability: 0, quality: 0, observation: "", ...data.teachingLearning.trainingPlanning?.iapPlan },
+          iapPlan: {
+            ...teachingLearningData.trainingPlanning.iapPlan,
+            ...data.teachingLearning.trainingPlanning?.iapPlan,
+          },
           iapCompletionReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.trainingPlanning.iapCompletionReports,
             ...data.teachingLearning.trainingPlanning?.iapCompletionReports,
           },
         },
         cbaImplementation: {
           assessmentPlans: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.assessmentPlans,
             ...data.teachingLearning.cbaImplementation?.assessmentPlans,
           },
           traineePortfolio: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.traineePortfolio,
             ...data.teachingLearning.cbaImplementation?.traineePortfolio,
           },
           attendanceReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.attendanceReports,
             ...data.teachingLearning.cbaImplementation?.attendanceReports,
           },
           sessionDeliveryReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.sessionDeliveryReports,
             ...data.teachingLearning.cbaImplementation?.sessionDeliveryReports,
           },
           portfolioVerificationReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.portfolioVerificationReports,
             ...data.teachingLearning.cbaImplementation?.portfolioVerificationReports,
           },
           assessmentMonitoringReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.cbaImplementation.assessmentMonitoringReports,
             ...data.teachingLearning.cbaImplementation?.assessmentMonitoringReports,
           },
         },
         technologicalTools: {
           digitalTools: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.technologicalTools.digitalTools,
             ...data.teachingLearning.technologicalTools?.digitalTools,
           },
           feedbackOnTechnology: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.technologicalTools.feedbackOnTechnology,
             ...data.teachingLearning.technologicalTools?.feedbackOnTechnology,
           },
           evidenceOfImprovedEfficiency: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...teachingLearningData.technologicalTools.evidenceOfImprovedEfficiency,
             ...data.teachingLearning.technologicalTools?.evidenceOfImprovedEfficiency,
           },
         },
         overview: {
-          strengths: data.teachingLearning.overview?.strengths || "",
-          weaknesses: data.teachingLearning.overview?.weaknesses || "",
-          areasOfImprovement: data.teachingLearning.overview?.areasOfImprovement || "",
+          strengths: data.teachingLearning.overview?.strengths || teachingLearningData.overview.strengths,
+          weaknesses: data.teachingLearning.overview?.weaknesses || teachingLearningData.overview.weaknesses,
+          areasOfImprovement:
+            data.teachingLearning.overview?.areasOfImprovement || teachingLearningData.overview.areasOfImprovement,
         },
-        totalMarks: data.teachingLearning.totalMarks || 0,
+        totalMarks: data.teachingLearning.totalMarks || teachingLearningData.totalMarks,
       }
 
       setTeachingLearningData(mergedData)
     }
   }, [data])
 
-  // Calculate total marks whenever data changes
-  useEffect(() => {
-    calculateTotalMarks()
-  }, [teachingLearningData])
-
-  // Update parent component with changes
-  const updateParent = (updatedData: TeachingLearningData) => {
-    onDataChange({
-      teachingLearning: updatedData,
-    })
-  }
-
-  // Handle changes to evaluation items
-  const handleEvaluationChange = (
-    section: keyof Omit<TeachingLearningData, "overview" | "totalMarks">,
-    field: string,
-    type: "availability" | "quality",
-    value: number,
-  ) => {
-    setTeachingLearningData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            [type]: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to observations
-  const handleObservationChange = (
-    section: keyof Omit<TeachingLearningData, "overview" | "totalMarks">,
-    field: string,
-    value: string,
-  ) => {
-    setTeachingLearningData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            observation: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to overview fields
-  const handleOverviewChange = (field: keyof TeachingLearningData["overview"], value: string) => {
-    setTeachingLearningData((prev) => {
-      const updated = {
-        ...prev,
-        overview: {
-          ...prev.overview,
-          [field]: value,
-        },
-      }
-      return updated
-    })
-  }
-
-  // Calculate total marks for all sections
-  const calculateTotalMarks = () => {
+  // Calculate total marks
+  const calculateTotalMarks = useCallback(() => {
     // Define marks allocation for each item
     const marksAllocation = {
       cbtCba: {
@@ -311,17 +219,91 @@ export default function HeadteacherTeachingLearning({ data, onDataChange }: Head
       }
     })
 
-    // Update state without calling updateParent inside setState
+    return totalMarks
+  }, [teachingLearningData])
+
+  // Update total marks whenever data changes
+  useEffect(() => {
+    const newTotalMarks = calculateTotalMarks()
+
     setTeachingLearningData((prev) => ({
       ...prev,
-      totalMarks,
+      totalMarks: newTotalMarks,
     }))
+
+    // Update parent component with changes
+    onDataChange({
+      teachingLearning: {
+        ...teachingLearningData,
+        totalMarks: newTotalMarks,
+      },
+    })
+  }, [
+    teachingLearningData.cbtCba,
+    teachingLearningData.trainingPlanning,
+    teachingLearningData.cbaImplementation,
+    teachingLearningData.technologicalTools,
+    calculateTotalMarks,
+    onDataChange,
+    teachingLearningData.overview,
+  ])
+
+  // Handle changes to evaluation items
+  const handleEvaluationChange = (
+    section: keyof Omit<TeachingLearningData, "overview" | "totalMarks">,
+    field: string,
+    type: "availability" | "quality",
+    value: number,
+  ) => {
+    setTeachingLearningData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            [type]: value,
+          },
+        },
+      }
+      return updated
+    })
   }
 
-  // Add a separate useEffect to update the parent when totalMarks changes
-  useEffect(() => {
-    updateParent(teachingLearningData)
-  }, [teachingLearningData])
+  // Handle changes to observations
+  const handleObservationChange = (
+    section: keyof Omit<TeachingLearningData, "overview" | "totalMarks">,
+    field: string,
+    value: string,
+  ) => {
+    setTeachingLearningData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            observation: value,
+          },
+        },
+      }
+      return updated
+    })
+  }
+
+  // Handle changes to overview fields
+  const handleOverviewChange = (field: keyof TeachingLearningData["overview"], value: string) => {
+    setTeachingLearningData((prev) => {
+      const updated = {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          [field]: value,
+        },
+      }
+      return updated
+    })
+  }
 
   return (
     <div className="space-y-6">

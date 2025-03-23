@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { EvaluationItem } from "./evaluation/EvaluationItem"
-import type { HygieneAndSafetyData } from "./evaluation/EvaluationType"
 import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import type { HygieneAndSafetyData } from "./evaluation/EvaluationType"
 
 interface HeadteacherHygieneAndSafetyProps {
   data: any
@@ -12,6 +14,7 @@ interface HeadteacherHygieneAndSafetyProps {
 }
 
 export default function HeadteacherHygieneAndSafety({ data, onDataChange }: HeadteacherHygieneAndSafetyProps) {
+  const [activeTab, setActiveTab] = useState("administrationBlock")
   const [hygieneAndSafetyData, setHygieneAndSafetyData] = useState<HygieneAndSafetyData>({
     administrationBlock: {
       staffOffices: { availability: 0, quality: 0, observation: "" },
@@ -82,981 +85,2221 @@ export default function HeadteacherHygieneAndSafety({ data, onDataChange }: Head
     totalMarks: 0,
   })
 
-  // Add a type guard function at the top of your component (after the useState declaration)
-  const ensureFieldExists = (
-    data: HygieneAndSafetyData,
-    section: keyof Omit<HygieneAndSafetyData, "overview" | "totalMarks">,
-    field: string
-  ) => {
-    // Check if the section exists
-    if (!data[section]) {
-      data[section] = {} as any;
-    }
-    
-    // Check if the field exists in the section
-    if (!data[section][field]) {
-      data[section][field] = { availability: 0, quality: 0, observation: "" };
-    }
-    
-    return data;
-  };
-
-  // Initialize data from parent component
+  // Load data from parent component if available
   useEffect(() => {
     if (data?.hygieneAndSafety) {
-      // Create a deep copy of the initial state
-      const initialState = JSON.parse(JSON.stringify(hygieneAndSafetyData));
-      
-      // Merge with incoming data
-      const mergedData = {
-        ...initialState,
-        ...data.hygieneAndSafety
-      };
-      
-      // Ensure all required fields exist
-      const sections: (keyof Omit<HygieneAndSafetyData, "overview" | "totalMarks">)[] = [
-        'administrationBlock', 'classroomBlock', 'computerLab', 'library', 
-        'kitchen', 'refectory', 'dormitories', 'washrooms', 
-        'playgrounds', 'schoolGarden', 'workshops'
-      ];
-      
-      // For each section, ensure all fields exist
-      sections.forEach(section => {
-        if (section === 'administrationBlock') {
-          ['staffOffices', 'meetingRooms', 'accessibility', 'emergencyExits', 'ventilationLighting'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'classroomBlock') {
-          ['capacity', 'desksChairs', 'ventilationLighting', 'emergencyExits'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'computerLab') {
-          ['functionalComputers', 'internetAccess', 'workstationSetup', 'accessibility'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'library') {
-          ['booksResources', 'studyArea', 'conditionOfBooks', 'computers'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'kitchen') {
-          ['healthSafetyCompliance', 'foodStorage', 'sanitationFacilities'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'refectory') {
-          ['tablesSeating', 'cleanlinessHygiene', 'ventilation', 'wasteDisposal'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'dormitories') {
-          ['spacePrivacy', 'cleanlinessArrangement', 'fireSafety'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'washrooms') {
-          ['cleanlinessSupplies', 'privacySafety', 'accessibility'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'playgrounds') {
-          ['safetyOfEquipment', 'shadedAreas'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'schoolGarden') {
-          ['healthSafetyOfPlants', 'accessibility', 'educationalUse'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        } else if (section === 'workshops') {
-          ['toolsMachinery', 'ventilationSafety', 'storeArrangement', 'cleanliness'].forEach(field => {
-            mergedData[section][field] = mergedData[section][field] || { availability: 0, quality: 0, observation: "" };
-          });
-        }
-      });
-      
-      // Ensure overview exists
-      mergedData.overview = mergedData.overview || { strengths: "", weaknesses: "", areasOfImprovement: "" };
-      
-      setHygieneAndSafetyData(mergedData);
+      setHygieneAndSafetyData(data.hygieneAndSafety)
     }
-  }, [data]);
+  }, [data])
 
   // Calculate total marks
   const calculateTotalMarks = () => {
-    let totalMarks = 0
+    let total = 0
 
     // Administration Block
-    const adminItems = [
-      { field: hygieneAndSafetyData.administrationBlock.staffOffices, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.administrationBlock.meetingRooms, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.administrationBlock.accessibility, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.administrationBlock.emergencyExits, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.administrationBlock.ventilationLighting, isQualityNA: false, isAvailabilityNA: true },
-    ]
-
-    // Classroom Block
-    const classroomItems = [
-      { field: hygieneAndSafetyData.classroomBlock.capacity, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.classroomBlock.desksChairs, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.classroomBlock.ventilationLighting, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.classroomBlock.emergencyExits, isQualityNA: false, isAvailabilityNA: true },
-    ]
-
-    // Computer Lab
-    const computerLabItems = [
-      { field: hygieneAndSafetyData.computerLab.functionalComputers, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.computerLab.internetAccess, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.computerLab.workstationSetup, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.computerLab.accessibility, isQualityNA: false, isAvailabilityNA: true },
-    ]
-
-    // Library
-    const libraryItems = [
-      { field: hygieneAndSafetyData.library.booksResources, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.library.studyArea, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.library.conditionOfBooks, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.library.computers, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Kitchen
-    const kitchenItems = [
-      { field: hygieneAndSafetyData.kitchen.healthSafetyCompliance, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.kitchen.foodStorage, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.kitchen.sanitationFacilities, isQualityNA: false, isAvailabilityNA: true },
-    ]
-
-    // Refectory
-    const refectoryItems = [
-      { field: hygieneAndSafetyData.refectory.tablesSeating, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.refectory.cleanlinessHygiene, isQualityNA: false, isAvailabilityNA: true },
-      { field: hygieneAndSafetyData.refectory.ventilation, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.refectory.wasteDisposal, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Dormitories
-    const dormitoriesItems = [
-      { field: hygieneAndSafetyData.dormitories.spacePrivacy, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.dormitories.cleanlinessArrangement, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.dormitories.fireSafety, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Washrooms
-    const washroomsItems = [
-      { field: hygieneAndSafetyData.washrooms.cleanlinessSupplies, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.washrooms.privacySafety, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.washrooms.accessibility, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Playgrounds
-    const playgroundsItems = [
-      { field: hygieneAndSafetyData.playgrounds.safetyOfEquipment, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.playgrounds.shadedAreas, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // School Garden
-    const schoolGardenItems = [
-      { field: hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.schoolGarden.accessibility, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.schoolGarden.educationalUse, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Workshops
-    const workshopsItems = [
-      { field: hygieneAndSafetyData.workshops.toolsMachinery, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.workshops.ventilationSafety, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.workshops.storeArrangement, isQualityNA: true, isAvailabilityNA: false },
-      { field: hygieneAndSafetyData.workshops.cleanliness, isQualityNA: true, isAvailabilityNA: false },
-    ]
-
-    // Combine all items
-    const allItems = [
-      ...adminItems,
-      ...classroomItems,
-      ...computerLabItems,
-      ...libraryItems,
-      ...kitchenItems,
-      ...refectoryItems,
-      ...dormitoriesItems,
-      ...washroomsItems,
-      ...playgroundsItems,
-      ...schoolGardenItems,
-      ...workshopsItems,
-    ]
-
-    // Calculate marks for each item
-    allItems.forEach(item => {
-      const { field, isQualityNA, isAvailabilityNA } = item
-      const marksAllocated = 0.5 // Each item is worth 0.5 marks
-
-      if (isQualityNA) {
-        // If quality is N/A, only consider availability (100% of marks)
-        totalMarks += field.availability === 1 ? marksAllocated : 0
-      } else if (isAvailabilityNA) {
-        // If availability is N/A, only consider quality (100% of marks)
-        totalMarks += field.quality === 1 ? marksAllocated : 0
-      } else {
-        // Calculate total marks based on availability and quality
-        const availabilityMarks = field.availability === 1 ? marksAllocated * 0.4 : 0
-        const qualityMarks = field.quality === 1 ? marksAllocated * 0.6 : 0
-        totalMarks += availabilityMarks + qualityMarks
+    Object.values(hygieneAndSafetyData.administrationBlock).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
       }
     })
 
-    return totalMarks
+    // Classroom Block
+    Object.values(hygieneAndSafetyData.classroomBlock).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Computer Lab
+    Object.values(hygieneAndSafetyData.computerLab).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Library
+    Object.values(hygieneAndSafetyData.library).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Kitchen
+    Object.values(hygieneAndSafetyData.kitchen).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Refectory
+    Object.values(hygieneAndSafetyData.refectory).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Dormitories
+    Object.values(hygieneAndSafetyData.dormitories).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Washrooms
+    Object.values(hygieneAndSafetyData.washrooms).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Playgrounds
+    Object.values(hygieneAndSafetyData.playgrounds).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // School Garden
+    Object.values(hygieneAndSafetyData.schoolGarden).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    // Workshops
+    Object.values(hygieneAndSafetyData.workshops).forEach((item) => {
+      if (item.availability === 1 || item.quality === 1) {
+        total += 0.5
+      }
+    })
+
+    return total
   }
 
-  // Update total marks when data changes
-  useEffect(() => {
-    const newTotalMarks = calculateTotalMarks()
-    
-    // Only update if the total marks have changed
-    if (newTotalMarks !== hygieneAndSafetyData.totalMarks) {
-      setHygieneAndSafetyData(prev => ({
-        ...prev,
-        totalMarks: newTotalMarks
-      }))
+  // Update data and notify parent component
+  const updateData = (newData: HygieneAndSafetyData) => {
+    const totalMarks = calculateTotalMarks()
+    const updatedData = {
+      ...newData,
+      totalMarks,
     }
-  }, [
-    hygieneAndSafetyData.administrationBlock,
-    hygieneAndSafetyData.classroomBlock,
-    hygieneAndSafetyData.computerLab,
-    hygieneAndSafetyData.library,
-    hygieneAndSafetyData.kitchen,
-    hygieneAndSafetyData.refectory,
-    hygieneAndSafetyData.dormitories,
-    hygieneAndSafetyData.washrooms,
-    hygieneAndSafetyData.playgrounds,
-    hygieneAndSafetyData.schoolGarden,
-    hygieneAndSafetyData.workshops
-  ])
 
-  // Update parent component when total marks change
-  useEffect(() => {
-    onDataChange({
-      hygieneAndSafety: hygieneAndSafetyData
-    })
-  }, [hygieneAndSafetyData, onDataChange])
+    setHygieneAndSafetyData(updatedData)
+    onDataChange({ hygieneAndSafety: updatedData })
+  }
 
-  // Modify your handleEvaluationChange function to use the type guard
-  const handleEvaluationChange = (
+  // Handle radio button changes
+  const handleRadioChange = (
     section: keyof Omit<HygieneAndSafetyData, "overview" | "totalMarks">,
-    field: string,
-    type: 'availability' | 'quality',
-    value: number,
-  ) => {
-    setHygieneAndSafetyData((prev) => {
-      // First ensure the field exists
-      const updatedData = ensureFieldExists({...prev}, section, field);
-      
-      // Then update the value
-      updatedData[section][field][type] = value;
-      
-      return updatedData;
-    });
-  };
-
-  // Modify your handleObservationChange function to use the type guard
-  const handleObservationChange = (
-    section: keyof Omit<HygieneAndSafetyData, "overview" | "totalMarks">,
-    field: string,
+    item: string,
+    field: "availability" | "quality",
     value: string,
   ) => {
-    setHygieneAndSafetyData((prev) => {
-      // First ensure the field exists
-      const updatedData = ensureFieldExists({...prev}, section, field);
-      
-      // Then update the value
-      updatedData[section][field].observation = value;
-      
-      return updatedData;
-    });
-  };
-
-  // Handle field changes
-  const handleFieldChange = (
-    section: keyof HygieneAndSafetyData,
-    field: string,
-    subField: 'availability' | 'quality' | 'observation',
-    value: number | string
-  ) => {
-    if (subField === 'observation') {
-      handleObservationChange(section, field, value as string);
-    } else {
-      handleEvaluationChange(section, field, subField as 'availability' | 'quality', value as number);
+    const newData = {
+      ...hygieneAndSafetyData,
+      [section]: {
+        ...hygieneAndSafetyData[section],
+        [item]: {
+          ...hygieneAndSafetyData[section][item],
+          [field]: value === "yes" ? 1 : 0,
+        },
+      },
     }
+
+    updateData(newData)
+  }
+
+  // Handle observation changes
+  const handleObservationChange = (
+    section: keyof Omit<HygieneAndSafetyData, "overview" | "totalMarks">,
+    item: string,
+    value: string,
+  ) => {
+    const newData = {
+      ...hygieneAndSafetyData,
+      [section]: {
+        ...hygieneAndSafetyData[section],
+        [item]: {
+          ...hygieneAndSafetyData[section][item],
+          observation: value,
+        },
+      },
+    }
+
+    updateData(newData)
   }
 
   // Handle overview changes
-  const handleOverviewChange = (field: keyof typeof hygieneAndSafetyData.overview, value: string) => {
-    setHygieneAndSafetyData(prev => ({
-      ...prev,
+  const handleOverviewChange = (field: keyof HygieneAndSafetyData["overview"], value: string) => {
+    const newData = {
+      ...hygieneAndSafetyData,
       overview: {
-        ...prev.overview,
-        [field]: value
-      }
-    }))
+        ...hygieneAndSafetyData.overview,
+        [field]: value,
+      },
+    }
+
+    updateData(newData)
+  }
+
+  // Render content for Administration Block
+  const renderAdministrationBlock = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.1 Administration Block (2.5 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Offices of all staff</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.administrationBlock.staffOffices.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("administrationBlock", "staffOffices", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="staffOffices-avail-yes" />
+                      <Label htmlFor="staffOffices-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="staffOffices-avail-no" />
+                      <Label htmlFor="staffOffices-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.administrationBlock.staffOffices.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.administrationBlock.staffOffices.observation}
+                    onChange={(e) => handleObservationChange("administrationBlock", "staffOffices", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Meeting rooms</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.administrationBlock.meetingRooms.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("administrationBlock", "meetingRooms", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="meetingRooms-avail-yes" />
+                      <Label htmlFor="meetingRooms-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="meetingRooms-avail-no" />
+                      <Label htmlFor="meetingRooms-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"> </div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.administrationBlock.meetingRooms.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.administrationBlock.meetingRooms.observation}
+                    onChange={(e) => handleObservationChange("administrationBlock", "meetingRooms", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Accessibility and Condition of offices for staff and visitors</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.administrationBlock.accessibility.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("administrationBlock", "accessibility", "quality", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="accessibility-qual-yes" />
+                      <Label htmlFor="accessibility-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="accessibility-qual-no" />
+                      <Label htmlFor="accessibility-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.administrationBlock.accessibility.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.administrationBlock.accessibility.observation}
+                    onChange={(e) => handleObservationChange("administrationBlock", "accessibility", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Emergency exits</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.administrationBlock.emergencyExits.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("administrationBlock", "emergencyExits", "quality", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="emergencyExits-qual-yes" />
+                      <Label htmlFor="emergencyExits-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="emergencyExits-qual-no" />
+                      <Label htmlFor="emergencyExits-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.administrationBlock.emergencyExits.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.administrationBlock.emergencyExits.observation}
+                    onChange={(e) => handleObservationChange("administrationBlock", "emergencyExits", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Ventilation and lighting</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.administrationBlock.ventilationLighting.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("administrationBlock", "ventilationLighting", "quality", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="ventilationLighting-qual-yes" />
+                      <Label htmlFor="ventilationLighting-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="ventilationLighting-qual-no" />
+                      <Label htmlFor="ventilationLighting-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>
+                    {hygieneAndSafetyData.administrationBlock.ventilationLighting.quality === 1 ? "0.5" : "0.0"}
+                  </div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.administrationBlock.ventilationLighting.observation}
+                    onChange={(e) =>
+                      handleObservationChange("administrationBlock", "ventilationLighting", e.target.value)
+                    }
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Classroom Block
+  const renderClassroomBlock = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.2 Classroom Block (2 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Capacity to accommodate students comfortably</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.classroomBlock.capacity.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("classroomBlock", "capacity", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="capacity-qual-yes" />
+                      <Label htmlFor="capacity-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="capacity-qual-no" />
+                      <Label htmlFor="capacity-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.classroomBlock.capacity.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.classroomBlock.capacity.observation}
+                    onChange={(e) => handleObservationChange("classroomBlock", "capacity", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Desks and chairs</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.classroomBlock.desksChairs.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("classroomBlock", "desksChairs", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="desksChairs-avail-yes" />
+                      <Label htmlFor="desksChairs-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="desksChairs-avail-no" />
+                      <Label htmlFor="desksChairs-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.classroomBlock.desksChairs.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.classroomBlock.desksChairs.observation}
+                    onChange={(e) => handleObservationChange("classroomBlock", "desksChairs", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Ventilation and lighting</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.classroomBlock.ventilationLighting.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("classroomBlock", "ventilationLighting", "quality", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="classroomVentilation-qual-yes" />
+                      <Label htmlFor="classroomVentilation-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="classroomVentilation-qual-no" />
+                      <Label htmlFor="classroomVentilation-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.classroomBlock.ventilationLighting.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.classroomBlock.ventilationLighting.observation}
+                    onChange={(e) => handleObservationChange("classroomBlock", "ventilationLighting", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Emergency exits</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.classroomBlock.emergencyExits.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("classroomBlock", "emergencyExits", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="classroomEmergency-qual-yes" />
+                      <Label htmlFor="classroomEmergency-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="classroomEmergency-qual-no" />
+                      <Label htmlFor="classroomEmergency-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.classroomBlock.emergencyExits.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.classroomBlock.emergencyExits.observation}
+                    onChange={(e) => handleObservationChange("classroomBlock", "emergencyExits", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Computer Lab
+  const renderComputerLab = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.3 Computer Lab (2 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Functional computers related to the number of students</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.computerLab.functionalComputers.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("computerLab", "functionalComputers", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="functionalComputers-qual-yes" />
+                      <Label htmlFor="functionalComputers-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="functionalComputers-qual-no" />
+                      <Label htmlFor="functionalComputers-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.computerLab.functionalComputers.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.computerLab.functionalComputers.observation}
+                    onChange={(e) => handleObservationChange("computerLab", "functionalComputers", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Internet access</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.computerLab.internetAccess.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("computerLab", "internetAccess", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="internetAccess-qual-yes" />
+                      <Label htmlFor="internetAccess-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="internetAccess-qual-no" />
+                      <Label htmlFor="internetAccess-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.computerLab.internetAccess.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.computerLab.internetAccess.observation}
+                    onChange={(e) => handleObservationChange("computerLab", "internetAccess", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Setup of workstations</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.computerLab.workstationSetup.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("computerLab", "workstationSetup", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="workstationSetup-qual-yes" />
+                      <Label htmlFor="workstationSetup-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="workstationSetup-qual-no" />
+                      <Label htmlFor="workstationSetup-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.computerLab.workstationSetup.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.computerLab.workstationSetup.observation}
+                    onChange={(e) => handleObservationChange("computerLab", "workstationSetup", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Accessibility and quiet study areas</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.computerLab.accessibility.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("computerLab", "accessibility", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="computerAccessibility-qual-yes" />
+                      <Label htmlFor="computerAccessibility-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="computerAccessibility-qual-no" />
+                      <Label htmlFor="computerAccessibility-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.computerLab.accessibility.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.computerLab.accessibility.observation}
+                    onChange={(e) => handleObservationChange("computerLab", "accessibility", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Library
+  const renderLibrary = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.4 Library (2 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Books and other resources</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.library.booksResources.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("library", "booksResources", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="booksResources-avail-yes" />
+                      <Label htmlFor="booksResources-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="booksResources-avail-no" />
+                      <Label htmlFor="booksResources-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.library.booksResources.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.library.booksResources.observation}
+                    onChange={(e) => handleObservationChange("library", "booksResources", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Study area</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.library.studyArea.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("library", "studyArea", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="studyArea-qual-yes" />
+                      <Label htmlFor="studyArea-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="studyArea-qual-no" />
+                      <Label htmlFor="studyArea-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.library.studyArea.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.library.studyArea.observation}
+                    onChange={(e) => handleObservationChange("library", "studyArea", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Condition of books and resources</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.library.conditionOfBooks.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("library", "conditionOfBooks", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="conditionOfBooks-qual-yes" />
+                      <Label htmlFor="conditionOfBooks-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="conditionOfBooks-qual-no" />
+                      <Label htmlFor="conditionOfBooks-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.library.conditionOfBooks.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.library.conditionOfBooks.observation}
+                    onChange={(e) => handleObservationChange("library", "conditionOfBooks", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Computers</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.library.computers.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("library", "computers", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="libraryComputers-avail-yes" />
+                      <Label htmlFor="libraryComputers-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="libraryComputers-avail-no" />
+                      <Label htmlFor="libraryComputers-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.library.computers.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.library.computers.observation}
+                    onChange={(e) => handleObservationChange("library", "computers", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Kitchen
+  const renderKitchen = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.5 Kitchen (1.5 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Compliance with health and safety regulations</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.kitchen.healthSafetyCompliance.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("kitchen", "healthSafetyCompliance", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="healthSafetyCompliance-qual-yes" />
+                      <Label htmlFor="healthSafetyCompliance-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="healthSafetyCompliance-qual-no" />
+                      <Label htmlFor="healthSafetyCompliance-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.kitchen.healthSafetyCompliance.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.kitchen.healthSafetyCompliance.observation}
+                    onChange={(e) => handleObservationChange("kitchen", "healthSafetyCompliance", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Cleanliness and organization of food storage</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.kitchen.foodStorage.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("kitchen", "foodStorage", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="foodStorage-qual-yes" />
+                      <Label htmlFor="foodStorage-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="foodStorage-qual-no" />
+                      <Label htmlFor="foodStorage-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.kitchen.foodStorage.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.kitchen.foodStorage.observation}
+                    onChange={(e) => handleObservationChange("kitchen", "foodStorage", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Proper sanitation facilities for food preparation</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.kitchen.sanitationFacilities.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("kitchen", "sanitationFacilities", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="sanitationFacilities-qual-yes" />
+                      <Label htmlFor="sanitationFacilities-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="sanitationFacilities-qual-no" />
+                      <Label htmlFor="sanitationFacilities-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.kitchen.sanitationFacilities.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.kitchen.sanitationFacilities.observation}
+                    onChange={(e) => handleObservationChange("kitchen", "sanitationFacilities", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Refectory
+  const renderRefectory = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.6 Refectory (2 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Condition of tables and seating arrangements</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.refectory.tablesSeating.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("refectory", "tablesSeating", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="tablesSeating-qual-yes" />
+                      <Label htmlFor="tablesSeating-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="tablesSeating-qual-no" />
+                      <Label htmlFor="tablesSeating-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.refectory.tablesSeating.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.refectory.tablesSeating.observation}
+                    onChange={(e) => handleObservationChange("refectory", "tablesSeating", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Cleanliness and hygiene practices</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.refectory.cleanlinessHygiene.quality === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("refectory", "cleanlinessHygiene", "quality", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="cleanlinessHygiene-qual-yes" />
+                      <Label htmlFor="cleanlinessHygiene-qual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="cleanlinessHygiene-qual-no" />
+                      <Label htmlFor="cleanlinessHygiene-qual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.refectory.cleanlinessHygiene.quality === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.refectory.cleanlinessHygiene.observation}
+                    onChange={(e) => handleObservationChange("refectory", "cleanlinessHygiene", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Ventilation</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.refectory.ventilation.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("refectory", "ventilation", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="refectoryVentilation-avail-yes" />
+                      <Label htmlFor="refectoryVentilation-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="refectoryVentilation-avail-no" />
+                      <Label htmlFor="refectoryVentilation-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.refectory.ventilation.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.refectory.ventilation.observation}
+                    onChange={(e) => handleObservationChange("refectory", "ventilation", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Waste disposal systems</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.refectory.wasteDisposal.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("refectory", "wasteDisposal", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="wasteDisposal-avail-yes" />
+                      <Label htmlFor="wasteDisposal-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="wasteDisposal-avail-no" />
+                      <Label htmlFor="wasteDisposal-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.refectory.wasteDisposal.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.refectory.wasteDisposal.observation}
+                    onChange={(e) => handleObservationChange("refectory", "wasteDisposal", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Dormitories
+  const renderDormitories = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.7 Dormitories (1.5 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Adequate space and privacy for students</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.dormitories.spacePrivacy.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("dormitories", "spacePrivacy", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="spacePrivacy-avail-yes" />
+                      <Label htmlFor="spacePrivacy-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="spacePrivacy-avail-no" />
+                      <Label htmlFor="spacePrivacy-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.dormitories.spacePrivacy.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.dormitories.spacePrivacy.observation}
+                    onChange={(e) => handleObservationChange("dormitories", "spacePrivacy", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Cleanliness and beds arrangement</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.dormitories.cleanlinessArrangement.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("dormitories", "cleanlinessArrangement", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="cleanlinessArrangement-avail-yes" />
+                      <Label htmlFor="cleanlinessArrangement-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="cleanlinessArrangement-avail-no" />
+                      <Label htmlFor="cleanlinessArrangement-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>
+                    {hygieneAndSafetyData.dormitories.cleanlinessArrangement.availability === 1 ? "0.5" : "0.0"}
+                  </div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.dormitories.cleanlinessArrangement.observation}
+                    onChange={(e) => handleObservationChange("dormitories", "cleanlinessArrangement", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Fire safety measures and emergency exits</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.dormitories.fireSafety.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("dormitories", "fireSafety", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="fireSafety-avail-yes" />
+                      <Label htmlFor="fireSafety-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="fireSafety-avail-no" />
+                      <Label htmlFor="fireSafety-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.dormitories.fireSafety.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.dormitories.fireSafety.observation}
+                    onChange={(e) => handleObservationChange("dormitories", "fireSafety", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Washrooms
+  const renderWashrooms = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.8 Washrooms (1.5 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Cleanliness and availability of supplies (soap, paper)</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.washrooms.cleanlinessSupplies.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("washrooms", "cleanlinessSupplies", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="cleanlinessSupplies-avail-yes" />
+                      <Label htmlFor="cleanlinessSupplies-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="cleanlinessSupplies-avail-no" />
+                      <Label htmlFor="cleanlinessSupplies-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.washrooms.cleanlinessSupplies.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.washrooms.cleanlinessSupplies.observation}
+                    onChange={(e) => handleObservationChange("washrooms", "cleanlinessSupplies", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Adequate privacy and safety measures</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.washrooms.privacySafety.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("washrooms", "privacySafety", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="privacySafety-avail-yes" />
+                      <Label htmlFor="privacySafety-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="privacySafety-avail-no" />
+                      <Label htmlFor="privacySafety-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.washrooms.privacySafety.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.washrooms.privacySafety.observation}
+                    onChange={(e) => handleObservationChange("washrooms", "privacySafety", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Accessibility and sufficient for all students</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.washrooms.accessibility.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("washrooms", "accessibility", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="washroomAccessibility-avail-yes" />
+                      <Label htmlFor="washroomAccessibility-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="washroomAccessibility-avail-no" />
+                      <Label htmlFor="washroomAccessibility-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.washrooms.accessibility.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.washrooms.accessibility.observation}
+                    onChange={(e) => handleObservationChange("washrooms", "accessibility", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Playgrounds
+  const renderPlaygrounds = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.9 Playgrounds (1 mark)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Safety of equipment and surfaces</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.playgrounds.safetyOfEquipment.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("playgrounds", "safetyOfEquipment", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="safetyOfEquipment-avail-yes" />
+                      <Label htmlFor="safetyOfEquipment-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="safetyOfEquipment-avail-no" />
+                      <Label htmlFor="safetyOfEquipment-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.playgrounds.safetyOfEquipment.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.playgrounds.safetyOfEquipment.observation}
+                    onChange={(e) => handleObservationChange("playgrounds", "safetyOfEquipment", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Availability of shaded areas</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.playgrounds.shadedAreas.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("playgrounds", "shadedAreas", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="shadedAreas-avail-yes" />
+                      <Label htmlFor="shadedAreas-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="shadedAreas-avail-no" />
+                      <Label htmlFor="shadedAreas-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.playgrounds.shadedAreas.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.playgrounds.shadedAreas.observation}
+                    onChange={(e) => handleObservationChange("playgrounds", "shadedAreas", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for School Garden
+  const renderSchoolGarden = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.10 School Garden (1.5 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Health and safety of plants (non-toxic)</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("schoolGarden", "healthSafetyOfPlants", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="healthSafetyOfPlants-avail-yes" />
+                      <Label htmlFor="healthSafetyOfPlants-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="healthSafetyOfPlants-avail-no" />
+                      <Label htmlFor="healthSafetyOfPlants-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.observation}
+                    onChange={(e) => handleObservationChange("schoolGarden", "healthSafetyOfPlants", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Accessibility for students</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.schoolGarden.accessibility.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("schoolGarden", "accessibility", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="gardenAccessibility-avail-yes" />
+                      <Label htmlFor="gardenAccessibility-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="gardenAccessibility-avail-no" />
+                      <Label htmlFor="gardenAccessibility-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.schoolGarden.accessibility.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.schoolGarden.accessibility.observation}
+                    onChange={(e) => handleObservationChange("schoolGarden", "accessibility", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Educational use of the garden</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.schoolGarden.educationalUse.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("schoolGarden", "educationalUse", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="educationalUse-avail-yes" />
+                      <Label htmlFor="educationalUse-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="educationalUse-avail-no" />
+                      <Label htmlFor="educationalUse-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.schoolGarden.educationalUse.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.schoolGarden.educationalUse.observation}
+                    onChange={(e) => handleObservationChange("schoolGarden", "educationalUse", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render content for Workshops
+  const renderWorkshops = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-blue-700">6.11 Workshops (2 marks)</h3>
+
+        <div className="bg-blue-50/50 p-6 rounded-md">
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Condition of tools and machinery</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.workshops.toolsMachinery.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("workshops", "toolsMachinery", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="toolsMachinery-avail-yes" />
+                      <Label htmlFor="toolsMachinery-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="toolsMachinery-avail-no" />
+                      <Label htmlFor="toolsMachinery-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.workshops.toolsMachinery.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.workshops.toolsMachinery.observation}
+                    onChange={(e) => handleObservationChange("workshops", "toolsMachinery", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Proper ventilation and safety measures</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.workshops.ventilationSafety.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) =>
+                      handleRadioChange("workshops", "ventilationSafety", "availability", value)
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="ventilationSafety-avail-yes" />
+                      <Label htmlFor="ventilationSafety-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="ventilationSafety-avail-no" />
+                      <Label htmlFor="ventilationSafety-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.workshops.ventilationSafety.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.workshops.ventilationSafety.observation}
+                    onChange={(e) => handleObservationChange("workshops", "ventilationSafety", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Store arrangement</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.workshops.storeArrangement.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("workshops", "storeArrangement", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="storeArrangement-avail-yes" />
+                      <Label htmlFor="storeArrangement-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="storeArrangement-avail-no" />
+                      <Label htmlFor="storeArrangement-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.workshops.storeArrangement.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.workshops.storeArrangement.observation}
+                    onChange={(e) => handleObservationChange("workshops", "storeArrangement", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-start">
+                <div className="w-1/3 pt-1">
+                  <p className="font-medium">Cleanliness</p>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Availability (40%)</div>
+                  <RadioGroup
+                    value={hygieneAndSafetyData.workshops.cleanliness.availability === 1 ? "yes" : "no"}
+                    onValueChange={(value) => handleRadioChange("workshops", "cleanliness", "availability", value)}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="yes" id="workshopCleanliness-avail-yes" />
+                      <Label htmlFor="workshopCleanliness-avail-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="no" id="workshopCleanliness-avail-no" />
+                      <Label htmlFor="workshopCleanliness-avail-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="w-1/6">
+                  <div className="text-sm text-gray-500 mb-1">Quality (60%)</div>
+                  <div className="text-center">N/A</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>0.5</div>
+                </div>
+                <div className="w-1/12 text-center">
+                  <div className="text-sm text-gray-500 mb-1"></div>
+                  <div>{hygieneAndSafetyData.workshops.cleanliness.availability === 1 ? "0.5" : "0.0"}</div>
+                </div>
+                <div className="w-1/4">
+                  <Textarea
+                    placeholder="Add observation..."
+                    value={hygieneAndSafetyData.workshops.cleanliness.observation}
+                    onChange={(e) => handleObservationChange("workshops", "cleanliness", e.target.value)}
+                    className="h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render the active tab content
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case "administrationBlock":
+        return renderAdministrationBlock()
+      case "classroomBlock":
+        return renderClassroomBlock()
+      case "computerLab":
+        return renderComputerLab()
+      case "library":
+        return renderLibrary()
+      case "kitchen":
+        return renderKitchen()
+      case "refectory":
+        return renderRefectory()
+      case "dormitories":
+        return renderDormitories()
+      case "washrooms":
+        return renderWashrooms()
+      case "playgrounds":
+        return renderPlaygrounds()
+      case "schoolGarden":
+        return renderSchoolGarden()
+      case "workshops":
+        return renderWorkshops()
+      default:
+        return renderAdministrationBlock()
+    }
   }
 
   return (
-    <Card className="border-blue-200">
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-blue-700">6. Hygiene and Safety (20 Marks)</h2>
-          <div className="text-right">
-            <p className="text-sm text-blue-600">Total Score</p>
-            <p className="text-xl font-bold text-blue-800">{hygieneAndSafetyData.totalMarks.toFixed(1)} / 20</p>
+    <div className="space-y-6">
+      <Card className="border-blue-200">
+        <CardContent className="pt-6">
+          <h2 className="text-xl font-semibold text-blue-700 mb-6">6. Hygiene and Safety (20 Marks)</h2>
+
+          <div className="flex flex-wrap gap-1 bg-slate-50 p-2 rounded-md mb-6">
+            <Button
+              variant={activeTab === "administrationBlock" ? "default" : "outline"}
+              onClick={() => setActiveTab("administrationBlock")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.1 Administration Block
+            </Button>
+            <Button
+              variant={activeTab === "classroomBlock" ? "default" : "outline"}
+              onClick={() => setActiveTab("classroomBlock")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.2 Classroom Block
+            </Button>
+            <Button
+              variant={activeTab === "computerLab" ? "default" : "outline"}
+              onClick={() => setActiveTab("computerLab")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.3 Computer Lab
+            </Button>
+            <Button
+              variant={activeTab === "library" ? "default" : "outline"}
+              onClick={() => setActiveTab("library")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.4 Library
+            </Button>
+            <Button
+              variant={activeTab === "kitchen" ? "default" : "outline"}
+              onClick={() => setActiveTab("kitchen")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.5 Kitchen
+            </Button>
+            <Button
+              variant={activeTab === "refectory" ? "default" : "outline"}
+              onClick={() => setActiveTab("refectory")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.6 Refectory
+            </Button>
+            <Button
+              variant={activeTab === "dormitories" ? "default" : "outline"}
+              onClick={() => setActiveTab("dormitories")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.7 Dormitories
+            </Button>
+            <Button
+              variant={activeTab === "washrooms" ? "default" : "outline"}
+              onClick={() => setActiveTab("washrooms")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.8 Washrooms
+            </Button>
+            <Button
+              variant={activeTab === "playgrounds" ? "default" : "outline"}
+              onClick={() => setActiveTab("playgrounds")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.9 Playgrounds
+            </Button>
+            <Button
+              variant={activeTab === "schoolGarden" ? "default" : "outline"}
+              onClick={() => setActiveTab("schoolGarden")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.10 School Garden
+            </Button>
+            <Button
+              variant={activeTab === "workshops" ? "default" : "outline"}
+              onClick={() => setActiveTab("workshops")}
+              className="text-sm px-3 py-1 h-auto"
+              size="sm"
+            >
+              6.11 Workshops
+            </Button>
           </div>
-        </div>
 
-        {/* Header */}
-        <div className="grid grid-cols-[2fr,1fr,1fr,0.5fr,0.5fr,1fr] gap-4 bg-blue-50 p-2 rounded-md mb-2">
-          <div className="font-semibold text-blue-700">Evaluation area/Achievement indicators</div>
-          <div className="text-center font-semibold text-blue-700">Availability (Weight: 40%)</div>
-          <div className="text-center font-semibold text-blue-700">Quality (Weight: 60%)</div>
-          <div className="text-center font-semibold text-blue-700">Marks allocated</div>
-          <div className="text-center font-semibold text-blue-700">Total marks</div>
-          <div className="text-center font-semibold text-blue-700">Observation</div>
-        </div>
+          {renderActiveTabContent()}
 
-        {/* 6.1 Administration Block */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.1 Administration Block</h3>
-          
-          <EvaluationItem
-            id="staffOffices"
-            label="Offices of all staff"
-            availabilityValue={hygieneAndSafetyData.administrationBlock.staffOffices.availability}
-            qualityValue={hygieneAndSafetyData.administrationBlock.staffOffices.quality}
-            onAvailabilityChange={(value) => handleFieldChange('administrationBlock', 'staffOffices', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('administrationBlock', 'staffOffices', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.administrationBlock.staffOffices.observation}
-            onObservationChange={(value) => handleFieldChange('administrationBlock', 'staffOffices', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="meetingRooms"
-            label="Meeting rooms"
-            availabilityValue={hygieneAndSafetyData.administrationBlock.meetingRooms.availability}
-            qualityValue={hygieneAndSafetyData.administrationBlock.meetingRooms.quality}
-            onAvailabilityChange={(value) => handleFieldChange('administrationBlock', 'meetingRooms', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('administrationBlock', 'meetingRooms', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.administrationBlock.meetingRooms.observation}
-            onObservationChange={(value) => handleFieldChange('administrationBlock', 'meetingRooms', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="accessibility"
-            label="Accessibility and Condition of offices for staff and visitors"
-            availabilityValue={hygieneAndSafetyData.administrationBlock.accessibility.availability}
-            qualityValue={hygieneAndSafetyData.administrationBlock.accessibility.quality}
-            onAvailabilityChange={(value) => handleFieldChange('administrationBlock', 'accessibility', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('administrationBlock', 'accessibility', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.administrationBlock.accessibility.observation}
-            onObservationChange={(value) => handleFieldChange('administrationBlock', 'accessibility', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="emergencyExits"
-            label="Emergency exits"
-            availabilityValue={hygieneAndSafetyData.administrationBlock.emergencyExits.availability}
-            qualityValue={hygieneAndSafetyData.administrationBlock.emergencyExits.quality}
-            onAvailabilityChange={(value) => handleFieldChange('administrationBlock', 'emergencyExits', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('administrationBlock', 'emergencyExits', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.administrationBlock.emergencyExits.observation}
-            onObservationChange={(value) => handleFieldChange('administrationBlock', 'emergencyExits', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="ventilationLighting"
-            label="Ventilation and lighting"
-            availabilityValue={hygieneAndSafetyData.administrationBlock.ventilationLighting.availability}
-            qualityValue={hygieneAndSafetyData.administrationBlock.ventilationLighting.quality}
-            onAvailabilityChange={(value) => handleFieldChange('administrationBlock', 'ventilationLighting', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('administrationBlock', 'ventilationLighting', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.administrationBlock.ventilationLighting.observation}
-            onObservationChange={(value) => handleFieldChange('administrationBlock', 'ventilationLighting', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.2 Classroom Block */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.2 Classroom Block</h3>
-          
-          <EvaluationItem
-            id="capacity"
-            label="Capacity to accommodate students comfortably"
-            availabilityValue={hygieneAndSafetyData.classroomBlock.capacity.availability}
-            qualityValue={hygieneAndSafetyData.classroomBlock.capacity.quality}
-            onAvailabilityChange={(value) => handleFieldChange('classroomBlock', 'capacity', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('classroomBlock', 'capacity', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.classroomBlock.capacity.observation}
-            onObservationChange={(value) => handleFieldChange('classroomBlock', 'capacity', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="desksChairs"
-            label="Desks and chairs"
-            availabilityValue={hygieneAndSafetyData.classroomBlock.desksChairs.availability}
-            qualityValue={hygieneAndSafetyData.classroomBlock.desksChairs.quality}
-            onAvailabilityChange={(value) => handleFieldChange('classroomBlock', 'desksChairs', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('classroomBlock', 'desksChairs', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.classroomBlock.desksChairs.observation}
-            onObservationChange={(value) => handleFieldChange('classroomBlock', 'desksChairs', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="ventilationLightingClassroom"
-            label="Ventilation and lighting"
-            availabilityValue={hygieneAndSafetyData.classroomBlock.ventilationLighting.availability}
-            qualityValue={hygieneAndSafetyData.classroomBlock.ventilationLighting.quality}
-            onAvailabilityChange={(value) => handleFieldChange('classroomBlock', 'ventilationLighting', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('classroomBlock', 'ventilationLighting', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.classroomBlock.ventilationLighting.observation}
-            onObservationChange={(value) => handleFieldChange('classroomBlock', 'ventilationLighting', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="emergencyExitsClassroom"
-            label="Emergency exits"
-            availabilityValue={hygieneAndSafetyData.classroomBlock.emergencyExits.availability}
-            qualityValue={hygieneAndSafetyData.classroomBlock.emergencyExits.quality}
-            onAvailabilityChange={(value) => handleFieldChange('classroomBlock', 'emergencyExits', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('classroomBlock', 'emergencyExits', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.classroomBlock.emergencyExits.observation}
-            onObservationChange={(value) => handleFieldChange('classroomBlock', 'emergencyExits', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.3 Computer Lab */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.3 Computer Lab</h3>
-          
-          <EvaluationItem
-            id="functionalComputers"
-            label="Functional computers related to the number of students"
-            availabilityValue={hygieneAndSafetyData.computerLab.functionalComputers.availability}
-            qualityValue={hygieneAndSafetyData.computerLab.functionalComputers.quality}
-            onAvailabilityChange={(value) => handleFieldChange('computerLab', 'functionalComputers', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('computerLab', 'functionalComputers', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.computerLab.functionalComputers.observation}
-            onObservationChange={(value) => handleFieldChange('computerLab', 'functionalComputers', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="internetAccess"
-            label="Internet access"
-            availabilityValue={hygieneAndSafetyData.computerLab.internetAccess.availability}
-            qualityValue={hygieneAndSafetyData.computerLab.internetAccess.quality}
-            onAvailabilityChange={(value) => handleFieldChange('computerLab', 'internetAccess', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('computerLab', 'internetAccess', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.computerLab.internetAccess.observation}
-            onObservationChange={(value) => handleFieldChange('computerLab', 'internetAccess', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="workstationSetup"
-            label="Setup of workstations"
-            availabilityValue={hygieneAndSafetyData.computerLab.workstationSetup.availability}
-            qualityValue={hygieneAndSafetyData.computerLab.workstationSetup.quality}
-            onAvailabilityChange={(value) => handleFieldChange('computerLab', 'workstationSetup', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('computerLab', 'workstationSetup', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.computerLab.workstationSetup.observation}
-            onObservationChange={(value) => handleFieldChange('computerLab', 'workstationSetup', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="accessibilityLab"
-            label="Accessibility and quiet study areas"
-            availabilityValue={hygieneAndSafetyData.computerLab.accessibility.availability}
-            qualityValue={hygieneAndSafetyData.computerLab.accessibility.quality}
-            onAvailabilityChange={(value) => handleFieldChange('computerLab', 'accessibility', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('computerLab', 'accessibility', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.computerLab.accessibility.observation}
-            onObservationChange={(value) => handleFieldChange('computerLab', 'accessibility', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.4 Library */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.4 Library</h3>
-          
-          <EvaluationItem
-            id="booksResources"
-            label="Books and other resources"
-            availabilityValue={hygieneAndSafetyData.library.booksResources.availability}
-            qualityValue={hygieneAndSafetyData.library.booksResources.quality}
-            onAvailabilityChange={(value) => handleFieldChange('library', 'booksResources', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('library', 'booksResources', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.library.booksResources.observation}
-            onObservationChange={(value) => handleFieldChange('library', 'booksResources', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="studyArea"
-            label="Study area"
-            availabilityValue={hygieneAndSafetyData.library.studyArea.availability}
-            qualityValue={hygieneAndSafetyData.library.studyArea.quality}
-            onAvailabilityChange={(value) => handleFieldChange('library', 'studyArea', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('library', 'studyArea', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.library.studyArea.observation}
-            onObservationChange={(value) => handleFieldChange('library', 'studyArea', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="conditionOfBooks"
-            label="Condition of books and resources"
-            availabilityValue={hygieneAndSafetyData.library.conditionOfBooks.availability}
-            qualityValue={hygieneAndSafetyData.library.conditionOfBooks.quality}
-            onAvailabilityChange={(value) => handleFieldChange('library', 'conditionOfBooks', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('library', 'conditionOfBooks', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.library.conditionOfBooks.observation}
-            onObservationChange={(value) => handleFieldChange('library', 'conditionOfBooks', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="computers"
-            label="Computers"
-            availabilityValue={hygieneAndSafetyData.library.computers.availability}
-            qualityValue={hygieneAndSafetyData.library.computers.quality}
-            onAvailabilityChange={(value) => handleFieldChange('library', 'computers', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('library', 'computers', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.library.computers.observation}
-            onObservationChange={(value) => handleFieldChange('library', 'computers', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.5 Kitchen */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.5 Kitchen</h3>
-          
-          <EvaluationItem
-            id="healthSafetyCompliance"
-            label="Compliance with health and safety regulations"
-            availabilityValue={hygieneAndSafetyData.kitchen.healthSafetyCompliance.availability}
-            qualityValue={hygieneAndSafetyData.kitchen.healthSafetyCompliance.quality}
-            onAvailabilityChange={(value) => handleFieldChange('kitchen', 'healthSafetyCompliance', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('kitchen', 'healthSafetyCompliance', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.kitchen.healthSafetyCompliance.observation}
-            onObservationChange={(value) => handleFieldChange('kitchen', 'healthSafetyCompliance', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="foodStorage"
-            label="Cleanliness and organization of food storage"
-            availabilityValue={hygieneAndSafetyData.kitchen.foodStorage.availability}
-            qualityValue={hygieneAndSafetyData.kitchen.foodStorage.quality}
-            onAvailabilityChange={(value) => handleFieldChange('kitchen', 'foodStorage', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('kitchen', 'foodStorage', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.kitchen.foodStorage.observation}
-            onObservationChange={(value) => handleFieldChange('kitchen', 'foodStorage', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="sanitationFacilities"
-            label="Proper sanitation facilities for food preparation"
-            availabilityValue={hygieneAndSafetyData.kitchen.sanitationFacilities.availability}
-            qualityValue={hygieneAndSafetyData.kitchen.sanitationFacilities.quality}
-            onAvailabilityChange={(value) => handleFieldChange('kitchen', 'sanitationFacilities', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('kitchen', 'sanitationFacilities', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.kitchen.sanitationFacilities.observation}
-            onObservationChange={(value) => handleFieldChange('kitchen', 'sanitationFacilities', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.6 Refectory */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.6 Refectory</h3>
-          
-          <EvaluationItem
-            id="tablesSeating"
-            label="Condition of tables and seating arrangements"
-            availabilityValue={hygieneAndSafetyData.refectory.tablesSeating.availability}
-            qualityValue={hygieneAndSafetyData.refectory.tablesSeating.quality}
-            onAvailabilityChange={(value) => handleFieldChange('refectory', 'tablesSeating', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('refectory', 'tablesSeating', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.refectory.tablesSeating.observation}
-            onObservationChange={(value) => handleFieldChange('refectory', 'tablesSeating', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="cleanlinessHygiene"
-            label="Cleanliness and hygiene practices"
-            availabilityValue={hygieneAndSafetyData.refectory.cleanlinessHygiene.availability}
-            qualityValue={hygieneAndSafetyData.refectory.cleanlinessHygiene.quality}
-            onAvailabilityChange={(value) => handleFieldChange('refectory', 'cleanlinessHygiene', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('refectory', 'cleanlinessHygiene', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="100%"
-            availabilityWeight="N/A"
-            isAvailabilityNA={true}
-            observation={hygieneAndSafetyData.refectory.cleanlinessHygiene.observation}
-            onObservationChange={(value) => handleFieldChange('refectory', 'cleanlinessHygiene', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="ventilation"
-            label="Ventilation"
-            availabilityValue={hygieneAndSafetyData.refectory.ventilation.availability}
-            qualityValue={hygieneAndSafetyData.refectory.ventilation.quality}
-            onAvailabilityChange={(value) => handleFieldChange('refectory', 'ventilation', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('refectory', 'ventilation', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.refectory.ventilation.observation}
-            onObservationChange={(value) => handleFieldChange('refectory', 'ventilation', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="wasteDisposal"
-            label="Waste disposal systems"
-            availabilityValue={hygieneAndSafetyData.refectory.wasteDisposal.availability}
-            qualityValue={hygieneAndSafetyData.refectory.wasteDisposal.quality}
-            onAvailabilityChange={(value) => handleFieldChange('refectory', 'wasteDisposal', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('refectory', 'wasteDisposal', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.refectory.wasteDisposal.observation}
-            onObservationChange={(value) => handleFieldChange('refectory', 'wasteDisposal', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.7 Dormitories */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.7 Dormitories</h3>
-          
-          <EvaluationItem
-            id="spacePrivacy"
-            label="Adequate space and privacy for students"
-            availabilityValue={hygieneAndSafetyData.dormitories.spacePrivacy.availability}
-            qualityValue={hygieneAndSafetyData.dormitories.spacePrivacy.quality}
-            onAvailabilityChange={(value) => handleFieldChange('dormitories', 'spacePrivacy', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('dormitories', 'spacePrivacy', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.dormitories.spacePrivacy.observation}
-            onObservationChange={(value) => handleFieldChange('dormitories', 'spacePrivacy', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="cleanlinessArrangement"
-            label="Cleanliness and beds arrangement"
-            availabilityValue={hygieneAndSafetyData.dormitories.cleanlinessArrangement.availability}
-            qualityValue={hygieneAndSafetyData.dormitories.cleanlinessArrangement.quality}
-            onAvailabilityChange={(value) => handleFieldChange('dormitories', 'cleanlinessArrangement', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('dormitories', 'cleanlinessArrangement', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.dormitories.cleanlinessArrangement.observation}
-            onObservationChange={(value) => handleFieldChange('dormitories', 'cleanlinessArrangement', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="fireSafety"
-            label="Fire safety measures and emergency exits"
-            availabilityValue={hygieneAndSafetyData.dormitories.fireSafety.availability}
-            qualityValue={hygieneAndSafetyData.dormitories.fireSafety.quality}
-            onAvailabilityChange={(value) => handleFieldChange('dormitories', 'fireSafety', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('dormitories', 'fireSafety', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.dormitories.fireSafety.observation}
-            onObservationChange={(value) => handleFieldChange('dormitories', 'fireSafety', 'observation', value)}
-          />
-        </div>
-     
-
-        {/* 6.8 Washrooms */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.8 Washrooms</h3>
-          
-          <EvaluationItem
-            id="cleanlinessSupplies"
-            label="Cleanliness and availability of supplies (soap, paper)"
-            availabilityValue={hygieneAndSafetyData.washrooms.cleanlinessSupplies.availability}
-            qualityValue={hygieneAndSafetyData.washrooms.cleanlinessSupplies.quality}
-            onAvailabilityChange={(value) => handleFieldChange('washrooms', 'cleanlinessSupplies', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('washrooms', 'cleanlinessSupplies', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.washrooms.cleanlinessSupplies.observation}
-            onObservationChange={(value) => handleFieldChange('washrooms', 'cleanlinessSupplies', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="privacySafety"
-            label="Adequate privacy and safety measures"
-            availabilityValue={hygieneAndSafetyData.washrooms.privacySafety.availability}
-            qualityValue={hygieneAndSafetyData.washrooms.privacySafety.quality}
-            onAvailabilityChange={(value) => handleFieldChange('washrooms', 'privacySafety', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('washrooms', 'privacySafety', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.washrooms.privacySafety.observation}
-            onObservationChange={(value) => handleFieldChange('washrooms', 'privacySafety', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="accessibility"
-            label="Accessibility and sufficient for all students"
-            availabilityValue={hygieneAndSafetyData.washrooms.accessibility.availability}
-            qualityValue={hygieneAndSafetyData.washrooms.accessibility.quality}
-            onAvailabilityChange={(value) => handleFieldChange('washrooms', 'accessibility', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('washrooms', 'accessibility', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.washrooms.accessibility.observation}
-            onObservationChange={(value) => handleFieldChange('washrooms', 'accessibility', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.9 Playgrounds */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.9 Playgrounds</h3>
-          
-          <EvaluationItem
-            id="safetyOfEquipment"
-            label="Safety of equipment and surfaces"
-            availabilityValue={hygieneAndSafetyData.playgrounds.safetyOfEquipment.availability}
-            qualityValue={hygieneAndSafetyData.playgrounds.safetyOfEquipment.quality}
-            onAvailabilityChange={(value) => handleFieldChange('playgrounds', 'safetyOfEquipment', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('playgrounds', 'safetyOfEquipment', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.playgrounds.safetyOfEquipment.observation}
-            onObservationChange={(value) => handleFieldChange('playgrounds', 'safetyOfEquipment', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="shadedAreas"
-            label="Availability of shaded areas"
-            availabilityValue={hygieneAndSafetyData.playgrounds.shadedAreas.availability}
-            qualityValue={hygieneAndSafetyData.playgrounds.shadedAreas.quality}
-            onAvailabilityChange={(value) => handleFieldChange('playgrounds', 'shadedAreas', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('playgrounds', 'shadedAreas', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.playgrounds.shadedAreas.observation}
-            onObservationChange={(value) => handleFieldChange('playgrounds', 'shadedAreas', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.10 School Garden */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.10 School Garden</h3>
-          
-          <EvaluationItem
-            id="healthSafetyOfPlants"
-            label="Health and safety of plants (non-toxic)"
-            availabilityValue={hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.availability}
-            qualityValue={hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.quality}
-            onAvailabilityChange={(value) => handleFieldChange('schoolGarden', 'healthSafetyOfPlants', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('schoolGarden', 'healthSafetyOfPlants', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.schoolGarden.healthSafetyOfPlants.observation}
-            onObservationChange={(value) => handleFieldChange('schoolGarden', 'healthSafetyOfPlants', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="accessibilityGarden"
-            label="Accessibility for students"
-            availabilityValue={hygieneAndSafetyData.schoolGarden.accessibility.availability}
-            qualityValue={hygieneAndSafetyData.schoolGarden.accessibility.quality}
-            onAvailabilityChange={(value) => handleFieldChange('schoolGarden', 'accessibility', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('schoolGarden', 'accessibility', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.schoolGarden.accessibility.observation}
-            onObservationChange={(value) => handleFieldChange('schoolGarden', 'accessibility', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="educationalUse"
-            label="Educational use of the garden"
-            availabilityValue={hygieneAndSafetyData.schoolGarden.educationalUse.availability}
-            qualityValue={hygieneAndSafetyData.schoolGarden.educationalUse.quality}
-            onAvailabilityChange={(value) => handleFieldChange('schoolGarden', 'educationalUse', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('schoolGarden', 'educationalUse', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.schoolGarden.educationalUse.observation}
-            onObservationChange={(value) => handleFieldChange('schoolGarden', 'educationalUse', 'observation', value)}
-          />
-        </div>
-
-        {/* 6.11 Workshops */}
-        <div className="mb-6">
-          <h3 className="text-md font-semibold text-blue-600 mb-2">6.11 Workshops</h3>
-          
-          <EvaluationItem
-            id="toolsMachinery"
-            label="Condition of tools and machinery"
-            availabilityValue={hygieneAndSafetyData.workshops.toolsMachinery.availability}
-            qualityValue={hygieneAndSafetyData.workshops.toolsMachinery.quality}
-            onAvailabilityChange={(value) => handleFieldChange('workshops', 'toolsMachinery', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('workshops', 'toolsMachinery', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.workshops.toolsMachinery.observation}
-            onObservationChange={(value) => handleFieldChange('workshops', 'toolsMachinery', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="ventilationSafety"
-            label="Proper ventilation and safety measures"
-            availabilityValue={hygieneAndSafetyData.workshops.ventilationSafety.availability}
-            qualityValue={hygieneAndSafetyData.workshops.ventilationSafety.quality}
-            onAvailabilityChange={(value) => handleFieldChange('workshops', 'ventilationSafety', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('workshops', 'ventilationSafety', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.workshops.ventilationSafety.observation}
-            onObservationChange={(value) => handleFieldChange('workshops', 'ventilationSafety', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="storeArrangement"
-            label="Store arrangement"
-            availabilityValue={hygieneAndSafetyData.workshops.storeArrangement.availability}
-            qualityValue={hygieneAndSafetyData.workshops.storeArrangement.quality}
-            onAvailabilityChange={(value) => handleFieldChange('workshops', 'storeArrangement', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('workshops', 'storeArrangement', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.workshops.storeArrangement.observation}
-            onObservationChange={(value) => handleFieldChange('workshops', 'storeArrangement', 'observation', value)}
-          />
-
-          <EvaluationItem
-            id="cleanliness"
-            label="Cleanliness"
-            availabilityValue={hygieneAndSafetyData.workshops.cleanliness.availability}
-            qualityValue={hygieneAndSafetyData.workshops.cleanliness.quality}
-            onAvailabilityChange={(value) => handleFieldChange('workshops', 'cleanliness', 'availability', value)}
-            onQualityChange={(value) => handleFieldChange('workshops', 'cleanliness', 'quality', value)}
-            marksAllocated={0.5}
-            qualityWeight="N/A"
-            availabilityWeight="100%"
-            isQualityNA={true}
-            observation={hygieneAndSafetyData.workshops.cleanliness.observation}
-            onObservationChange={(value) => handleFieldChange('workshops', 'cleanliness', 'observation', value)}
-          />
-        </div>
-
-        {/* Overview Section */}
-        <Card className="border-blue-200">
-          <CardContent className="pt-6">
+          <div className="mt-8 border-t border-blue-100 pt-6">
             <h3 className="text-lg font-semibold text-blue-700 mb-4">Overview of the findings</h3>
             <div className="space-y-4">
               <div>
@@ -1089,14 +2332,17 @@ export default function HeadteacherHygieneAndSafety({ data, onDataChange }: Head
                 />
               </div>
             </div>
+          </div>
 
-            <div className="mt-6 text-right">
-              <p className="text-sm text-blue-600">Total Marks for Hygiene and Safety</p>
-              <p className="text-xl font-bold text-blue-800">{hygieneAndSafetyData.totalMarks.toFixed(1)} / 20</p>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-2 mt-6">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-blue-800">Total marks for Hygiene and Safety:</span>
+              <span className="text-xl font-bold text-blue-800">{hygieneAndSafetyData.totalMarks.toFixed(1)} / 20</span>
             </div>
-          </CardContent>
-        </Card>
-</CardContent>
-    </Card>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
+

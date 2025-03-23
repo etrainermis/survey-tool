@@ -1,18 +1,18 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PlusCircle, ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import HeadteacherCompletedSurveys from "./HeadteacherCompletedSurveys"
-import HeadteacherIncompleteSurveys from "./HeadteacherIncompleteSurveys"
 import HeadteacherDashboardCharts from "./HeadteacherDashboardCharts"
 
 export default function HeadteacherDashboard() {
-  const [activeTab, setActiveTab] = useState("dashboard")
   const navigate = useNavigate()
+
+  // Function to navigate to completed or incomplete evaluations pages
+  const handleCardClick = (path: string) => {
+    navigate(path)
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 p-4 md:p-8">
@@ -39,7 +39,10 @@ export default function HeadteacherDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Card className="bg-white shadow-sm border-blue-200">
+          <Card
+            className="bg-white shadow-sm border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick("/headteacher/completed-surveys")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -55,7 +58,10 @@ export default function HeadteacherDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white shadow-sm border-blue-200">
+          <Card
+            className="bg-white shadow-sm border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick("/headteacher/incomplete-surveys")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -72,31 +78,10 @@ export default function HeadteacherDashboard() {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="bg-blue-100 p-1">
-            <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Completed Evaluations
-            </TabsTrigger>
-            <TabsTrigger value="incomplete" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Incomplete Evaluations
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
-            <HeadteacherDashboardCharts />
-          </TabsContent>
-
-          <TabsContent value="completed" className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
-            <HeadteacherCompletedSurveys />
-          </TabsContent>
-
-          <TabsContent value="incomplete" className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
-            <HeadteacherIncompleteSurveys />
-          </TabsContent>
-        </Tabs>
+        {/* Dashboard content - no tabs anymore */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-blue-200">
+          <HeadteacherDashboardCharts />
+        </div>
       </div>
     </div>
   )
