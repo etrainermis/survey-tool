@@ -1,170 +1,278 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EvaluationItemWithWeights from "./evaluation-item";
+import { EvaluationItemWeights } from "./common/evaluation-item-weights";
 
 interface TeachingLearningProps {
-  formData: any
-  updateFormData: (data: any) => void
-  updateSectionMarks: (marks: number) => void
+  formData: any;
+  updateFormData: (data: any) => void;
+  updateSectionMarks: (marks: number) => void;
 }
 
-export default function TeachingLearning({ formData, updateFormData, updateSectionMarks }: TeachingLearningProps) {
-  const [localData, setLocalData] = useState({
+interface EvaluationField {
+  availability: number;
+  quality: number;
+  observation: string;
+  label: string;
+  marksAllocated: number;
+}
+
+interface LocalData {
+  // 3.1 CBT/CBA
+  cbc: EvaluationField;
+  guidingDocuments: EvaluationField;
+
+  // 3.2 Training planning and delivery
+  chronogram: EvaluationField;
+  timetable: EvaluationField;
+  trainerPortfolios: EvaluationField;
+  pedagogicalDocuments: EvaluationField;
+  iapPlan: EvaluationField;
+  iapReports: EvaluationField;
+
+  // 3.3 CBA implementation
+  assessmentPlans: EvaluationField;
+  traineePortfolio: EvaluationField;
+  attendanceReports: EvaluationField;
+  deliveryMonitoring: EvaluationField;
+  portfolioVerification: EvaluationField;
+  assessmentMonitoring: EvaluationField;
+
+  // 3.4 Use of technological tools
+  digitalTools: EvaluationField;
+  techFeedback: EvaluationField;
+  efficiencyEvidence: EvaluationField;
+
+  overview: {
+    strength: string;
+    weakness: string;
+    improvement: string;
+  };
+  sectionMarks: {
+    totalMarks: number;
+    weight: number;
+  };
+  [key: string]: any;
+}
+
+const defaultEvaluation: EvaluationField = {
+  availability: EvaluationItemWeights.NOT_SELECTED,
+  quality: EvaluationItemWeights.NOT_SELECTED,
+  observation: "",
+  label: "",
+  marksAllocated: 1,
+};
+
+export default function TeachingLearning({
+  formData,
+  updateFormData,
+  updateSectionMarks,
+}: TeachingLearningProps) {
+  const defaultData = {
     // 3.1 CBT/CBA
-    cbcAvailability: "",
-    cbcQuality: "na", // N/A
-    guidingDocumentsAvailability: "",
-    guidingDocumentsQuality: "na", // N/A
+    cbc: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "Validated Competence Based Curriculum (CBC)",
+    },
+    guidingDocuments: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "Guiding Documents regarding CBT/CBA Implementation",
+    },
 
     // 3.2 Training planning and delivery
-    chronogramAvailability: "",
-    chronogramQuality: "na", // N/A
-    timetableAvailability: "",
-    timetableQuality: "",
-    trainerPortfoliosAvailability: "",
-    trainerPortfoliosQuality: "",
-    pedagogicalDocumentsAvailability: "",
-    pedagogicalDocumentsQuality: "",
-    iapPlanAvailability: "",
-    iapPlanQuality: "",
-    iapReportsAvailability: "",
-    iapReportsQuality: "",
+    chronogram: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "Validated Chronogram",
+    },
+    timetable: {
+      ...defaultEvaluation,
+      label: "Training Timetable",
+      marksAllocated: 2,
+    },
+    trainerPortfolios: {
+      ...defaultEvaluation,
+      label: "Trainer Portfolios",
+    },
+    pedagogicalDocuments: {
+      ...defaultEvaluation,
+      label: "Pedagogical documents",
+    },
+    iapPlan: {
+      ...defaultEvaluation,
+      label: "Industrial Attachment Program (IAP) Plan",
+      marksAllocated: 2,
+    },
+    iapReports: {
+      ...defaultEvaluation,
+      label: "IAP Completion Reports",
+    },
 
     // 3.3 CBA implementation
-    assessmentPlansAvailability: "",
-    assessmentPlansQuality: "",
-    traineePortfolioAvailability: "",
-    traineePortfolioQuality: "",
-    attendanceReportsAvailability: "",
-    attendanceReportsQuality: "",
-    deliveryMonitoringAvailability: "",
-    deliveryMonitoringQuality: "",
-    portfolioVerificationAvailability: "",
-    portfolioVerificationQuality: "",
-    assessmentMonitoringAvailability: "",
-    assessmentMonitoringQuality: "",
+    assessmentPlans: {
+      ...defaultEvaluation,
+      label: "Assessment Plans",
+      marksAllocated: 2,
+    },
+    traineePortfolio: {
+      ...defaultEvaluation,
+      label: "Trainee Portfolio",
+    },
+    attendanceReports: {
+      ...defaultEvaluation,
+      label: "Attendance Reports",
+    },
+    deliveryMonitoring: {
+      ...defaultEvaluation,
+      label: "Session Delivery Monitoring Reports",
+    },
+    portfolioVerification: {
+      ...defaultEvaluation,
+      label: "Portfolio Verification Reports",
+    },
+    assessmentMonitoring: {
+      ...defaultEvaluation,
+      label: "Assessment Monitoring Reports",
+    },
 
     // 3.4 Use of technological tools
-    digitalToolsAvailability: "",
-    digitalToolsQuality: "",
-    techFeedbackAvailability: "",
-    techFeedbackQuality: "",
-    efficiencyEvidenceAvailability: "",
-    efficiencyEvidenceQuality: "",
+    digitalTools: {
+      ...defaultEvaluation,
+      label: "Digital tools",
+    },
+    techFeedback: {
+      ...defaultEvaluation,
+      label: "Feedback from staff and students on technology use",
+    },
+    efficiencyEvidence: {
+      ...defaultEvaluation,
+      label: "Evidence of improved efficiency",
+    },
 
-    // Add observation fields for each item
-    cbcObservation: "",
-    guidingDocumentsObservation: "",
-    chronogramObservation: "",
-    timetableObservation: "",
-    trainerPortfoliosObservation: "",
-    pedagogicalDocumentsObservation: "",
-    iapPlanObservation: "",
-    iapReportsObservation: "",
-    assessmentPlansObservation: "",
-    traineePortfolioObservation: "",
-    attendanceReportsObservation: "",
-    deliveryMonitoringObservation: "",
-    portfolioVerificationObservation: "",
-    assessmentMonitoringObservation: "",
-    digitalToolsObservation: "",
-    techFeedbackObservation: "",
-    efficiencyEvidenceObservation: "",
+    overview: {
+      strength: "",
+      weakness: "",
+      improvement: "",
+    },
+    sectionMarks: {
+      totalMarks: 0,
+      weight: 20,
+    },
+  };
 
-    // Overview
-    strength: "",
-    weakness: "",
-    improvement: "",
-    totalMarks : 0,
-    weight : 20,
-    ...formData,
-  })
+  const getInitialData = (): LocalData => {
+    try {
+      const storedData = localStorage.getItem("survey_draft");
+      if (!storedData) return defaultData;
 
-  const initialRender = useRef(true)
-  const prevMarks = useRef(0)
-
-  const calculateMarks = () => {
-    let total = 0
-
-    // Helper function to calculate marks for an item
-    const calculateItemMarks = (baseId, marksAllocated) => {
-      const availabilityValue = localData[`${baseId}Availability`]
-      const qualityValue = localData[`${baseId}Quality`]
-
-      // If quality is N/A, only consider availability (100% of marks)
-      if (qualityValue === "na") {
-        return availabilityValue === "yes" ? marksAllocated : 0
+      const parsedData = JSON.parse(storedData);
+      if (!parsedData || !parsedData.teachingLearning || Object.keys(parsedData.teachingLearning).length === 0) {
+        return defaultData;
       }
 
-      // Calculate partial marks based on availability (40%) and quality (60%)
-      let marks = 0
-      if (availabilityValue === "yes") {
-        marks += marksAllocated * 0.4
-      }
-      if (qualityValue === "yes") {
-        marks += marksAllocated * 0.6
-      }
-
-      return marks
+      return parsedData.teachingLearning;
+    } catch (error) {
+      console.error("Error parsing stored data:", error);
+      return defaultData;
     }
+  };
 
-    // 3.1 CBT/CBA (2 marks)
-    total += calculateItemMarks("cbc", 1)
-    total += calculateItemMarks("guidingDocuments", 1)
+  const [localData, setLocalData] = useState<LocalData>(getInitialData());
+  const initialRender = useRef(true);
+  const prevMarks = useRef(0);
 
-    // 3.2 Training planning and delivery (8 marks)
-    total += calculateItemMarks("chronogram", 1)
-    total += calculateItemMarks("timetable", 2)
-    total += calculateItemMarks("trainerPortfolios", 1)
-    total += calculateItemMarks("pedagogicalDocuments", 1)
-    total += calculateItemMarks("iapPlan", 2)
-    total += calculateItemMarks("iapReports", 1)
+  const calculateTotalMarks = (data: LocalData): number => {
+    let totalMarks = 0;
 
-    // 3.3 CBA implementation (7 marks)
-    total += calculateItemMarks("assessmentPlans", 2)
-    total += calculateItemMarks("traineePortfolio", 1)
-    total += calculateItemMarks("attendanceReports", 1)
-    total += calculateItemMarks("deliveryMonitoring", 1)
-    total += calculateItemMarks("portfolioVerification", 1)
-    total += calculateItemMarks("assessmentMonitoring", 1)
+    Object.keys(data).forEach((key) => {
+      const item = data[key as keyof LocalData];
+      
+      if (typeof item === "object" && "marksAllocated" in item) {
+        if (item.quality !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.quality ?? 0;
+        } 
+        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.availability ?? 0;
+        }
+      }
+    });
 
-    // 3.4 Use of technological tools (3 marks)
-    total += calculateItemMarks("digitalTools", 1)
-    total += calculateItemMarks("techFeedback", 1)
-    total += calculateItemMarks("efficiencyEvidence", 1)
-
-    // Cap at 20 marks maximum
-    return Math.min(total, 20)
-  }
+    return Math.min(totalMarks, 20);
+  };
 
   useEffect(() => {
     if (initialRender.current) {
-      initialRender.current = false
-      return
+      initialRender.current = false;
+      return;
     }
 
-    const currentMarks = calculateMarks()
+    const currentMarks = calculateTotalMarks(localData);
     if (currentMarks !== prevMarks.current) {
-      prevMarks.current = currentMarks
-      updateSectionMarks(currentMarks)
+      prevMarks.current = currentMarks;
+      updateSectionMarks(currentMarks);
     }
 
-    updateFormData(localData)
-  }, [localData, updateFormData, updateSectionMarks])
+    updateFormData(localData);
+  }, [localData, updateFormData, updateSectionMarks]);
 
-  const handleChange = (field: string, value: string) => {
-    setLocalData((prev) => {
-      if (prev[field] !== value) {
-        return { ...prev, [field]: value }
-      }
-      return prev
-    })
-  }
+  const handleAvailabilityChange = (baseId: keyof LocalData, availabilityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        availability: availabilityValue,
+      },
+    }));
+  };
+
+  const handleQualityChange = (baseId: keyof LocalData, qualityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        quality: qualityValue,
+      },
+    }));
+  };
+
+  const handleObservationChange = (baseId: keyof LocalData, observationValue: string) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        observation: observationValue,
+      },
+    }));
+  };
+
+  const renderEvaluationItems = (startIndex: number, endIndex: number) => {
+    return Object.entries(localData)
+      .filter(([_, value]) => typeof value === "object" && value !== null && "label" in value)
+      .slice(startIndex, endIndex)
+      .map(([key, value]) => (
+        <EvaluationItemWithWeights
+          key={key}
+          id={key}
+          label={value.label}
+          availabilityValue={value.availability}
+          qualityValue={value.quality}
+          onAvailabilityChange={handleAvailabilityChange}
+          onQualityChange={handleQualityChange}
+          isAvailabilityNA={value.availability === EvaluationItemWeights.NOT_APPLICABLE}
+          isQualityNA={value.quality === EvaluationItemWeights.NOT_APPLICABLE}
+          marksAllocated={value.marksAllocated}
+          qualityWeight="60%"
+          availabilityWeight="40%"
+          observation={value.observation}
+          onObservationChange={(value) => handleObservationChange(key, value)}
+        />
+      ));
+  };
 
   return (
     <div className="space-y-6">
@@ -180,37 +288,8 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">3.1 CBT/CBA (2 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="cbc"
-                  label="Validated Competence Based Curriculum (CBC)"
-                  availabilityValue={localData.cbcAvailability}
-                  qualityValue={localData.cbcQuality}
-                  onAvailabilityChange={(value) => handleChange("cbcAvailability", value)}
-                  onQualityChange={(value) => handleChange("cbcQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.cbcObservation}
-                  onObservationChange={(value) => handleChange("cbcObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="guidingDocuments"
-                  label="Guiding Documents regarding CBT/CBA Implementation"
-                  availabilityValue={localData.guidingDocumentsAvailability}
-                  qualityValue={localData.guidingDocumentsQuality}
-                  onAvailabilityChange={(value) => handleChange("guidingDocumentsAvailability", value)}
-                  onQualityChange={(value) => handleChange("guidingDocumentsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.guidingDocumentsObservation}
-                  onObservationChange={(value) => handleChange("guidingDocumentsObservation", value)}
-                />
+                {renderEvaluationItems(0, 2)}
               </div>
             </CardContent>
           </Card>
@@ -220,92 +299,8 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">3.2 Training planning and delivery (8 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="chronogram"
-                  label="Validated Chronogram"
-                  availabilityValue={localData.chronogramAvailability}
-                  qualityValue={localData.chronogramQuality}
-                  onAvailabilityChange={(value) => handleChange("chronogramAvailability", value)}
-                  onQualityChange={(value) => handleChange("chronogramQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.chronogramObservation}
-                  onObservationChange={(value) => handleChange("chronogramObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="timetable"
-                  label="Training Timetable"
-                  availabilityValue={localData.timetableAvailability}
-                  qualityValue={localData.timetableQuality}
-                  onAvailabilityChange={(value) => handleChange("timetableAvailability", value)}
-                  onQualityChange={(value) => handleChange("timetableQuality", value)}
-                  marksAllocated={2}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.timetableObservation}
-                  onObservationChange={(value) => handleChange("timetableObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="trainerPortfolios"
-                  label="Trainer Portfolios"
-                  availabilityValue={localData.trainerPortfoliosAvailability}
-                  qualityValue={localData.trainerPortfoliosQuality}
-                  onAvailabilityChange={(value) => handleChange("trainerPortfoliosAvailability", value)}
-                  onQualityChange={(value) => handleChange("trainerPortfoliosQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.trainerPortfoliosObservation}
-                  onObservationChange={(value) => handleChange("trainerPortfoliosObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="pedagogicalDocuments"
-                  label="Pedagogical documents (Scheme of Works, Handouts/notes, Session Plans), aligned with the overall curriculum and learning objectives"
-                  availabilityValue={localData.pedagogicalDocumentsAvailability}
-                  qualityValue={localData.pedagogicalDocumentsQuality}
-                  onAvailabilityChange={(value) => handleChange("pedagogicalDocumentsAvailability", value)}
-                  onQualityChange={(value) => handleChange("pedagogicalDocumentsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.pedagogicalDocumentsObservation}
-                  onObservationChange={(value) => handleChange("pedagogicalDocumentsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="iapPlan"
-                  label="Industrial Attachment Program (IAP) Plan"
-                  availabilityValue={localData.iapPlanAvailability}
-                  qualityValue={localData.iapPlanQuality}
-                  onAvailabilityChange={(value) => handleChange("iapPlanAvailability", value)}
-                  onQualityChange={(value) => handleChange("iapPlanQuality", value)}
-                  marksAllocated={2}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.iapPlanObservation}
-                  onObservationChange={(value) => handleChange("iapPlanObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="iapReports"
-                  label="IAP Completion Reports"
-                  availabilityValue={localData.iapReportsAvailability}
-                  qualityValue={localData.iapReportsQuality}
-                  onAvailabilityChange={(value) => handleChange("iapReportsAvailability", value)}
-                  onQualityChange={(value) => handleChange("iapReportsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.iapReportsObservation}
-                  onObservationChange={(value) => handleChange("iapReportsObservation", value)}
-                />
+                {renderEvaluationItems(2, 8)}
               </div>
             </CardContent>
           </Card>
@@ -315,91 +310,8 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">3.3 CBA implementation (7 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="assessmentPlans"
-                  label="Assessment Plans"
-                  availabilityValue={localData.assessmentPlansAvailability}
-                  qualityValue={localData.assessmentPlansQuality}
-                  onAvailabilityChange={(value) => handleChange("assessmentPlansAvailability", value)}
-                  onQualityChange={(value) => handleChange("assessmentPlansQuality", value)}
-                  marksAllocated={2}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.assessmentPlansObservation}
-                  onObservationChange={(value) => handleChange("assessmentPlansObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="traineePortfolio"
-                  label="Trainee Portfolio"
-                  availabilityValue={localData.traineePortfolioAvailability}
-                  qualityValue={localData.traineePortfolioQuality}
-                  onAvailabilityChange={(value) => handleChange("traineePortfolioAvailability", value)}
-                  onQualityChange={(value) => handleChange("traineePortfolioQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.traineePortfolioObservation}
-                  onObservationChange={(value) => handleChange("traineePortfolioObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="attendanceReports"
-                  label="Attendance Reports"
-                  availabilityValue={localData.attendanceReportsAvailability}
-                  qualityValue={localData.attendanceReportsQuality}
-                  onAvailabilityChange={(value) => handleChange("attendanceReportsAvailability", value)}
-                  onQualityChange={(value) => handleChange("attendanceReportsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.attendanceReportsObservation}
-                  onObservationChange={(value) => handleChange("attendanceReportsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="deliveryMonitoring"
-                  label="Session Delivery Monitoring Reports"
-                  availabilityValue={localData.deliveryMonitoringAvailability}
-                  qualityValue={localData.deliveryMonitoringQuality}
-                  onAvailabilityChange={(value) => handleChange("deliveryMonitoringAvailability", value)}
-                  onQualityChange={(value) => handleChange("deliveryMonitoringQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.deliveryMonitoringObservation}
-                  onObservationChange={(value) => handleChange("deliveryMonitoringObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="portfolioVerification"
-                  label="Portfolio Verification Reports"
-                  availabilityValue={localData.portfolioVerificationAvailability}
-                  qualityValue={localData.portfolioVerificationQuality}
-                  onAvailabilityChange={(value) => handleChange("portfolioVerificationAvailability", value)}
-                  onQualityChange={(value) => handleChange("portfolioVerificationQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.portfolioVerificationObservation}
-                  onObservationChange={(value) => handleChange("portfolioVerificationObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="assessmentMonitoring"
-                  label="Assessment Monitoring Reports"
-                  availabilityValue={localData.assessmentMonitoringAvailability}
-                  qualityValue={localData.assessmentMonitoringQuality}
-                  onAvailabilityChange={(value) => handleChange("assessmentMonitoringAvailability", value)}
-                  onQualityChange={(value) => handleChange("assessmentMonitoringQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.assessmentMonitoringObservation}
-                  onObservationChange={(value) => handleChange("assessmentMonitoringObservation", value)}
-                />
+                {renderEvaluationItems(8, 14)}
               </div>
             </CardContent>
           </Card>
@@ -409,49 +321,8 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">3.4 Use of technological tools (3 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="digitalTools"
-                  label="Digital tools"
-                  availabilityValue={localData.digitalToolsAvailability}
-                  qualityValue={localData.digitalToolsQuality}
-                  onAvailabilityChange={(value) => handleChange("digitalToolsAvailability", value)}
-                  onQualityChange={(value) => handleChange("digitalToolsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.digitalToolsObservation}
-                  onObservationChange={(value) => handleChange("digitalToolsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="techFeedback"
-                  label="Feedback from staff and students on technology use"
-                  availabilityValue={localData.techFeedbackAvailability}
-                  qualityValue={localData.techFeedbackQuality}
-                  onAvailabilityChange={(value) => handleChange("techFeedbackAvailability", value)}
-                  onQualityChange={(value) => handleChange("techFeedbackQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.techFeedbackObservation}
-                  onObservationChange={(value) => handleChange("techFeedbackObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="efficiencyEvidence"
-                  label="Evidence of improved efficiency"
-                  availabilityValue={localData.efficiencyEvidenceAvailability}
-                  qualityValue={localData.efficiencyEvidenceQuality}
-                  onAvailabilityChange={(value) => handleChange("efficiencyEvidenceAvailability", value)}
-                  onQualityChange={(value) => handleChange("efficiencyEvidenceQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.efficiencyEvidenceObservation}
-                  onObservationChange={(value) => handleChange("efficiencyEvidenceObservation", value)}
-                />
+                {renderEvaluationItems(14, 17)}
               </div>
             </CardContent>
           </Card>
@@ -463,7 +334,6 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
           <h3 className="text-lg font-semibold text-blue-700 mb-4">
             Overview of the findings (kindly be brief and specific)
           </h3>
-
           <div className="space-y-4">
             <div>
               <Label htmlFor="strength" className="text-sm font-medium">
@@ -471,8 +341,13 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
               </Label>
               <Textarea
                 id="strength"
-                value={localData.strength}
-                onChange={(e) => handleChange("strength", e.target.value)}
+                value={localData.overview.strength ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, strength: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -483,8 +358,13 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
               </Label>
               <Textarea
                 id="weakness"
-                value={localData.weakness}
-                onChange={(e) => handleChange("weakness", e.target.value)}
+                value={localData.overview.weakness ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, weakness: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -495,8 +375,13 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
               </Label>
               <Textarea
                 id="improvement"
-                value={localData.improvement}
-                onChange={(e) => handleChange("improvement", e.target.value)}
+                value={localData.overview.improvement ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, improvement: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -506,138 +391,14 @@ export default function TeachingLearning({ formData, updateFormData, updateSecti
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-blue-800">Total marks for Teaching and Learning:</span>
-          <span className="text-xl font-bold text-blue-800">{calculateMarks().toFixed(1)} / 20</span>
+          <span className="font-medium text-blue-800">
+            Total marks for Teaching and Learning:
+          </span>
+          <span className="text-xl font-bold text-blue-800">
+            {calculateTotalMarks(localData).toFixed(1)} / 20
+          </span>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-interface EvaluationItemWithWeightsProps {
-  id: string
-  label: string
-  availabilityValue: string
-  qualityValue: string
-  onAvailabilityChange: (value: string) => void
-  onQualityChange: (value: string) => void
-  marksAllocated: number
-  qualityWeight: string
-  availabilityWeight: string
-  isQualityNA?: boolean
-  observation: string
-  onObservationChange: (value: string) => void
-}
-
-function EvaluationItemWithWeights({
-  id,
-  label,
-  availabilityValue,
-  qualityValue,
-  onAvailabilityChange,
-  onQualityChange,
-  marksAllocated,
-  qualityWeight,
-  availabilityWeight,
-  isQualityNA = false,
-  observation,
-  onObservationChange,
-}: EvaluationItemWithWeightsProps) {
-  // Calculate marks obtained for this item
-  const calculateMarksObtained = () => {
-    if (isQualityNA) {
-      return availabilityValue === "yes" ? marksAllocated : 0
-    }
-
-    if (qualityValue === "na") {
-      return availabilityValue === "yes" ? marksAllocated : 0
-    }
-
-    let marks = 0
-    if (availabilityValue === "yes") {
-      marks += marksAllocated * 0.4
-    }
-    if (qualityValue === "yes") {
-      marks += marksAllocated * 0.6
-    }
-    return marks
-  }
-
-  useEffect(() => {
-    if (isQualityNA && qualityValue !== "na") {
-      onQualityChange("na")
-    }
-  }, [isQualityNA, qualityValue, onQualityChange])
-
-  return (
-    <div className="grid grid-cols-1 gap-2 p-2 rounded-md hover:bg-blue-50">
-      <div className="grid grid-cols-[2fr,1fr,1fr,0.5fr,0.5fr,1fr] gap-4 items-start">
-        <div className="text-sm font-medium">{label}</div>
-
-        <div className="flex flex-col">
-          <div className="text-center text-xs text-gray-500 mb-1">
-            <div>Availability ({availabilityWeight})</div>
-          </div>
-          <RadioGroup
-            value={availabilityValue}
-            onValueChange={onAvailabilityChange}
-            className="flex justify-center space-x-4"
-          >
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="yes" id={`${id}-availability-yes`} />
-              <Label htmlFor={`${id}-availability-yes`} className="text-sm">
-                Yes
-              </Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="no" id={`${id}-availability-no`} />
-              <Label htmlFor={`${id}-availability-no`} className="text-sm">
-                No
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div className="flex flex-col">
-          <div className="text-center text-xs text-gray-500 mb-1">
-            <div>Quality ({qualityWeight})</div>
-          </div>
-          {isQualityNA ? (
-            <div className="flex justify-center">
-              <span className="text-sm font-medium text-gray-600">N/A</span>
-            </div>
-          ) : (
-            <RadioGroup value={qualityValue} onValueChange={onQualityChange} className="flex justify-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="yes" id={`${id}-quality-yes`} />
-                <Label htmlFor={`${id}-quality-yes`} className="text-sm">
-                  Yes
-                </Label>
-              </div>
-              <div className="flex items-center space-x-1">
-                <RadioGroupItem value="no" id={`${id}-quality-no`} />
-                <Label htmlFor={`${id}-quality-no`} className="text-sm">
-                  No
-                </Label>
-              </div>
-            </RadioGroup>
-          )}
-        </div>
-
-        <div className="text-center text-sm font-medium">{marksAllocated}</div>
-
-        <div className="text-center text-sm font-medium">{calculateMarksObtained().toFixed(1)}</div>
-
-        <div>
-          <Textarea
-            value={observation}
-            onChange={(e) => onObservationChange(e.target.value)}
-            placeholder="Add observation..."
-            className="min-h-[60px] text-sm"
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-

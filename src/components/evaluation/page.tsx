@@ -357,7 +357,7 @@ export default function Home() {
                 Back
               </Button>
 
-              {currentStep < steps.length - 1 ? (
+              {currentStep < steps.length - 1  ? (
                 <Button
                   onClick={handleNext}
                   className="bg-blue-600 hover:bg-blue-700 text-white"

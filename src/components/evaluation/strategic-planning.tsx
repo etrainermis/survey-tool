@@ -9,6 +9,7 @@ import EvaluationItemWithWeights from "./evaluation-item";
 import { EvaluationType } from "./common/evaluation-item-type";
 import { EvaluationItemWeights } from "./common/evaluation-item-weights";
 import useAuth from "@/hooks/useAuth";
+import { parse } from "path";
 
 interface StrategicPlanningProps {
   formData: any;
@@ -63,9 +64,8 @@ export default function StrategicPlanning({
   updateFormData,
   updateSectionMarks,
 }: StrategicPlanningProps) {
-  const getInitialData = (): LocalData => {
-    const storedData = localStorage.getItem("survey_data");
-    return storedData ? JSON.parse(storedData).strategicPlan : {
+  const defaultData = 
+  {
       strategicPlan: {
         availability: EvaluationItemWeights.NOT_SELECTED,
         quality: EvaluationItemWeights.NOT_APPLICABLE,
@@ -115,7 +115,8 @@ export default function StrategicPlanning({
       },
       tenderCommittee: {
         ...defaultEvaluation,
-        label: "Tender and receiving committee appointed (Valid appointment letter)",
+        label:
+          "Tender and receiving committee appointed (Valid appointment letter)",
       },
       overview: {
         strength: "",
@@ -127,48 +128,53 @@ export default function StrategicPlanning({
         weight: 10,
       },
     };
+  const getInitialData = (): LocalData => {
+    try {
+      const storedData = localStorage.getItem("survey_draft");
+      if (!storedData) return defaultData;
+      
+      const parsedData = JSON.parse(storedData);
+      // console.log(parsedData);
+      
+      if (!parsedData || !parsedData.strategicPlanning || Object.keys(parsedData.strategicPlanning).length === 0) {
+        return defaultData;
+      }
+      // console.log("heree");
+      
+      return parsedData.strategicPlanning;
+    } catch (error) {
+      console.error("Error parsing stored data:", error);
+      return defaultData;
+    }
   };
   
+
   // Initialize state with data from localStorage (if available)
   const [localData, setLocalData] = useState<LocalData>(getInitialData());
-  
-  // Update local storage whenever localData changes
-  // useEffect(() => {
-  //   localStorage.setItem("localData", JSON.stringify(localData));
-  // }, [localData]);
-  
+
   const initialRender = useRef(true);
   const prevMarks = useRef(0);
-  const {user} = useAuth();
+  const { user } = useAuth();
   const calculateTotalMarks = (data: LocalData): number => {
     let totalMarks = 0;
-  
+
     Object.keys(data).forEach((key) => {
       const item = data[key as keyof LocalData];
-  
+
       if (typeof item === "object" && "marksAllocated" in item) {
         if (item.quality !== EvaluationItemWeights.NOT_APPLICABLE) {
           totalMarks += item.quality ?? 0; // Ensure undefined doesn't cause issues
-        } 
-        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) { 
+        }
+        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) {
           totalMarks += item.availability ?? 0; // Correctly add availability when applicable
         }
       }
     });
-  
+
     return totalMarks;
   };
-  
-  
-  // Update localData with calculated totalMarks
-  // setLocalData((prevData) => ({
-  //   ...prevData,
-  //   sectionMarks: {
-  //     ...prevData.sectionMarks,
-  //     totalMarks: calculateTotalMarks(prevData),
-  //   },
-  // }));
-  
+
+
 
   const calculateMarks = () => {
     let total = 0;
@@ -231,14 +237,6 @@ export default function StrategicPlanning({
 
     updateFormData(localData);
   }, [localData, updateFormData, updateSectionMarks]);
-  useEffect(()=>{
-    console.log(user?.id);
-    
-    const localData = localStorage.getItem(`survey_draft`);
-    // const parsedData: LocalData | null = localData ? JSON.parse(localData) as LocalData : null;
-    console.log(JSON.parse(localData));
-    // setLocalData(parsedData);
-  },[])
 
   const handleChange = (field: string, value: any) => {
     setLocalData((prev) => {
@@ -248,10 +246,18 @@ export default function StrategicPlanning({
       return prev;
     });
   };
-  const handleAvailabilityChange = (baseId: keyof LocalData, availabilityValue: any) => {
+  const handleAvailabilityChange = (
+    baseId: keyof LocalData,
+    availabilityValue: any
+  ) => {
     setLocalData((prevData) => {
-      console.log("Before update:", baseId, prevData[baseId]?.availability, availabilityValue);
-  
+      console.log(
+        "Before update:",
+        baseId,
+        prevData[baseId]?.availability,
+        availabilityValue
+      );
+
       const updatedData = {
         ...prevData,
         [baseId]: {
@@ -259,13 +265,21 @@ export default function StrategicPlanning({
           availability: availabilityValue,
         },
       };
-  
-      console.log("After update:", baseId, updatedData[baseId]?.availability, availabilityValue);
+
+      console.log(
+        "After update:",
+        baseId,
+        updatedData[baseId]?.availability,
+        availabilityValue
+      );
       return updatedData;
     });
   };
-  const handleObservationChange = (baseId: keyof LocalData, observationValue: string) => {
-    setLocalData((prevData) => {  
+  const handleObservationChange = (
+    baseId: keyof LocalData,
+    observationValue: string
+  ) => {
+    setLocalData((prevData) => {
       const updatedData = {
         ...prevData,
         [baseId]: {
@@ -278,8 +292,13 @@ export default function StrategicPlanning({
   };
   const handleQualityChange = (baseId: keyof LocalData, qualityValue: any) => {
     setLocalData((prevData) => {
-      console.log("Before update:", baseId, prevData[baseId]?.quality, qualityValue);
-  
+      console.log(
+        "Before update:",
+        baseId,
+        prevData[baseId]?.quality,
+        qualityValue
+      );
+
       const updatedData = {
         ...prevData,
         [baseId]: {
@@ -287,12 +306,17 @@ export default function StrategicPlanning({
           quality: qualityValue,
         },
       };
-  
-      console.log("After update:", baseId, updatedData[baseId]?.quality, qualityValue);
+
+      console.log(
+        "After update:",
+        baseId,
+        updatedData[baseId]?.quality,
+        qualityValue
+      );
       return updatedData;
     });
   };
-  
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="strategic" className="w-full">

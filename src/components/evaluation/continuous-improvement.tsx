@@ -1,140 +1,231 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import EvaluationItemWithWeights from "./evaluation-item"
+import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EvaluationItemWithWeights from "./evaluation-item";
+import { EvaluationItemWeights } from "./common/evaluation-item-weights";
 
 interface ContinuousImprovementProps {
-  formData: any
-  updateFormData: (data: any) => void
-  updateSectionMarks: (marks: number) => void
+  formData: any;
+  updateFormData: (data: any) => void;
+  updateSectionMarks: (marks: number) => void;
 }
+
+interface EvaluationField {
+  availability: number;
+  quality: number;
+  observation: string;
+  label: string;
+  marksAllocated: number;
+}
+
+interface LocalData {
+  // 5.1 Professionalism
+  cpdPlan: EvaluationField;
+  cpdReports: EvaluationField;
+  ethicalRecord: EvaluationField;
+  roleModeling: EvaluationField;
+  feedbackMechanisms: EvaluationField;
+  actionPlans: EvaluationField;
+  implementedImprovements: EvaluationField;
+
+  // 5.2 Performance Metrics
+  kpis: EvaluationField;
+  dataDecisions: EvaluationField;
+  improvementRecords: EvaluationField;
+  
+  overview: {
+    strength: string;
+    weakness: string;
+    improvement: string;
+  };
+  sectionMarks: {
+    totalMarks: number;
+    weight: number;
+  };
+  [key: string]: any;
+}
+
+const defaultEvaluation: EvaluationField = {
+  availability: EvaluationItemWeights.NOT_SELECTED,
+  quality: EvaluationItemWeights.NOT_SELECTED,
+  observation: "",
+  label: "",
+  marksAllocated: 1,
+};
 
 export default function ContinuousImprovement({
   formData,
   updateFormData,
   updateSectionMarks,
 }: ContinuousImprovementProps) {
-  const [localData, setLocalData] = useState({
+  const defaultData = {
     // 5.1 Professionalism
-    cpdPlanAvailability: "",
-    cpdPlanQuality: "na", // N/A
-    cpdReportsAvailability: "",
-    cpdReportsQuality: "na", // N/A
-    ethicalRecordAvailability: "",
-    ethicalRecordQuality: "",
-    roleModelingAvailability: "",
-    roleModelingQuality: "",
-    feedbackMechanismsAvailability: "",
-    feedbackMechanismsQuality: "",
-    actionPlansAvailability: "",
-    actionPlansQuality: "",
-    implementedImprovementsAvailability: "",
-    implementedImprovementsQuality: "",
+    cpdPlan: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "CPD plan",
+    },
+    cpdReports: {
+      ...defaultEvaluation,
+      quality: EvaluationItemWeights.NOT_APPLICABLE,
+      label: "CPD implementation reports",
+    },
+    ethicalRecord: {
+      ...defaultEvaluation,
+      label: "Free ethical record",
+    },
+    roleModeling: {
+      ...defaultEvaluation,
+      label: "Positive role modeling in professional settings",
+    },
+    feedbackMechanisms: {
+      ...defaultEvaluation,
+      label: "Staff feedback mechanisms",
+    },
+    actionPlans: {
+      ...defaultEvaluation,
+      label: "Action plans based on feedback",
+    },
+    implementedImprovements: {
+      ...defaultEvaluation,
+      label: "Implemented improvements",
+    },
 
     // 5.2 Performance Metrics
-    kpisAvailability: "",
-    kpisQuality: "",
-    dataDecisionsAvailability: "",
-    dataDecisionsQuality: "",
-    improvementRecordsAvailability: "",
-    improvementRecordsQuality: "",
+    kpis: {
+      ...defaultEvaluation,
+      label: "Documented KPIs or Performance review",
+    },
+    dataDecisions: {
+      ...defaultEvaluation,
+      label: "Evidence of data-driven decisions",
+    },
+    improvementRecords: {
+      ...defaultEvaluation,
+      label: "Records of implemented improvements",
+    },
 
-    // Add observation fields for each item
-    cpdPlanObservation: "",
-    cpdReportsObservation: "",
-    ethicalRecordObservation: "",
-    roleModelingObservation: "",
-    feedbackMechanismsObservation: "",
-    actionPlansObservation: "",
-    implementedImprovementsObservation: "",
-    kpisObservation: "",
-    dataDecisionsObservation: "",
-    improvementRecordsObservation: "",
+    overview: {
+      strength: "",
+      weakness: "",
+      improvement: "",
+    },
+    sectionMarks: {
+      totalMarks: 0,
+      weight: 10,
+    },
+  };
 
-    // Overview
-    strength: "",
-    weakness: "",
-    improvement: "",
+  const getInitialData = (): LocalData => {
+    try {
+      const storedData = localStorage.getItem("survey_draft");
+      if (!storedData) return defaultData;
 
-    totalMarks : 0,
-    weight : 10,
-    ...formData,
-  })
-
-  const initialRender = useRef(true)
-  const prevMarks = useRef(0)
-
-  const calculateMarks = () => {
-    let total = 0
-
-    // Helper function to calculate marks for an item
-    const calculateItemMarks = (baseId, marksAllocated) => {
-      const availabilityValue = localData[`${baseId}Availability`]
-      const qualityValue = localData[`${baseId}Quality`]
-
-      // If quality is N/A, only consider availability (100% of marks)
-      if (qualityValue === "na") {
-        return availabilityValue === "yes" ? marksAllocated : 0
+      const parsedData = JSON.parse(storedData);
+      if (!parsedData || !parsedData.continuousImprovement || Object.keys(parsedData.continuousImprovement).length === 0) {
+        return defaultData;
       }
 
-      // Calculate partial marks based on availability (40%) and quality (60%)
-      let marks = 0
-      if (availabilityValue === "yes") {
-        marks += marksAllocated * 0.4
-      }
-      if (qualityValue === "yes") {
-        marks += marksAllocated * 0.6
-      }
-
-      return marks
+      return parsedData.continuousImprovement;
+    } catch (error) {
+      console.error("Error parsing stored data:", error);
+      return defaultData;
     }
+  };
 
-    // 5.1 Professionalism (7 marks)
-    total += calculateItemMarks("cpdPlan", 1)
-    total += calculateItemMarks("cpdReports", 1)
-    total += calculateItemMarks("ethicalRecord", 1)
-    total += calculateItemMarks("roleModeling", 1)
-    total += calculateItemMarks("feedbackMechanisms", 1)
-    total += calculateItemMarks("actionPlans", 1)
-    total += calculateItemMarks("implementedImprovements", 1)
+  const [localData, setLocalData] = useState<LocalData>(getInitialData());
+  const initialRender = useRef(true);
+  const prevMarks = useRef(0);
 
-    // 5.2 Performance Metrics (3 marks)
-    total += calculateItemMarks("kpis", 1)
-    total += calculateItemMarks("dataDecisions", 1)
-    total += calculateItemMarks("improvementRecords", 1)
+  const calculateTotalMarks = (data: LocalData): number => {
+    let totalMarks = 0;
 
-    // Cap at 10 marks maximum
-    return Math.min(total, 10)
-  }
+    Object.keys(data).forEach((key) => {
+      const item = data[key as keyof LocalData];
+      
+      if (typeof item === "object" && "marksAllocated" in item) {
+        if (item.quality !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.quality ?? 0;
+        } 
+        if (item.availability !== EvaluationItemWeights.NOT_APPLICABLE) {
+          totalMarks += item.availability ?? 0;
+        }
+      }
+    });
+
+    return Math.min(totalMarks, 10);
+  };
 
   useEffect(() => {
     if (initialRender.current) {
-      initialRender.current = false
-      return
+      initialRender.current = false;
+      return;
     }
 
-    const currentMarks = calculateMarks()
+    const currentMarks = calculateTotalMarks(localData);
     if (currentMarks !== prevMarks.current) {
-      prevMarks.current = currentMarks
-      updateSectionMarks(currentMarks)
+      prevMarks.current = currentMarks;
+      updateSectionMarks(currentMarks);
     }
 
-    updateFormData(localData)
-  }, [localData, updateFormData, updateSectionMarks])
+    updateFormData(localData);
+  }, [localData, updateFormData, updateSectionMarks]);
 
-  const handleChange = (field: string, value: string) => {
-    setLocalData((prev) => {
-      if (prev[field] !== value) {
-        return { ...prev, [field]: value }
-      }
-      return prev
-    })
-  }
+  const handleAvailabilityChange = (baseId: keyof LocalData, availabilityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        availability: availabilityValue,
+      },
+    }));
+  };
+
+  const handleQualityChange = (baseId: keyof LocalData, qualityValue: number) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        quality: qualityValue,
+      },
+    }));
+  };
+
+  const handleObservationChange = (baseId: keyof LocalData, observationValue: string) => {
+    setLocalData((prevData) => ({
+      ...prevData,
+      [baseId]: {
+        ...prevData[baseId],
+        observation: observationValue,
+      },
+    }));
+  };
+
+  const renderEvaluationItems = (startIndex: number, endIndex: number) => {
+    return Object.entries(localData)
+      .filter(([_, value]) => typeof value === "object" && value !== null && "label" in value)
+      .slice(startIndex, endIndex)
+      .map(([key, value]) => (
+        <EvaluationItemWithWeights
+          key={key}
+          id={key}
+          label={value.label}
+          availabilityValue={value.availability}
+          qualityValue={value.quality}
+          onAvailabilityChange={handleAvailabilityChange}
+          onQualityChange={handleQualityChange}
+          isAvailabilityNA={value.availability === EvaluationItemWeights.NOT_APPLICABLE}
+          isQualityNA={value.quality === EvaluationItemWeights.NOT_APPLICABLE}
+          marksAllocated={value.marksAllocated}
+          qualityWeight="60%"
+          availabilityWeight="40%"
+          observation={value.observation}
+          onObservationChange={(value) => handleObservationChange(key, value)}
+        />
+      ));
+  };
 
   return (
     <div className="space-y-6">
@@ -148,107 +239,8 @@ export default function ContinuousImprovement({
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">5.1 Professionalism (7 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="cpdPlan"
-                  label="CPD plan"
-                  availabilityValue={localData.cpdPlanAvailability}
-                  qualityValue={localData.cpdPlanQuality}
-                  onAvailabilityChange={(value) => handleChange("cpdPlanAvailability", value)}
-                  onQualityChange={(value) => handleChange("cpdPlanQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.cpdPlanObservation}
-                  onObservationChange={(value) => handleChange("cpdPlanObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="cpdReports"
-                  label="CPD implementation reports"
-                  availabilityValue={localData.cpdReportsAvailability}
-                  qualityValue={localData.cpdReportsQuality}
-                  onAvailabilityChange={(value) => handleChange("cpdReportsAvailability", value)}
-                  onQualityChange={(value) => handleChange("cpdReportsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  isQualityNA={true}
-                  observation={localData.cpdReportsObservation}
-                  onObservationChange={(value) => handleChange("cpdReportsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="ethicalRecord"
-                  label="Free ethical record"
-                  availabilityValue={localData.ethicalRecordAvailability}
-                  qualityValue={localData.ethicalRecordQuality}
-                  onAvailabilityChange={(value) => handleChange("ethicalRecordAvailability", value)}
-                  onQualityChange={(value) => handleChange("ethicalRecordQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.ethicalRecordObservation}
-                  onObservationChange={(value) => handleChange("ethicalRecordObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="roleModeling"
-                  label="Positive role modeling in professional settings"
-                  availabilityValue={localData.roleModelingAvailability}
-                  qualityValue={localData.roleModelingQuality}
-                  onAvailabilityChange={(value) => handleChange("roleModelingAvailability", value)}
-                  onQualityChange={(value) => handleChange("roleModelingQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.roleModelingObservation}
-                  onObservationChange={(value) => handleChange("roleModelingObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="feedbackMechanisms"
-                  label="Staff feedback mechanisms"
-                  availabilityValue={localData.feedbackMechanismsAvailability}
-                  qualityValue={localData.feedbackMechanismsQuality}
-                  onAvailabilityChange={(value) => handleChange("feedbackMechanismsAvailability", value)}
-                  onQualityChange={(value) => handleChange("feedbackMechanismsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.feedbackMechanismsObservation}
-                  onObservationChange={(value) => handleChange("feedbackMechanismsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="actionPlans"
-                  label="Action plans based on feedback"
-                  availabilityValue={localData.actionPlansAvailability}
-                  qualityValue={localData.actionPlansQuality}
-                  onAvailabilityChange={(value) => handleChange("actionPlansAvailability", value)}
-                  onQualityChange={(value) => handleChange("actionPlansQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.actionPlansObservation}
-                  onObservationChange={(value) => handleChange("actionPlansObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="implementedImprovements"
-                  label="Implemented improvements"
-                  availabilityValue={localData.implementedImprovementsAvailability}
-                  qualityValue={localData.implementedImprovementsQuality}
-                  onAvailabilityChange={(value) => handleChange("implementedImprovementsAvailability", value)}
-                  onQualityChange={(value) => handleChange("implementedImprovementsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.implementedImprovementsObservation}
-                  onObservationChange={(value) => handleChange("implementedImprovementsObservation", value)}
-                />
+                {renderEvaluationItems(0, 7)}
               </div>
             </CardContent>
           </Card>
@@ -258,49 +250,8 @@ export default function ContinuousImprovement({
           <Card className="border-blue-200">
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold text-blue-700 mb-4">5.2 Performance Metrics (3 marks)</h3>
-
               <div className="space-y-4">
-                <EvaluationItemWithWeights
-                  id="kpis"
-                  label="Documented KPIs or Performance review"
-                  availabilityValue={localData.kpisAvailability}
-                  qualityValue={localData.kpisQuality}
-                  onAvailabilityChange={(value) => handleChange("kpisAvailability", value)}
-                  onQualityChange={(value) => handleChange("kpisQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.kpisObservation}
-                  onObservationChange={(value) => handleChange("kpisObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="dataDecisions"
-                  label="Evidence of data-driven decisions"
-                  availabilityValue={localData.dataDecisionsAvailability}
-                  qualityValue={localData.dataDecisionsQuality}
-                  onAvailabilityChange={(value) => handleChange("dataDecisionsAvailability", value)}
-                  onQualityChange={(value) => handleChange("dataDecisionsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.dataDecisionsObservation}
-                  onObservationChange={(value) => handleChange("dataDecisionsObservation", value)}
-                />
-
-                <EvaluationItemWithWeights
-                  id="improvementRecords"
-                  label="Records of implemented improvements"
-                  availabilityValue={localData.improvementRecordsAvailability}
-                  qualityValue={localData.improvementRecordsQuality}
-                  onAvailabilityChange={(value) => handleChange("improvementRecordsAvailability", value)}
-                  onQualityChange={(value) => handleChange("improvementRecordsQuality", value)}
-                  marksAllocated={1}
-                  qualityWeight="60%"
-                  availabilityWeight="40%"
-                  observation={localData.improvementRecordsObservation}
-                  onObservationChange={(value) => handleChange("improvementRecordsObservation", value)}
-                />
+                {renderEvaluationItems(7, 10)}
               </div>
             </CardContent>
           </Card>
@@ -312,7 +263,6 @@ export default function ContinuousImprovement({
           <h3 className="text-lg font-semibold text-blue-700 mb-4">
             Overview of the findings (kindly be brief and specific)
           </h3>
-
           <div className="space-y-4">
             <div>
               <Label htmlFor="strength" className="text-sm font-medium">
@@ -320,8 +270,13 @@ export default function ContinuousImprovement({
               </Label>
               <Textarea
                 id="strength"
-                value={localData.strength}
-                onChange={(e) => handleChange("strength", e.target.value)}
+                value={localData.overview.strength ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, strength: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -332,8 +287,13 @@ export default function ContinuousImprovement({
               </Label>
               <Textarea
                 id="weakness"
-                value={localData.weakness}
-                onChange={(e) => handleChange("weakness", e.target.value)}
+                value={localData.overview.weakness ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, weakness: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -344,8 +304,13 @@ export default function ContinuousImprovement({
               </Label>
               <Textarea
                 id="improvement"
-                value={localData.improvement}
-                onChange={(e) => handleChange("improvement", e.target.value)}
+                value={localData.overview.improvement ?? ""}
+                onChange={(e) =>
+                  setLocalData((prev) => ({
+                    ...prev,
+                    overview: { ...prev.overview, improvement: e.target.value },
+                  }))
+                }
                 className="mt-1"
               />
             </div>
@@ -355,11 +320,14 @@ export default function ContinuousImprovement({
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-blue-800">Total marks for Continuous Improvement:</span>
-          <span className="text-xl font-bold text-blue-800">{calculateMarks().toFixed(1)} / 10</span>
+          <span className="font-medium text-blue-800">
+            Total marks for Continuous Improvement:
+          </span>
+          <span className="text-xl font-bold text-blue-800">
+            {calculateTotalMarks(localData).toFixed(1)} / 10
+          </span>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
