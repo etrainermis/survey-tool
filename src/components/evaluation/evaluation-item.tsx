@@ -41,7 +41,7 @@ export default function EvaluationItemWithWeights({
   const getInitialValue = (value: number, expectedValue: number) =>
     value === EvaluationItemWeights.NOT_SELECTED
       ? "no"
-      : value === expectedValue || value === marksAllocated
+      : value === expectedValue || value === marksAllocated || !(value === EvaluationItemWeights.NOT_SELECTED)
       ? "yes"
       : "no";
 
@@ -55,8 +55,7 @@ export default function EvaluationItemWithWeights({
 
   // Calculate marks obtained for this item
   const calculateMarksObtained = () => {
-    // console.log(quantitySelectedValue);
-    // console.log(availabilitySelectedValue);
+
 
     // If quality is N/A, only consider availability
     if (qualityValue === EvaluationItemWeights.NOT_APPLICABLE) {
