@@ -445,10 +445,10 @@ const CreateSurvey = () => {
 
             {[3, 4, 5].map((level, levelIndex) => (
               <div key={level} className="space-y-4 border-t border-blue-100 pt-4">
-                <h4 className="font-medium text-blue-600">Level {level}</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <h4 className="font-medium ">Level {level}</h4>
+                <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-blue-700">Classrooms</Label>
+                    <Label className="">Virtual Classes</Label>
                     <Input
                       type="number"
                       min="0"
@@ -460,7 +460,19 @@ const CreateSurvey = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-blue-700">Male Students</Label>
+                    <Label className="">Physical Classes</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`, {
+                        valueAsNumber: true,
+                        required: "Number of classrooms is required",
+                      })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="">Male Students</Label>
                     <Input
                       type="number"
                       min="0"
@@ -472,7 +484,7 @@ const CreateSurvey = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-blue-700">Female Students</Label>
+                    <Label className="">Female Students</Label>
                     <Input
                       type="number"
                       min="0"
@@ -490,7 +502,7 @@ const CreateSurvey = () => {
             <div className="mt-4 pt-4 border-t border-blue-100">
               <div className="flex justify-between text-sm text-blue-600">
                 <span>Status: {trade.status}</span>
-                <span>Total Students: {trade.totalStudents}</span>
+             
               </div>
             </div>
           </Card>
