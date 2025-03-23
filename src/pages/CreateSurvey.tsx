@@ -152,6 +152,7 @@ const CreateSurvey = () => {
   const saveProgress = (data) => {
     if (user?.id) {
       localStorage.setItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`, JSON.stringify(data))
+      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data))
       toast({ description: "Progress saved", duration: 1000 })
     }
   }
