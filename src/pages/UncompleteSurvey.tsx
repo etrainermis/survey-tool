@@ -54,7 +54,7 @@ const IncompleteSurveys = () => {
     const user = userString ? JSON.parse(userString) : null // Parse user correctly
 
     if (user && user.id) {
-      const draft = JSON.parse(localStorage.getItem(`survey_draft`) || "null")
+      const draft = JSON.parse(localStorage.getItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`) || "null")
       if (draft) {
         setIncompleteSurveys([draft])
       }

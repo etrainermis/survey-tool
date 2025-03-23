@@ -167,7 +167,7 @@ export default function TeachingLearning({
 
   const getInitialData = (): LocalData => {
     try {
-      const storedData = localStorage.getItem("survey_draft");
+      const storedData = localStorage.getItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`);
       if (!storedData) return defaultData;
 
       const parsedData = JSON.parse(storedData);

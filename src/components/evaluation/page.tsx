@@ -142,7 +142,7 @@ export default function Home() {
   };
   const saveProgress = (data) => {
     if (user?.id) {
-      localStorage.setItem(`survey_draft`, JSON.stringify(data));
+      localStorage.setItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`, JSON.stringify(data));
       toast({ description: "Progress saved", duration: 1000 });
     }
   };

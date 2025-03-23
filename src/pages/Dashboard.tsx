@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Load draft surveys for current user
-    const draftKey = `survey_draft_${user?.id}`
+    const draftKey = `survey_draft_${localStorage.getItem('currentEvaluationSchool')}`
     const draft = localStorage.getItem(draftKey)
     if (draft) {
       setIncompleteSurveys([JSON.parse(draft)])
