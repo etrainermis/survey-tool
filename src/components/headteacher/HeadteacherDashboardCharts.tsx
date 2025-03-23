@@ -44,7 +44,7 @@ export default function HeadteacherDashboardCharts() {
     datasets: [
       {
         label: "Average Score (%)",
-        data: [85, 80, 88, 75, 82, 78],
+        data: [25, 60, 88, 75, 82, 93],
         backgroundColor: "rgba(59, 130, 246, 0.2)",
         borderColor: "rgba(59, 130, 246, 1)",
         borderWidth: 2,
@@ -56,12 +56,48 @@ export default function HeadteacherDashboardCharts() {
     ],
   }
 
+  // Function to get color based on score
+  const getColorForScore = (score: number) => {
+    if (score < 60) return { bg: "rgba(239, 68, 68, 0.8)", border: "rgba(239, 68, 68, 1)" } // Red - Critical
+    if (score < 70) return { bg: "rgba(249, 115, 22, 0.8)", border: "rgba(249, 115, 22, 1)" } // Orange - Poor
+    if (score < 80) return { bg: "rgba(245, 158, 11, 0.8)", border: "rgba(245, 158, 11, 1)" } // Amber - Average
+    if (score < 90) return { bg: "rgba(16, 185, 129, 0.8)", border: "rgba(16, 185, 129, 1)" } // Green - Good
+    return { bg: "rgba(37, 99, 235, 0.8)", border: "rgba(37, 99, 235, 1)" } // Blue - Excellent
+  }
+
+  // Function to get status text based on score
+  const getStatusForScore = (score: number) => {
+    if (score < 60) return "Critical"
+    if (score < 70) return "Poor"
+    if (score < 80) return "Average"
+    if (score < 90) return "Good"
+    return "Excellent"
+  }
+
+  // Function to get background color class based on score
+  const getBgClassForScore = (score: number) => {
+    if (score < 60) return "bg-red-50"
+    if (score < 70) return "bg-orange-50"
+    if (score < 80) return "bg-amber-50"
+    if (score < 90) return "bg-green-50"
+    return "bg-blue-50"
+  }
+
+  // Function to get text color class based on score
+  const getTextClassForScore = (score: number) => {
+    if (score < 60) return "text-red-700"
+    if (score < 70) return "text-orange-700"
+    if (score < 80) return "text-amber-700"
+    if (score < 90) return "text-green-700"
+    return "text-blue-700"
+  }
+
   // Pie chart data for trades, students, and teachers
   const pieData = {
     labels: ["Trades", "Male Students", "Female Students", "Male Teachers", "Female Teachers"],
     datasets: [
       {
-        data: [12, 450, 380, 35, 25],
+        data: [60, 350, 380, 75, 25],
         backgroundColor: [
           "rgba(59, 130, 246, 0.8)",
           "rgba(16, 185, 129, 0.8)",
@@ -81,62 +117,8 @@ export default function HeadteacherDashboardCharts() {
     ],
   }
 
-  // Bar chart data for headmaster's experience ratings
-  const barData = {
-    labels: ["Leadership", "Management", "Teaching", "Communication", "Innovation"],
-    datasets: [
-      {
-        label: "Experience Rating",
-        data: [4.5, 4.2, 4.8, 3.9, 4.1],
-        backgroundColor: [
-          "rgba(59, 130, 246, 0.8)",
-          "rgba(16, 185, 129, 0.8)",
-          "rgba(245, 158, 11, 0.8)",
-          "rgba(249, 115, 22, 0.8)",
-          "rgba(239, 68, 68, 0.8)",
-        ],
-        borderColor: [
-          "rgba(59, 130, 246, 1)",
-          "rgba(16, 185, 129, 1)",
-          "rgba(245, 158, 11, 1)",
-          "rgba(249, 115, 22, 1)",
-          "rgba(239, 68, 68, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  const barOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 5,
-        ticks: {
-          stepSize: 1,
-          callback: (value: any) => {
-            const labels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"]
-            return labels[value]
-          },
-        },
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            const value = context.raw
-            let rating = "Poor"
-            if (value >= 4.5) rating = "Excellent"
-            else if (value >= 3.5) rating = "Very Good"
-            else if (value >= 2.5) rating = "Good"
-            else if (value >= 1.5) rating = "Fair"
-            return `Rating: ${rating} (${value})`
-          },
-        },
-      },
-    },
-  }
+  
+  
 
   const radarOptions = {
     scales: {
@@ -172,17 +154,50 @@ export default function HeadteacherDashboardCharts() {
             <Radar data={radarData} options={radarOptions} />
           </div>
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-            {radarData.labels.map((label, index) => (
-              <div key={index} className="flex items-center p-2 bg-blue-50 rounded-md">
-                <div
-                  className="w-4 h-4 rounded-full mr-2"
-                  style={{ backgroundColor: radarData.datasets[0].borderColor as string }}
-                ></div>
-                <span className="text-sm font-medium">
-                  {label}: {radarData.datasets[0].data[index]}%
-                </span>
+            {radarData.labels.map((label, index) => {
+              const score = radarData.datasets[0].data[index]
+              const color = getColorForScore(score)
+              const status = getStatusForScore(score)
+              const bgClass = getBgClassForScore(score)
+              const textClass = getTextClassForScore(score)
+
+              return (
+                <div key={index} className={`flex flex-col p-3 ${bgClass} rounded-md`}>
+                  <div className="flex items-center mb-1">
+                    <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: color.border }}></div>
+                    <span className="text-sm font-medium">{label}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className={`text-lg font-bold ${textClass}`}>{score}%</span>
+                    <span className={`text-xs font-medium ${textClass}`}>{status}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+            <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
+                <span className="text-xs">Critical (&lt;60%)</span>
               </div>
-            ))}
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-orange-500 mr-1"></div>
+                <span className="text-xs">Poor (60-69%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-amber-500 mr-1"></div>
+                <span className="text-xs">Average (70-79%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
+                <span className="text-xs">Good (80-89%)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+                <span className="text-xs">Excellent (90-100%)</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -224,40 +239,7 @@ export default function HeadteacherDashboardCharts() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-blue-700">Headteacher Experience Ratings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px] flex items-center justify-center">
-            <Bar data={barData} options={barOptions} />
-          </div>
-          <div className="mt-6 p-3 bg-gray-50 rounded-md">
-            <div className="flex flex-wrap justify-center gap-4">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
-                <span className="text-xs">Poor (1)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-orange-500 mr-1"></div>
-                <span className="text-xs">Fair (2)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-yellow-500 mr-1"></div>
-                <span className="text-xs">Good (3)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                <span className="text-xs">Very Good (4)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                <span className="text-xs">Excellent (5)</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+     
     </div>
   )
 }

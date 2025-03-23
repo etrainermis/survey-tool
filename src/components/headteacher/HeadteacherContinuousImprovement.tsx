@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,160 +43,68 @@ export default function HeadteacherContinuousImprovement({
   // Load data from parent component if available
   useEffect(() => {
     if (data?.continuousImprovement) {
-      // Ensure all required properties exist by merging with default state
       const mergedData = {
+        ...continuousImprovementData,
         professionalism: {
           cpdPlan: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.cpdPlan,
             ...data.continuousImprovement.professionalism?.cpdPlan,
           },
           cpdImplementationReports: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.cpdImplementationReports,
             ...data.continuousImprovement.professionalism?.cpdImplementationReports,
           },
           freeEthicalRecord: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.freeEthicalRecord,
             ...data.continuousImprovement.professionalism?.freeEthicalRecord,
           },
           positiveRoleModeling: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.positiveRoleModeling,
             ...data.continuousImprovement.professionalism?.positiveRoleModeling,
           },
           staffFeedbackMechanisms: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.staffFeedbackMechanisms,
             ...data.continuousImprovement.professionalism?.staffFeedbackMechanisms,
           },
           actionPlansBasedOnFeedback: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.actionPlansBasedOnFeedback,
             ...data.continuousImprovement.professionalism?.actionPlansBasedOnFeedback,
           },
           implementedImprovements: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.professionalism.implementedImprovements,
             ...data.continuousImprovement.professionalism?.implementedImprovements,
           },
         },
         performanceMetrics: {
           documentedKPIs: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.performanceMetrics.documentedKPIs,
             ...data.continuousImprovement.performanceMetrics?.documentedKPIs,
           },
           evidenceOfDataDrivenDecisions: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.performanceMetrics.evidenceOfDataDrivenDecisions,
             ...data.continuousImprovement.performanceMetrics?.evidenceOfDataDrivenDecisions,
           },
           recordsOfImplementedImprovements: {
-            availability: 0,
-            quality: 0,
-            observation: "",
+            ...continuousImprovementData.performanceMetrics.recordsOfImplementedImprovements,
             ...data.continuousImprovement.performanceMetrics?.recordsOfImplementedImprovements,
           },
         },
         overview: {
-          strengths: data.continuousImprovement.overview?.strengths || "",
-          weaknesses: data.continuousImprovement.overview?.weaknesses || "",
-          areasOfImprovement: data.continuousImprovement.overview?.areasOfImprovement || "",
+          strengths: data.continuousImprovement.overview?.strengths || continuousImprovementData.overview.strengths,
+          weaknesses: data.continuousImprovement.overview?.weaknesses || continuousImprovementData.overview.weaknesses,
+          areasOfImprovement:
+            data.continuousImprovement.overview?.areasOfImprovement ||
+            continuousImprovementData.overview.areasOfImprovement,
         },
-        totalMarks: data.continuousImprovement.totalMarks || 0,
+        totalMarks: data.continuousImprovement.totalMarks || continuousImprovementData.totalMarks,
       }
 
       setContinuousImprovementData(mergedData)
     }
   }, [data])
 
-  // Calculate total marks whenever data changes
-  useEffect(() => {
-    calculateTotalMarks()
-  }, [continuousImprovementData.professionalism, continuousImprovementData.performanceMetrics])
-
-  // Update parent component with changes
-  const updateParent = (updatedData: ContinuousImprovementData) => {
-    onDataChange({
-      continuousImprovement: updatedData,
-    })
-  }
-
-  // Separate useEffect to update parent when totalMarks changes
-  useEffect(() => {
-    updateParent(continuousImprovementData)
-  }, [continuousImprovementData])
-
-  // Handle changes to evaluation items
-  const handleEvaluationChange = (
-    section: keyof Omit<ContinuousImprovementData, "overview" | "totalMarks">,
-    field: string,
-    type: "availability" | "quality",
-    value: number,
-  ) => {
-    setContinuousImprovementData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            [type]: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to observations
-  const handleObservationChange = (
-    section: keyof Omit<ContinuousImprovementData, "overview" | "totalMarks">,
-    field: string,
-    value: string,
-  ) => {
-    setContinuousImprovementData((prev) => {
-      const updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: {
-            ...prev[section][field],
-            observation: value,
-          },
-        },
-      }
-      return updated
-    })
-  }
-
-  // Handle changes to overview fields
-  const handleOverviewChange = (field: keyof ContinuousImprovementData["overview"], value: string) => {
-    setContinuousImprovementData((prev) => {
-      const updated = {
-        ...prev,
-        overview: {
-          ...prev.overview,
-          [field]: value,
-        },
-      }
-      return updated
-    })
-  }
-
-  // Calculate total marks for all sections
-  const calculateTotalMarks = () => {
+  // Calculate total marks
+  const calculateTotalMarks = useCallback(() => {
     // Define marks allocation for each item
     const marksAllocation = {
       professionalism: {
@@ -255,11 +163,87 @@ export default function HeadteacherContinuousImprovement({
       }
     })
 
-    // Update state without calling updateParent inside setState
+    return totalMarks
+  }, [continuousImprovementData])
+
+  // Update total marks whenever data changes
+  useEffect(() => {
+    const newTotalMarks = calculateTotalMarks()
+
     setContinuousImprovementData((prev) => ({
       ...prev,
-      totalMarks,
+      totalMarks: newTotalMarks,
     }))
+
+    // Update parent component with changes
+    onDataChange({
+      continuousImprovement: {
+        ...continuousImprovementData,
+        totalMarks: newTotalMarks,
+      },
+    })
+  }, [
+    continuousImprovementData.professionalism,
+    continuousImprovementData.performanceMetrics,
+    calculateTotalMarks,
+    onDataChange,
+  ])
+
+  // Handle changes to evaluation items
+  const handleEvaluationChange = (
+    section: keyof Omit<ContinuousImprovementData, "overview" | "totalMarks">,
+    field: string,
+    type: "availability" | "quality",
+    value: number,
+  ) => {
+    setContinuousImprovementData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            [type]: value,
+          },
+        },
+      }
+      return updated
+    })
+  }
+
+  // Handle changes to observations
+  const handleObservationChange = (
+    section: keyof Omit<ContinuousImprovementData, "overview" | "totalMarks">,
+    field: string,
+    value: string,
+  ) => {
+    setContinuousImprovementData((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: {
+            ...prev[section][field],
+            observation: value,
+          },
+        },
+      }
+      return updated
+    })
+  }
+
+  // Handle changes to overview fields
+  const handleOverviewChange = (field: keyof ContinuousImprovementData["overview"], value: string) => {
+    setContinuousImprovementData((prev) => {
+      const updated = {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          [field]: value,
+        },
+      }
+      return updated
+    })
   }
 
   return (
