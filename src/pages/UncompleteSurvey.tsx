@@ -3,6 +3,7 @@
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
+import { School } from "lucide-react"
 
 interface Survey {
   school: {
@@ -52,13 +53,21 @@ const IncompleteSurveys = () => {
   useEffect(() => {
     const userString = localStorage.getItem("user")
     const user = userString ? JSON.parse(userString) : null // Parse user correctly
+    const drafts: any[] = [];
 
-    if (user && user.id) {
-      const draft = JSON.parse(localStorage.getItem(`survey_draft_${user.id}`) || "null")
-      if (draft) {
-        setIncompleteSurveys([draft])
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("survey_draft_")) {
+        console.log(key);
+        
+        const draft = JSON.parse(localStorage.getItem(key) || "null");
+        if (draft) {
+          drafts.push(draft);
+        }
       }
-    }
+    });
+    setIncompleteSurveys(drafts);
+
+
   }, [])
 
   return (
@@ -85,7 +94,7 @@ const IncompleteSurveys = () => {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/create-survey")}
+                  onClick={() => navigate(`/create-survey?schoolId=${survey.school.id}`)}
                   className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-400"
                 >
                   Continue
