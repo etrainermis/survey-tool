@@ -186,6 +186,13 @@ export default function StakeholdersEngagement({
     }
 
     const currentMarks = calculateTotalMarks(localData);
+    setLocalData((prevData) => ({
+      ...prevData,
+      sectionMarks: {
+        ...prevData.sectionMarks,
+        totalMarks : currentMarks
+      },
+    }));
     if (currentMarks !== prevMarks.current) {
       prevMarks.current = currentMarks;
       updateSectionMarks(currentMarks);

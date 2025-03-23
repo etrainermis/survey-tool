@@ -454,11 +454,18 @@ export default function OperationalManagement({
     }
 
     const currentMarks = calculateTotalMarks(localData);
+    setLocalData((prevData) => ({
+      ...prevData,
+      sectionMarks: {
+        ...prevData.sectionMarks,
+        totalMarks : currentMarks
+      },
+    }));
     if (currentMarks !== prevMarks.current) {
       prevMarks.current = currentMarks;
       updateSectionMarks(currentMarks);
     }
-
+   
     updateFormData(localData);
   }, [localData, updateFormData, updateSectionMarks]);
 
