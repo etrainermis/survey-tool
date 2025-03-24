@@ -187,6 +187,9 @@ export default function Home() {
       )} out of 100`,
       description: "Your survey has been successfully submitted.",
     });
+    localStorage.removeItem(
+      `survey_draft_${localStorage.getItem("currentEvaluationSchool")}`
+    );
     // Reset form or redirect as needed
   };
 
