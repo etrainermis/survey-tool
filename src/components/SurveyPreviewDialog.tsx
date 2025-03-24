@@ -6,14 +6,16 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useOneSurvey } from "@/hooks/useOneSurvey"
 
 interface Survey {
   id: string
   school: {
+    id: string;
     name: string
   }
   createdAt: string
-  collectedData?: any
+  data: any
 }
 
 interface SurveyPreviewDialogProps {
@@ -139,17 +141,29 @@ const renderResultsSummary = (schoolType, sectionMarks, totalMarks) => {
 export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPreviewDialogProps) => {
   const [step, setStep] = useState(0)
 
-  if (!survey) return null
+    // Use the hook to fetch survey data based on schoolId
+    const { survey: fetchedSurvey, fetchingSurvey, errorFetchingSurvey } = useOneSurvey(survey?.school.id || "");
+
+    // If survey is not available or is still loading, render loading or error states
+    if (fetchingSurvey) return <div>Loading...</div>;
+    if (errorFetchingSurvey) return <div>Error loading survey data.</div>;
+  
+    // Handle case where survey or fetchedSurvey is null or undefined
+    if (!fetchedSurvey) return null;
+    console.log("Fetched Survey:", fetchedSurvey);
 
   // Parse the survey data
-  const surveyData = survey.collectedData
-    ? typeof survey.collectedData === "string"
-      ? JSON.parse(survey.collectedData)
-      : survey.collectedData
-    : {}
+  const surveyData = fetchedSurvey?.data
+  ? typeof fetchedSurvey.data === "string"
+    ? JSON.parse(fetchedSurvey.data)
+    : fetchedSurvey.data
+  : {}
+
+console.log("Parsed Survey Data:", fetchedSurvey?.data);
+    
 
   // Get the general information data - handle both string and object formats
-  const generalInfo = surveyData.generalInformation
+  const generalInfo = surveyData?.generalInformation
     ? typeof surveyData.generalInformation === "string"
       ? JSON.parse(surveyData.generalInformation)
       : surveyData.generalInformation
@@ -157,7 +171,8 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
 
   // Add a console log to help debug
   console.log("Survey data:", surveyData)
-  console.log("General info:", generalInfo)
+  console.log("General information:", generalInfo)
+  
 
   // Get evaluation data
   const evaluationData = surveyData.evaluation || {}
@@ -322,10 +337,12 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
 // Update the renderSchoolInformation function to better handle data
 const renderSchoolInformation = (data: any) => {
   // Try to access school data from different possible structures
-  const school = data?.school || data || {}
+  const school = data?.school || data || {};
+  const generalInfo= data?.generalInformation || data || {};
+ 
 
   // Debug what we're getting
-  console.log("School data in render function:", school)
+  console.log("School data:", school);
 
   return (
     <div className="space-y-4">
@@ -349,13 +366,13 @@ const renderSchoolInformation = (data: any) => {
           <h4 className="font-semibold text-blue-600 mb-2">Contact Information</h4>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Email:</span> {school.contact?.email || "N/A"}
+              <span className="font-medium">Email:</span> {school.email || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {school.contact?.phone || "N/A"}
+              <span className="font-medium">Phone:</span> {school.phoneNumber || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Head Teacher:</span> {school.contact?.headteacher || "N/A"}
+              <span className="font-medium">Head Teacher:</span> {school.headteacher || "N/A"}
             </p>
           </div>
         </div>
@@ -365,7 +382,7 @@ const renderSchoolInformation = (data: any) => {
         <h4 className="font-semibold text-blue-600 mb-2">Staff Statistics</h4>
         <div className="grid grid-cols-2 gap-4">
           <p>
-            <span className="font-medium">Male Teachers:</span> {school.stats?.maleTeachers || "0"}
+            <span className="font-medium">Male Teachers:</span> {generalInfo?.maleTeachers || "0"}
           </p>
           <p>
             <span className="font-medium">Female Teachers:</span> {school.stats?.femaleTeachers || "0"}
