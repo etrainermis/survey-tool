@@ -89,7 +89,7 @@ const IncompleteSurveys = () => {
                 className="p-4 border-b border-blue-100 last:border-b-0 flex justify-between items-center"
               >
                 <div>
-                  <h3 className="font-medium text-blue-700">{survey.school.name}</h3>
+                  <h3 className="font-medium ">{survey.school.name}</h3>
                   <p className="text-sm text-blue-500">Draft</p>
                 </div>
                 <Button
