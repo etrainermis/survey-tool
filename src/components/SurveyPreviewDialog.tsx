@@ -678,10 +678,10 @@ const renderITInfrastructure = (data: any) => {
                 {it.equipment?.status || "N/A"}
               </span>
             </p>
-            <p>
+            {/* <p>
               <span className="font-medium">Asset Register File:</span>{" "}
               {it.equipment?.assetRegisterFile ? "Uploaded" : "Not uploaded"}
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
