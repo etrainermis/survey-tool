@@ -28,13 +28,24 @@ const Dashboard = () => {
   const { surveys, fetchingSurveys } = useAllSurveys()
 
   useEffect(() => {
-    // Load draft surveys for current user
-    const draftKey = `survey_draft_${user?.id}`
-    const draft = localStorage.getItem(draftKey)
-    if (draft) {
-      setIncompleteSurveys([JSON.parse(draft)])
-    }
-  }, [user?.id])
+    const userString = localStorage.getItem("user")
+    const user = userString ? JSON.parse(userString) : null // Parse user correctly
+    const drafts: any[] = [];
+
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("survey_draft_")) {
+        console.log(key);
+        
+        const draft = JSON.parse(localStorage.getItem(key) || "null");
+        if (draft) {
+          drafts.push(draft);
+        }
+      }
+    });
+    setIncompleteSurveys(drafts);
+
+
+  }, [])
 
   const handleLogout = () => {
     logout()

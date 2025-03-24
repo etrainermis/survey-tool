@@ -130,7 +130,7 @@ export default function StrategicPlanning({
     };
   const getInitialData = (): LocalData => {
     try {
-      const storedData = localStorage.getItem(`survey_draft_${localStorage.getItem('currentEvaluationSchool')}`);
+      const storedData = localStorage.getItem("survey_draft");
       if (!storedData) return defaultData;
       
       const parsedData = JSON.parse(storedData);
