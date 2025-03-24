@@ -8,12 +8,11 @@ COPY package*.json ./
 
 COPY . .
 
-RUN npm i -g yarn --force
-RUN yarn
+RUN npm install
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-RUN yarn build
+RUN npm run build
 
 EXPOSE 3435
 
