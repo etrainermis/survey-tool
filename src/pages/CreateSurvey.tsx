@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, X } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import type { AuthState } from "@/lib/auth"
 import { Form } from "@/components/ui/form"
@@ -17,6 +17,7 @@ import useAuth from "@/hooks/useAuth"
 import { useAllSchools } from "@/hooks/useSchools"
 import { AuthApi } from "@/lib/config/axios.config"
 import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface CreateSurveyProps {
   authState: AuthState
@@ -38,9 +39,8 @@ interface SurveyData {
     stats: {
       trades: number
       students: number
-      teachers: number
-      maleTeachers?: number // Add this line
-      femaleTeachers?: number // Add this line
+      maleTeachers: number
+      femaleTeachers: number
     }
     contact: {
       phone: string
@@ -53,7 +53,8 @@ interface SurveyData {
       name: string
       levels: Array<{
         level: number
-        classrooms: number
+        virtualClassrooms: number
+        physicalClassrooms: number
         students: {
           male: number
           female: number
@@ -87,7 +88,7 @@ interface SurveyData {
     }
     internet: {
       exists: boolean
-      type?: "4G" | "Fiber" // Add this field
+      type?: "4G" | "Fiber"
     }
     server: {
       exists: boolean
@@ -99,6 +100,7 @@ interface SurveyData {
       hasAssetRegister: boolean
       status: string
       isAvailable: boolean
+      assetRegisterFile?: File
     }
   }
 }
@@ -106,12 +108,16 @@ interface SurveyData {
 const CreateSurvey = () => {
   const [currentStep, setCurrentStep] = useState(1)
   const [currentInfraType, setCurrentInfraType] = useState(0)
+  const [isTradeDialogOpen, setIsTradeDialogOpen] = useState(false)
+  const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0)
+  const [newTradeName, setNewTradeName] = useState("")
   const { toast } = useToast()
   const form = useForm<SurveyData>()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [selectedSchool, setSelectedSchool] = useState(null)
   const { schools, fetchingSchools, errorFetchingSchools, mutate } = useAllSchools()
+  const fileInputRef = useRef(null)
 
   const infrastructureTypes = [
     "administration block",
@@ -156,8 +162,16 @@ const CreateSurvey = () => {
 
   const saveProgress = (data) => {
     if (user?.id) {
-      localStorage.setItem(`survey_draft_${localStorage.getItem("currentEvaluationSchool")}`, JSON.stringify(data))
-      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(data))
+      // Make a copy of the data to avoid circular references
+      const dataCopy = JSON.parse(JSON.stringify(data))
+
+      // Remove File objects which can't be serialized
+      if (dataCopy.it?.equipment?.assetRegisterFile) {
+        delete dataCopy.it.equipment.assetRegisterFile
+      }
+
+      localStorage.setItem(`survey_draft_${localStorage.getItem("currentEvaluationSchool")}`, JSON.stringify(dataCopy))
+      localStorage.setItem(`survey_draft_${user.id}`, JSON.stringify(dataCopy))
       toast({ description: "Progress saved", duration: 1000 })
     }
   }
@@ -203,6 +217,7 @@ const CreateSurvey = () => {
       prevStep()
     }
   }
+
   const onSubmit = async (data: any) => {
     try {
       // Validate that a school is selected
@@ -214,9 +229,18 @@ const CreateSurvey = () => {
         })
         return
       }
+
+      // Make a copy of the data to avoid circular references
+      const dataCopy = JSON.parse(JSON.stringify(data))
+
+      // Remove File objects which can't be serialized
+      if (dataCopy.it?.equipment?.assetRegisterFile) {
+        delete dataCopy.it.equipment.assetRegisterFile
+      }
+
       const surveyPayload = {
         schoolId: selectedSchool.id,
-        generalInformation: JSON.stringify(data),
+        generalInformation: JSON.stringify(dataCopy),
       }
 
       // Submit to API
@@ -255,6 +279,7 @@ const CreateSurvey = () => {
       })
     }
   }
+
   const renderSchoolSection = () => (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -402,6 +427,7 @@ const CreateSurvey = () => {
               className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
               {...form.register("school.stats.maleTeachers", {
                 required: "Number of male teachers is required",
+                valueAsNumber: true,
                 min: { value: 0, message: "Cannot be negative" },
               })}
             />
@@ -419,6 +445,7 @@ const CreateSurvey = () => {
               className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
               {...form.register("school.stats.femaleTeachers", {
                 required: "Number of female teachers is required",
+                valueAsNumber: true,
                 min: { value: 0, message: "Cannot be negative" },
               })}
             />
@@ -461,9 +488,9 @@ const CreateSurvey = () => {
                       type="number"
                       min="0"
                       className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`, {
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.virtualClassrooms`, {
                         valueAsNumber: true,
-                        required: "Number of classrooms is required",
+                        required: "Number of virtual classrooms is required",
                       })}
                     />
                   </div>
@@ -473,9 +500,9 @@ const CreateSurvey = () => {
                       type="number"
                       min="0"
                       className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.classrooms`, {
+                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.physicalClassrooms`, {
                         valueAsNumber: true,
-                        required: "Number of classrooms is required",
+                        required: "Number of physical classrooms is required",
                       })}
                     />
                   </div>
@@ -683,7 +710,9 @@ const CreateSurvey = () => {
             <Input
               type="number"
               className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              {...form.register("it.computerLab.totalComputers")}
+              {...form.register("it.computerLab.totalComputers", {
+                valueAsNumber: true,
+              })}
             />
           </div>
           <div className="space-y-2">
@@ -691,7 +720,9 @@ const CreateSurvey = () => {
             <Input
               type="number"
               className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              {...form.register("it.computerLab.workingComputers")}
+              {...form.register("it.computerLab.workingComputers", {
+                valueAsNumber: true,
+              })}
             />
           </div>
           {/* Not Working Computers */}
@@ -700,7 +731,9 @@ const CreateSurvey = () => {
             <Input
               type="number"
               className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              {...form.register("it.computerLab.nonWorkingComputers")}
+              {...form.register("it.computerLab.nonWorkingComputers", {
+                valueAsNumber: true,
+              })}
             />
           </div>
 
@@ -751,7 +784,9 @@ const CreateSurvey = () => {
                 <Input
                   type="number"
                   className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                  {...form.register("it.computerLab.totalProjectors")}
+                  {...form.register("it.computerLab.totalProjectors", {
+                    valueAsNumber: true,
+                  })}
                 />
               </div>
               {/* Working Projectors */}
@@ -760,7 +795,9 @@ const CreateSurvey = () => {
                 <Input
                   type="number"
                   className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                  {...form.register("it.computerLab.workingProjectors")}
+                  {...form.register("it.computerLab.workingProjectors", {
+                    valueAsNumber: true,
+                  })}
                 />
               </div>
               {/* Not Working Projectors */}
@@ -769,7 +806,9 @@ const CreateSurvey = () => {
                 <Input
                   type="number"
                   className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                  {...form.register("it.computerLab.nonWorkingProjectors")}
+                  {...form.register("it.computerLab.nonWorkingProjectors", {
+                    valueAsNumber: true,
+                  })}
                 />
               </div>
             </div>
@@ -891,18 +930,27 @@ const CreateSurvey = () => {
               </Label>
             </div>
 
-            {/* Add file upload section
-            <div className="space-y-2">
+         
+            {/* <div className="space-y-2">
               <Label className="">Asset Register Document</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="file"
                   id="asset-register-file"
                   className="hidden"
+                  ref={fileInputRef}
                   onChange={(e) => {
                     if (e.target.files && e.target.files.length > 0) {
                       const fileName = e.target.files[0].name
-                      document.getElementById("selected-file-name").textContent = fileName
+                      const fileElement = document.getElementById("selected-file-name")
+                      if (fileElement) {
+                        fileElement.textContent = fileName
+                        fileElement.className = "text-sm text-blue-600"
+                      }
+
+                      // Store the file in form data
+                      form.setValue("it.equipment.assetRegisterFile", e.target.files[0])
+
                       toast({
                         description: `File "${fileName}" selected`,
                         duration: 3000,
@@ -914,7 +962,7 @@ const CreateSurvey = () => {
                   type="button"
                   variant="outline"
                   className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                  onClick={() => document.getElementById("asset-register-file")?.click()}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   + Add File
                 </Button>
@@ -952,18 +1000,27 @@ const CreateSurvey = () => {
       }
       currentData.companies.push({ name: "", distance: "", trades: [] })
       form.reset(currentData)
+      saveProgress(currentData)
     }
 
     // Add trade to a company
-    const addTrade = (companyIndex) => {
-      const tradeName = prompt("Enter trade name:")
-      if (tradeName && tradeName.trim() !== "") {
+    const openTradeDialog = (companyIndex) => {
+      setCurrentCompanyIndex(companyIndex)
+      setNewTradeName("")
+      setIsTradeDialogOpen(true)
+    }
+
+    // Add the trade from dialog
+    const addTradeFromDialog = () => {
+      if (newTradeName && newTradeName.trim() !== "") {
         const currentData = form.getValues()
-        if (!currentData.companies[companyIndex].trades) {
-          currentData.companies[companyIndex].trades = []
+        if (!currentData.companies[currentCompanyIndex].trades) {
+          currentData.companies[currentCompanyIndex].trades = []
         }
-        currentData.companies[companyIndex].trades.push(tradeName.trim())
+        currentData.companies[currentCompanyIndex].trades.push(newTradeName.trim())
         form.reset(currentData)
+        saveProgress(currentData)
+        setIsTradeDialogOpen(false)
       }
     }
 
@@ -972,6 +1029,7 @@ const CreateSurvey = () => {
       const currentData = form.getValues()
       currentData.companies[companyIndex].trades.splice(tradeIndex, 1)
       form.reset(currentData)
+      saveProgress(currentData)
     }
 
     return (
@@ -1013,7 +1071,7 @@ const CreateSurvey = () => {
                     <Label className="">Trades</Label>
                     <Button
                       type="button"
-                      onClick={() => addTrade(companyIndex)}
+                      onClick={() => openTradeDialog(companyIndex)}
                       className="text-xs bg-blue-600 hover:bg-blue-700 text-white h-6 px-2"
                     >
                       + Add Trade
@@ -1051,6 +1109,51 @@ const CreateSurvey = () => {
             </div>
           )}
         </Card>
+
+        {/* Trade Dialog */}
+        <Dialog open={isTradeDialogOpen} onOpenChange={setIsTradeDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Trade</DialogTitle>
+              {/* <Button
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                variant="ghost"
+                onClick={() => setIsTradeDialogOpen(false)}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button> */}
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="trade-name" className="text-right">
+                  Trade Name
+                </Label>
+                <Input
+                  id="trade-name"
+                  value={newTradeName}
+                  onChange={(e) => setNewTradeName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter trade name"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addTradeFromDialog()
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" onClick={() => setIsTradeDialogOpen(false)} variant="outline">
+                Cancel
+              </Button>
+              <Button type="button" onClick={addTradeFromDialog}>
+                Add Trade
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
