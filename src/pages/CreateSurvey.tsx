@@ -517,7 +517,7 @@ const CreateSurvey = () => {
               </span>
             </div>
 
-            {[3, 4, 5].map((level, levelIndex) => (
+            {[1,2,3, 4, 5].map((level, levelIndex) => ( 
               <div key={level} className="space-y-4 border-t border-blue-100 pt-4">
                 <h4 className="font-medium ">Level {level}</h4>
                 <div className="grid grid-cols-4 gap-4">
