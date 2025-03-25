@@ -8,8 +8,9 @@ export const useAllSurveys = (size?: number, page?: number) => {
     async (url) => {
       try {
         const response = await AuthApi.get(url);
-        console.log(response);
+        console.log(response.data);
         return response?.data?.content;
+        
       } catch (error) {
         console.log(error);
         throw error;

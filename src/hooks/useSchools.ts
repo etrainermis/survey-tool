@@ -29,7 +29,7 @@ export const useSchoolsByDistrict = (districtId: string | null) => {
     async (url) => {
       try {
         const response = await AuthApi.get(url);
-        return response.data.data;
+        return response.data.data.content;
       } catch (error) {
         console.error(error);
         throw error;
@@ -39,7 +39,7 @@ export const useSchoolsByDistrict = (districtId: string | null) => {
 
   return {
     schools: data,
-    isLoading,
-    error,
+    fetchingSchools: isLoading,
+    errorFetchingSchools: error,
   };
 };

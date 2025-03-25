@@ -6,14 +6,23 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useOneSurvey } from "@/hooks/useOneSurvey"
 
 interface Survey {
   id: string
   school: {
+    id: string;
     name: string
   }
   createdAt: string
-  collectedData?: any
+  data: any
+  strategicPlanning: any
+  operationalManagement: any
+  teachingAndLearning: any
+  stakeholdersEngagement: any
+  continuousImprovement: any
+  infrastructureAndEnvironment: any
+  
 }
 
 interface SurveyPreviewDialogProps {
@@ -139,28 +148,90 @@ const renderResultsSummary = (schoolType, sectionMarks, totalMarks) => {
 export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPreviewDialogProps) => {
   const [step, setStep] = useState(0)
 
-  if (!survey) return null
+    // Use the hook to fetch survey data based on schoolId
+    const { survey: fetchedSurvey, fetchingSurvey, errorFetchingSurvey } = useOneSurvey(survey?.school.id || "");
+
+    // If survey is not available or is still loading, render loading or error states
+    if (fetchingSurvey) return <div>Loading...</div>;
+    if (errorFetchingSurvey) return <div>Error loading survey data.</div>;
+  
+    // Handle case where survey or fetchedSurvey is null or undefined
+    if (!fetchedSurvey) return null;
+    console.log("Fetched Survey:", fetchedSurvey);
 
   // Parse the survey data
-  const surveyData = survey.collectedData
-    ? typeof survey.collectedData === "string"
-      ? JSON.parse(survey.collectedData)
-      : survey.collectedData
-    : {}
+  const surveyData = fetchedSurvey?.data
+  ? typeof fetchedSurvey.data === "string"
+    ? JSON.parse(fetchedSurvey.data)
+    : fetchedSurvey.data
+  : {}
+
+console.log("Parsed Survey Data:", fetchedSurvey?.data);
+    
 
   // Get the general information data - handle both string and object formats
-  const generalInfo = surveyData.generalInformation
+  const generalInfo = surveyData?.generalInformation
     ? typeof surveyData.generalInformation === "string"
       ? JSON.parse(surveyData.generalInformation)
       : surveyData.generalInformation
     : {}
 
+    //
+
   // Add a console log to help debug
   console.log("Survey data:", surveyData)
-  console.log("General info:", generalInfo)
+  console.log("General information:", generalInfo)
+  
 
-  // Get evaluation data
-  const evaluationData = surveyData.evaluation || {}
+
+
+  const evaluationData = surveyData?.strategicPlanning
+  ? typeof surveyData.strategicPlanning === "string"
+    ? JSON.parse(surveyData.strategicPlanning)
+    : surveyData.strategicPlanning
+  : {}
+  
+  console.log("Evaluation data:", evaluationData)
+
+  const evaluationDataOne = surveyData?.operationalManagement
+  ? typeof surveyData.operationalManagement === "string"
+    ? JSON.parse(surveyData.operationalManagement)
+    : surveyData.operationalManagement
+  : {}
+
+  console.log("Evaluation data one:", evaluationDataOne)
+
+  const evaluationDataTwo = surveyData?.teachingAndLearning
+  ? typeof surveyData.teachingAndLearning === "string"
+    ? JSON.parse(surveyData.teachingAndLearning)
+    : surveyData.teachingAndLearning
+  : {}
+  
+  console.log("Evaluation data one:", evaluationDataTwo)
+
+    const evaluationDataThree = surveyData?.stakeholdersEngagement
+  ? typeof surveyData.stakeholdersEngagement === "string"
+    ? JSON.parse(surveyData.stakeholdersEngagement)
+    : surveyData.stakeholdersEngagement
+  : {}
+  
+  console.log("Evaluation data one:", evaluationDataThree)
+
+  const evaluationDataFour = surveyData?.continuousImprovement
+  ? typeof surveyData.continuousImprovement === "string"
+    ? JSON.parse(surveyData.continuousImprovement)
+    : surveyData.continuousImprovement
+  : {}
+  
+  console.log("Evaluation data one:", evaluationDataFour)
+
+  const evaluationDataFive = surveyData?.infrastructureAndEnvironment
+  ? typeof surveyData.infrastructureAndEnvironment === "string"
+    ? JSON.parse(surveyData.infrastructureAndEnvironment)
+    : surveyData.infrastructureAndEnvironment
+  : {}
+  
+  console.log("Evaluation data one:", evaluationDataFive)
 
   // Extract school type for the summary
   const schoolCategory = generalInfo?.school?.category || ""
@@ -171,8 +242,8 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
 
   // Calculate section marks for the summary
   const sectionMarks = {
-    strategicPlanning: evaluationData.strategicPlanning?.totalMarks || 0,
-    operationalManagement: evaluationData.operationalManagement?.totalMarks || 0,
+    strategicPlanning: evaluationData.totalMarks || 0,
+    operationalManagement: evaluationDataOne.totalMarks || 0,
     teachingLearning: evaluationData.teachingAndLearning?.totalMarks || 0,
     stakeholdersEngagement: evaluationData.stakeholdersEngagement?.totalMarks || 0,
     continuousImprovement: evaluationData.continuousImprovement?.totalMarks || 0,
@@ -207,27 +278,27 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
     // Evaluation sections
     {
       title: "1. Strategic Planning",
-      content: renderStrategicPlanning(evaluationData.strategicPlanning),
+      content: renderStrategicPlanning(evaluationData),
     },
     {
       title: "2. School Operational Management",
-      content: renderOperationalManagement(evaluationData.operationalManagement),
+      content: renderOperationalManagement(evaluationDataOne),
     },
     {
       title: "3. Leading Teaching and Learning",
-      content: renderTeachingAndLearning(evaluationData.teachingAndLearning),
+      content: renderTeachingAndLearning(evaluationDataTwo),
     },
     {
       title: "4. Stakeholders' Engagement",
-      content: renderStakeholdersEngagement(evaluationData.stakeholdersEngagement),
+      content: renderStakeholdersEngagement(evaluationDataThree),
     },
     {
       title: "5. Continuous Improvement",
-      content: renderContinuousImprovement(evaluationData.continuousImprovement),
+      content: renderContinuousImprovement(evaluationDataFour),
     },
     {
       title: "6. Infrastructure and Environment",
-      content: renderInfrastructureAndEnvironment(evaluationData.infrastructureAndEnvironment),
+      content: renderInfrastructureAndEnvironment(evaluationDataFive),
     },
     // Final results summary
     {
@@ -322,10 +393,12 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
 // Update the renderSchoolInformation function to better handle data
 const renderSchoolInformation = (data: any) => {
   // Try to access school data from different possible structures
-  const school = data?.school || data || {}
+  const school = data?.school || data || {};
+  const generalInfo= data?.generalInformation || data || {};
+ 
 
   // Debug what we're getting
-  console.log("School data in render function:", school)
+  console.log("School data:", school);
 
   return (
     <div className="space-y-4">
@@ -349,13 +422,13 @@ const renderSchoolInformation = (data: any) => {
           <h4 className="font-semibold text-blue-600 mb-2">Contact Information</h4>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Email:</span> {school.contact?.email || "N/A"}
+              <span className="font-medium">Email:</span> {school.email || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {school.contact?.phone || "N/A"}
+              <span className="font-medium">Phone:</span> {school.phoneNumber || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Head Teacher:</span> {school.contact?.headteacher || "N/A"}
+              <span className="font-medium">Head Teacher:</span> {school.headteacher || "N/A"}
             </p>
           </div>
         </div>
@@ -365,7 +438,7 @@ const renderSchoolInformation = (data: any) => {
         <h4 className="font-semibold text-blue-600 mb-2">Staff Statistics</h4>
         <div className="grid grid-cols-2 gap-4">
           <p>
-            <span className="font-medium">Male Teachers:</span> {school.stats?.maleTeachers || "0"}
+            <span className="font-medium">Male Teachers:</span> {generalInfo?.maleTeachers || "0"}
           </p>
           <p>
             <span className="font-medium">Female Teachers:</span> {school.stats?.femaleTeachers || "0"}
@@ -689,8 +762,23 @@ const renderITInfrastructure = (data: any) => {
   )
 }
 
-// Update the renderEvaluationTable function to remove the redundant "Total marks" column
 const renderEvaluationTable = (data, items) => {
+  const calculateTableTotal = (items, data) => {
+    return items.reduce((total, item) => {
+      if (item.isHeader) return total; // Skip header rows
+
+      const availability = (data?.[item.key]?.availability ?? item.availability) === -1 
+        ? 0 
+        : (data?.[item.key]?.availability ?? item.availability);
+
+      const quality = (data?.[item.key]?.quality ?? item.quality) === -1 
+        ? 0 
+        : (data?.[item.key]?.quality ?? item.quality);
+
+      return total + availability + quality;
+    }, 0);
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table className="border-collapse border border-gray-200">
@@ -712,19 +800,22 @@ const renderEvaluationTable = (data, items) => {
             >
               <TableCell className="border border-gray-200 font-medium">{item.indicator}</TableCell>
               <TableCell className="border border-gray-200 text-center">
-                {item.isHeader ? "" : item.availability === "N/A" ? "N/A" : data?.[item.key]?.availability || ""}
+                {item.isHeader ? "" : ((data?.[item.key]?.availability ?? item.availability) === -1 ? "N/A" : (data?.[item.key]?.availability ?? item.availability))}
               </TableCell>
               <TableCell className="border border-gray-200 text-center">
-                {item.isHeader ? "" : item.quality === "N/A" ? "N/A" : data?.[item.key]?.quality || ""}
+                {item.isHeader ? "" : ((data?.[item.key]?.quality ?? item.quality) === -1 ? "N/A" : (data?.[item.key]?.quality ?? item.quality))}
               </TableCell>
               <TableCell className="border border-gray-200 text-center">
-                {item.isHeader ? "" : item.marksAllocated || ""}
+                {item.isHeader ? "" : (data?.[item.key]?.marksAllocated ?? item.marksAllocated)}
               </TableCell>
               <TableCell className="border border-gray-200 text-center">
-                {item.isHeader ? "" : data?.[item.key]?.marksObtained || "0"}
+                {item.isHeader ? "" : 
+                  ((data?.[item.key]?.availability ?? item.availability) === -1 ? 0 : (data?.[item.key]?.availability ?? item.availability)) +
+                  ((data?.[item.key]?.quality ?? item.quality) === -1 ? 0 : (data?.[item.key]?.quality ?? item.quality))
+                }
               </TableCell>
               <TableCell className="border border-gray-200">
-                {item.isHeader ? "" : data?.[item.key]?.observation || ""}
+                {item.isHeader ? "" : (data?.[item.key]?.observation?.trim() || "No Observations made")}
               </TableCell>
             </TableRow>
           ))}
@@ -732,13 +823,17 @@ const renderEvaluationTable = (data, items) => {
             <TableCell colSpan={5} className="border border-gray-200 text-right font-bold">
               Total Marks:
             </TableCell>
-            <TableCell className="border border-gray-200 text-center font-bold">{data?.totalMarks || "0"}</TableCell>
+            <TableCell className="border border-gray-200 text-center font-bold">
+              {calculateTableTotal(items, data) || "0"}
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>
     </div>
-  )
-}
+  );
+};
+
+
 
 // Update the renderOverview function to use blue instead of yellow
 const renderOverview = (data) => {
@@ -763,8 +858,14 @@ const renderOverview = (data) => {
   )
 }
 
+
 // Update the renderStrategicPlanning function to use a simpler header
-const renderStrategicPlanning = (data = {}) => {
+const renderStrategicPlanning = (data: any = {}) => {
+
+  const strategicPlan = data?.strategicPlanning || data || {};
+  console.log("strategic planning:", strategicPlan)
+  console.log("strategic planning Annual Budget Availability:", strategicPlan.annualBudgetPlan.availability)
+  console.log("availability",strategicPlan.tenderCommittee.availability)
   const strategicPlanningItems = [
     {
       key: "strategicPlanningHeader",
@@ -775,25 +876,33 @@ const renderStrategicPlanning = (data = {}) => {
     {
       key: "strategicPlan",
       indicator: "Approved Strategic plan (Signed by the right authority)",
-      availability: "",
-      quality: "N/A",
-      marksAllocated: "2",
+      availability: strategicPlan.strategicPlan.availability || "N/A",
+      quality: strategicPlan.strategicPlan.quality || "N/A",
+      marksAllocated: strategicPlan.strategicPlan.marksAllocated|| "N/A",
     },
-    { key: "schoolVision", indicator: "School vision", availability: "N/A", quality: "", marksAllocated: "1" },
-    { key: "schoolMission", indicator: "School Mission", availability: "N/A", quality: "", marksAllocated: "1" },
+    { key: "schoolVision", 
+      indicator: "School vision", 
+      availability: strategicPlan.schoolVision.availability || "N/A", 
+      quality: strategicPlan.schoolVision.quality || "N/A", 
+      marksAllocated: strategicPlan.schoolVision.marksAllocated },
+      { key: "schoolMission", 
+        indicator: "School mission", 
+        availability: strategicPlan.schoolMission.availability || "N/A", 
+        quality: strategicPlan.schoolMission.quality || "N/A", 
+        marksAllocated: strategicPlan.schoolMission.marksAllocated },
     {
       key: "organizationalStructure",
       indicator: "Organizational structure",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: strategicPlan.organizationalStructure.availability || "N/A", 
+      quality: strategicPlan.organizationalStructure.quality || "N/A", 
+      marksAllocated: strategicPlan.organizationalStructure.marksAllocated || "N/A",
     },
     {
       key: "operationalBudget",
       indicator: "Operational budget",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: strategicPlan.operationalBudget.availability || "N/A", 
+      quality: strategicPlan.operationalBudget.quality || "N/A", 
+      marksAllocated: strategicPlan.operationalBudget.marksAllocated || "N/A",
     },
     {
       key: "annualBudgetHeader",
@@ -802,33 +911,38 @@ const renderStrategicPlanning = (data = {}) => {
       marksAllocated: "",
     },
     {
-      key: "annualBudget",
-      indicator: "Approved annual and budget plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      key: "annualBudgetPlan",
+      indicator: "Approved Strategic plan (Signed by the right authority)",
+      availability: strategicPlan.annualBudgetPlan.availability || "N/A",
+      quality: strategicPlan.annualBudgetPlan.quality || "N/A",
+      marksAllocated: strategicPlan.annualBudgetPlan.marksAllocated|| "N/A",
     },
+    
     {
       key: "procurementPlan",
       indicator: "Approved procurement plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: strategicPlan.procurementPlan.availability || "N/A",
+      quality: strategicPlan.procurementPlan.quality || "N/A",
+      marksAllocated: strategicPlan.procurementPlan.marksAllocated|| "N/A",
     },
+  
+    
+
     {
       key: "businessPlan",
       indicator: "Business Plan for production unit",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: strategicPlan.businessPlan.availability || "N/A",
+      quality: strategicPlan.businessPlan.quality || "N/A",
+      marksAllocated: strategicPlan.businessPlan.marksAllocated || "N/A",
     },
     {
       key: "tenderCommittee",
       indicator: "Tender and receiving committee appointed (Valid appointment letter)",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: strategicPlan.tenderCommittee.availability || "N/A",
+      quality: strategicPlan.tenderCommittee.quality || "N/A",
+      marksAllocated: strategicPlan.tenderCommittee.marksAllocated || "N/A",
     },
+   
   ]
 
   return (
@@ -844,7 +958,11 @@ const renderStrategicPlanning = (data = {}) => {
 }
 
 // Update the renderOperationalManagement function to include all components
-const renderOperationalManagement = (data = {}) => {
+const renderOperationalManagement = (data: any = {}) => {
+  const operationalManagement = data?.operationalManagement || data || {};
+  console.log("operationalManagement", operationalManagement)
+  console.log("operationalManagementSec", operationalManagement.sec)
+
   const operationalItems = [
     // Section headers should not have marks assigned
     {
@@ -856,30 +974,30 @@ const renderOperationalManagement = (data = {}) => {
     {
       key: "executiveCommittee",
       indicator: "Availability Of School Executive Committee (SEC)",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.sec.availability ?? "N/A",
+      quality: operationalManagement.sec.quality ?? "N/A",
+      marksAllocated: operationalManagement.sec.marksAllocated ?? "0.5",
     },
     {
       key: "feedingCommittee",
       indicator: "Availablity Of School Feeding Committee",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.feedingCommittee.availability ?? "N/A",
+      quality: operationalManagement.feedingCommittee.quality ?? "N/A",
+      marksAllocated: operationalManagement.feedingCommittee.marksAllocated ?? "0.5",
     },
     {
       key: "executiveMinutes",
       indicator: "At least 1 minutes Of School Executive Committee meeting per term",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.secMinutes.availability ?? "N/A",
+      quality: operationalManagement.secMinutes.quality ?? "N/A",
+      marksAllocated: operationalManagement.secMinutes.marksAllocated ?? "0.5",
     },
     {
       key: "generalAssembly",
       indicator: "One minutes Of School General Assembly (SGA) meeting per year",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.sgaMinutes.availability ?? "N/A",
+      quality: operationalManagement.sgaMinutes.quality ?? "N/A",
+      marksAllocated: operationalManagement.sgaMinutes.marksAllocated ?? "0.5",
     },
 
     { key: "proceduresHeader", indicator: "2.2 Procedures and Communication", isHeader: true, marksAllocated: "" },
@@ -887,322 +1005,385 @@ const renderOperationalManagement = (data = {}) => {
     {
       key: "organigram",
       indicator: "School organigram available and published",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.organigram.availability ?? "N/A",
+      quality: operationalManagement.organigram.quality ?? "N/A",
+      marksAllocated: operationalManagement.organigram.marksAllocated ?? "0.5",
     },
     {
       key: "managementMeeting",
       indicator: "School Management Meeting per month (At least one minutes)",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.managementMeeting.availability ?? "N/A",
+      quality: operationalManagement.managementMeeting.quality ?? "N/A",
+      marksAllocated: operationalManagement.managementMeeting.marksAllocated ?? "0.5",
     },
     {
       key: "pedagogicalMeeting",
       indicator: "At least 6 Minutes Of School Pedagogical Meeting Per Year (two each term)",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.pedagogicalMeeting.availability ?? "N/A",
+      quality: operationalManagement.pedagogicalMeeting.quality ?? "N/A",
+      marksAllocated: operationalManagement.pedagogicalMeeting.marksAllocated ?? "0.5",
     },
     {
       key: "studentsMeeting",
       indicator: "At least 1 minutes of meetings Between School Administration And Students Per Term",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.studentsMeeting.availability ?? "N/A",
+      quality: operationalManagement.studentsMeeting.quality ?? "N/A",
+      marksAllocated: operationalManagement.studentsMeeting.marksAllocated ?? "0.5",
     },
     {
       key: "staffMeeting",
       indicator: "At Least 2 Minutes Of Meeting Between School Administration And Supporting Staff Per Month",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.staffMeeting.availability ?? "N/A",
+      quality: operationalManagement.staffMeeting.quality ?? "N/A",
+      marksAllocated: operationalManagement.staffMeeting.marksAllocated ?? "0.5",
     },
-    { key: "suggestionBox", indicator: "Suggestion Box", availability: "N/A", quality: "", marksAllocated: "0.5" },
+    { key: "suggestionBox", 
+      indicator: "Suggestion Box", 
+      availability: operationalManagement.suggestionBox.availability ?? "N/A",
+      quality: operationalManagement.suggestionBox.quality ?? "N/A",
+      marksAllocated: operationalManagement.suggestionBox.marksAllocated ?? "0.5",
+     },
 
     { key: "staffManagementHeader", indicator: "2.3 Staff Management", isHeader: true, marksAllocated: "" },
     {
       key: "workPerformance",
       indicator: "Work Performance Contract",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.workPerformance.availability ?? "N/A",
+      quality: operationalManagement.workPerformance.quality ?? "N/A",
+      marksAllocated: operationalManagement.workPerformance.marksAllocated ?? "0.5",
     },
     {
       key: "performanceEvaluation",
       indicator: "Performance Evaluation Report",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.performanceEvaluation.availability ?? "N/A",
+      quality: operationalManagement.performanceEvaluation.quality ?? "N/A",
+      marksAllocated: operationalManagement.performanceEvaluation.marksAllocated ?? "0.5",
     },
-    { key: "staffFile", indicator: "Staff File", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "staffFile", 
+      indicator: "Staff File", 
+      availability: operationalManagement.staffFile.availability ?? "N/A",
+      quality: operationalManagement.staffFile.quality ?? "N/A",
+      marksAllocated: operationalManagement.staffFile.marksAllocated ?? "0.5",
+    },
     {
-      key: "tmisRegistration",
+      key: "tmiRegistration",
       indicator: "Registration of all staff in TMIS",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.tmiRegistration.availability ?? "N/A",
+      quality: operationalManagement.tmiRegistration.quality ?? "N/A",
+      marksAllocated: operationalManagement.tmiRegistration.marksAllocated ?? "0.5",
     },
     {
       key: "sdmsRecord",
       indicator: "Record of staff information in SDMS",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.sdmsRecord.availability ?? "N/A",
+      quality: operationalManagement.sdmsRecord.quality ?? "N/A",
+      marksAllocated: operationalManagement.sdmsRecord.marksAllocated ?? "0.5",
     },
     {
       key: "staffAttendance",
       indicator: "Staff Attendance Records",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.staffAttendance.availability ?? "N/A",
+      quality: operationalManagement.staffAttendance.quality ?? "N/A",
+      marksAllocated: operationalManagement.staffAttendance.marksAllocated ?? "0.5",
     },
-    { key: "monthlyPayroll", indicator: "Monthly Payroll", availability: "N/A", quality: "", marksAllocated: "0.5" },
+    { 
+      key: "monthlyPayroll", 
+      indicator: "Monthly Payroll", 
+      availability: operationalManagement.monthlyPayroll.availability ?? "N/A",
+      quality: operationalManagement.monthlyPayroll.quality ?? "N/A",
+      marksAllocated: operationalManagement.monthlyPayroll.marksAllocated ?? "0.5",
+     },
+
     {
       key: "capacityBuildingPlan",
       indicator: "Staff Capacity Building Plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.capacityBuildingPlan.availability ?? "N/A",
+      quality: operationalManagement.capacityBuildingPlan.quality ?? "N/A",
+      marksAllocated: operationalManagement.capacityBuildingPlan.marksAllocated ?? "0.5",
     },
     {
       key: "capacityBuildingReport",
       indicator: "Implementation Report Of Staff Capacity Building",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.capacityBuildingReport.availability ?? "N/A",
+      quality: operationalManagement.capacityBuildingReport.quality ?? "N/A",
+      marksAllocated: operationalManagement.capacityBuildingReport.marksAllocated ?? "0.5",
     },
     {
       key: "disciplinaryCommittee",
       indicator: "Staff Disciplinary Committee / Reports",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.disciplinaryCommittee.availability ?? "N/A",
+      quality: operationalManagement.disciplinaryCommittee.quality ?? "N/A",
+      marksAllocated: operationalManagement.disciplinaryCommittee.marksAllocated ?? "0.5",
     },
 
     { key: "financialManagementHeader", indicator: "2.4 Financial management", isHeader: true, marksAllocated: "" },
     {
       key: "operationalBudget",
       indicator: "Operational Budget Plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.operationalBudget.availability ?? "N/A",
+      quality: operationalManagement.operationalBudget.quality ?? "N/A",
+      marksAllocated: operationalManagement.operationalBudget.marksAllocated ?? "0.5",
     },
     {
-      key: "financialReport",
+      key: "financialReports",
       indicator: "Monthly, Termly Financial Report and Annual Financial Report",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.financialReports.availability ?? "N/A",
+      quality: operationalManagement.financialReports.quality ?? "N/A",
+      marksAllocated: operationalManagement.financialReports.marksAllocated ?? "0.5",
     },
     {
       key: "auditReports",
       indicator: "Internal Audit Reports (Reports of school audit committee)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.auditReports.availability ?? "N/A",
+      quality: operationalManagement.auditReports.quality ?? "N/A",
+      marksAllocated: operationalManagement.auditReports.marksAllocated ?? "0.5",
     },
 
     { key: "procurementHeader", indicator: "2.5 Procurement Management", isHeader: true, marksAllocated: "" },
-    { key: "procurementPlan", indicator: "Procurement Plan", availability: "", quality: "", marksAllocated: "0.5" },
-    {
-      key: "tenderCommittee",
-      indicator: "Tender Committee reports",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+    { key: "procurementPlan", 
+      indicator: "Procurement Plan", 
+      availability: operationalManagement.procurementPlan.availability ?? "N/A",
+      quality: operationalManagement.procurementPlan.quality ?? "N/A",
+      marksAllocated: operationalManagement.procurementPlan.marksAllocated ?? "0.5",
     },
-    { key: "tenderDocuments", indicator: "Tender Documents", availability: "", quality: "", marksAllocated: "0.5" },
+    {
+      key: "tenderCommitteeReports",
+      indicator: "Tender Committee reports",
+      availability: operationalManagement.tenderCommitteeReports.availability ?? "N/A",
+      quality: operationalManagement.tenderCommitteeReports.quality ?? "N/A",
+      marksAllocated: operationalManagement.tenderCommitteeReports.marksAllocated ?? "0.5",
+    },
+    { key: "tenderDocuments", 
+      indicator: "Tender Documents", 
+      availability: operationalManagement.tenderDocuments.availability ?? "N/A",
+      quality: operationalManagement.tenderDocuments.quality ?? "N/A",
+      marksAllocated: operationalManagement.tenderDocuments.marksAllocated ?? "0.5",
+    },
 
     { key: "estateManagementHeader", indicator: "2.6 Estate Management", isHeader: true, marksAllocated: "" },
     {
       key: "infrastructureInventory",
       indicator: "Annual-Based Inventory Reports For Infrastructure",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.infrastructureInventory.availability ?? "N/A",
+      quality: operationalManagement.infrastructureInventory.quality ?? "N/A",
+      marksAllocated: operationalManagement.infrastructureInventory.marksAllocated ?? "0.5",
     },
     {
       key: "infrastructureMaintenance",
       indicator: "Annual Maintenance And Safety Report of Infrastructure",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.infrastructureMaintenance.availability ?? "N/A",
+      quality: operationalManagement.infrastructureMaintenance.quality ?? "N/A",
+      marksAllocated: operationalManagement.infrastructureMaintenance.marksAllocated ?? "0.5",
     },
     {
       key: "wasteManagement",
       indicator: "Waste Management Mechanism Including Bio Degradable And Non-Bio Degradable Waste",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.wasteManagement.availability ?? "N/A",
+      quality: operationalManagement.wasteManagement.quality ?? "N/A",
+      marksAllocated: operationalManagement.wasteManagement.marksAllocated ?? "0.5",
     },
 
     { key: "assetManagementHeader", indicator: "2.7 Asset Management", isHeader: true, marksAllocated: "" },
-    { key: "storeCards", indicator: "Store Cards", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "storeCards", 
+      indicator: "Store Cards", 
+      availability: operationalManagement.storeCards.availability ?? "N/A",
+      quality: operationalManagement.storeCards.quality ?? "N/A",
+      marksAllocated: operationalManagement.storeCards.marksAllocated ?? "0.5",
+    },
     {
       key: "requisitionForms",
       indicator: "Store Requisition Forms",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.requisitionForms.availability ?? "N/A",
+      quality: operationalManagement.requisitionForms.quality ?? "N/A",
+      marksAllocated: operationalManagement.requisitionForms.marksAllocated ?? "0.5",
     },
     {
       key: "equipmentInventory",
       indicator: "Term-Based Inventory Reports Of Equipment And Materials",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.equipmentInventory.availability ?? "N/A",
+      quality: operationalManagement.equipmentInventory.quality ?? "N/A",
+      marksAllocated: operationalManagement.equipmentInventory.marksAllocated ?? "0.5",
     },
     {
       key: "maintenancePlan",
       indicator: "Term-Based Maintenance And Safety Plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.maintenancePlan.availability ?? "N/A",
+      quality: operationalManagement.maintenancePlan.quality ?? "N/A",
+      marksAllocated: operationalManagement.maintenancePlan.marksAllocated ?? "0.5",
     },
     {
       key: "maintenanceReport",
       indicator: "Term-Based Maintenance And Safety Report",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.maintenanceReport.availability ?? "N/A",
+      quality: operationalManagement.maintenanceReport.quality ?? "N/A",
+      marksAllocated: operationalManagement.maintenanceReport.marksAllocated ?? "0.5",
     },
 
     { key: "studentManagementHeader", indicator: "2.8 Student Management", isHeader: true, marksAllocated: "" },
-    { key: "enrolmentPlan", indicator: "Enrolment Plan", availability: "N/A", quality: "", marksAllocated: "0.5" },
+
+    { key: "enrolmentPlan", 
+      indicator: "Enrolment Plan",  
+      availability: operationalManagement.enrolmentPlan.availability ?? "N/A",
+      quality: operationalManagement.enrolmentPlan.quality ?? "N/A",
+      marksAllocated: operationalManagement.enrolmentPlan.marksAllocated ?? "0.5",
+    },
     {
-      key: "traineeFilingSystem",
+      key: "traineeFiling",
       indicator: "Trainee Filing System (Consider SDMS)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.traineeFiling.availability ?? "N/A",
+      quality: operationalManagement.traineeFiling.quality ?? "N/A",
+      marksAllocated: operationalManagement.traineeFiling.marksAllocated ?? "0.5",
     },
     {
       key: "feedingProgram",
       indicator: "Implementation report Of School Feeding Program",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.feedingProgram.availability ?? "N/A",
+      quality: operationalManagement.feedingProgram.quality ?? "N/A",
+      marksAllocated: operationalManagement.feedingProgram.marksAllocated ?? "0.5",
     },
     {
       key: "femaleRoom",
       indicator: "Operational Female Learner Room (Girls'room) and the sickbay for boarding schools",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.femaleRoom.availability ?? "N/A",
+      quality: operationalManagement.femaleRoom.quality ?? "N/A",
+      marksAllocated: operationalManagement.femaleRoom.marksAllocated ?? "0.5",
     },
     {
       key: "sportsRecreationPlan",
       indicator: "Operational Plan For Sports and Recreation",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.sportsRecreationPlan.availability ?? "N/A",
+      quality: operationalManagement.sportsRecreationPlan.quality ?? "N/A",
+      marksAllocated: operationalManagement.sportsRecreationPlan.marksAllocated ?? "0.5",
     },
     {
       key: "sportsRecreationReport",
       indicator: "Implementation Report On Sports And Recreation",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.sportsRecreationReport.availability ?? "N/A",
+      quality: operationalManagement.sportsRecreationReport.quality ?? "N/A",
+      marksAllocated: operationalManagement.sportsRecreationReport.marksAllocated ?? "0.5",
     },
 
     { key: "consumablesHeader", indicator: "2.9 Training consumables management", isHeader: true, marksAllocated: "" },
     {
       key: "consumableFunds",
       indicator: "Consumable funds requests",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.consumableFunds.availability ?? "N/A",
+      quality: operationalManagement.consumableFunds.quality ?? "N/A",
+      marksAllocated: operationalManagement.consumableFunds.marksAllocated ?? "0.5",
     },
     {
-      key: "consumableTenderCommittee",
+      key: "consumableTender",
       indicator: "Consumable tender committee (Appointment letter not exceeding 2 years)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.consumableTender.availability ?? "N/A",
+      quality: operationalManagement.consumableTender.quality ?? "N/A",
+      marksAllocated: operationalManagement.consumableTender.marksAllocated ?? "0.5",
     },
     {
       key: "marketSurvey",
       indicator: "Consumable Market survey report",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.marketSurvey.availability ?? "N/A",
+      quality: operationalManagement.marketSurvey.quality ?? "N/A",
+      marksAllocated: operationalManagement.marketSurvey.marksAllocated ?? "0.5",
     },
     {
-      key: "consumableProcurementPlan",
+      key: "consumableProcurement",
       indicator: "Consumable procurement plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: operationalManagement.consumableProcurement.availability ?? "N/A",
+      quality: operationalManagement.consumableProcurement.quality ?? "N/A",
+      marksAllocated: operationalManagement.consumableProcurement.marksAllocated ?? "0.5",
     },
     {
       key: "tenderPublication",
       indicator: "Publication of tender",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.tenderPublication.availability ?? "N/A",
+      quality: operationalManagement.tenderPublication.quality ?? "N/A",
+      marksAllocated: operationalManagement.tenderPublication.marksAllocated ?? "0.5",
     },
     {
       key: "tenderEvaluation",
       indicator: "Tender evaluation report",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.tenderEvaluation.availability ?? "N/A",
+      quality: operationalManagement.tenderEvaluation.quality ?? "N/A",
+      marksAllocated: operationalManagement.tenderEvaluation.marksAllocated ?? "0.5",
     },
-    { key: "contracts", indicator: "Contracts", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "purchaseOrders", indicator: "Purchase orders", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "contracts", 
+      indicator: "Contracts", 
+      availability: operationalManagement.contracts.availability ?? "N/A",
+      quality: operationalManagement.contracts.quality ?? "N/A",
+      marksAllocated: operationalManagement.contracts.marksAllocated ?? "0.5",
+     },
+    { key: "purchaseOrders",
+      indicator: "Purchase orders", 
+      availability: operationalManagement.purchaseOrders.availability ?? "N/A",
+      quality: operationalManagement.purchaseOrders.quality ?? "N/A",
+      marksAllocated: operationalManagement.purchaseOrders.marksAllocated ?? "0.5",
+    },
     {
       key: "receivingCommittee",
       indicator: "Receiving committee (Appointment letter)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.receivingCommittee.availability ?? "N/A",
+      quality: operationalManagement.receivingCommittee.quality ?? "N/A",
+      marksAllocated: operationalManagement.receivingCommittee.marksAllocated ?? "0.5",
     },
-    { key: "deliveryNote", indicator: "Delivery note", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "goodsReceivedNote", indicator: "Good received note", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "storeCardsConsumables", indicator: "Store cards", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "deliveryNote", 
+      indicator: "Delivery note", 
+      availability: operationalManagement.deliveryNote.availability ?? "N/A",
+      quality: operationalManagement.deliveryNote.quality ?? "N/A",
+      marksAllocated: operationalManagement.deliveryNote.marksAllocated ?? "0.5",
+    },
+    { key: "goodsReceivedNote", 
+      indicator: "Good received note", 
+      availability: operationalManagement.goodsReceivedNote.availability ?? "N/A",
+      quality: operationalManagement.goodsReceivedNote.quality ?? "N/A",
+      marksAllocated: operationalManagement.goodsReceivedNote.marksAllocated ?? "0.5",
+     },
+    { key: "consumableStoreCards", 
+      indicator: "Store cards", 
+      availability: operationalManagement.consumableStoreCards.availability ?? "N/A",
+      quality: operationalManagement.consumableStoreCards.quality ?? "N/A",
+      marksAllocated: operationalManagement.consumableStoreCards.marksAllocated ?? "0.5",
+    },
     {
       key: "mainStoreRequisition",
       indicator: "Consumables requisition form for the main store",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.mainStoreRequisition.availability ?? "N/A",
+      quality: operationalManagement.mainStoreRequisition.quality ?? "N/A",
+      marksAllocated: operationalManagement.mainStoreRequisition.marksAllocated ?? "0.5",
     },
     {
       key: "miniStoreRequisition",
       indicator: "Consumables requisition form for the mini store",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.miniStoreRequisition.availability ?? "N/A",
+      quality: operationalManagement.miniStoreRequisition.quality ?? "N/A",
+      marksAllocated: operationalManagement.miniStoreRequisition.marksAllocated ?? "0.5",
     },
     {
       key: "monthlyInventory",
       indicator: "Monthly inventory report",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: operationalManagement.monthlyInventory.availability ?? "N/A",
+      quality: operationalManagement.monthlyInventory.quality ?? "N/A",
+      marksAllocated: operationalManagement.monthlyInventory.marksAllocated ?? "0.5",
     },
     {
-      key: "consumablesUtilization",
+      key: "utilizationReport",
       indicator: "Consumables Utilization report",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.utilizationReport.availability ?? "N/A",
+      quality: operationalManagement.utilizationReport.quality ?? "N/A",
+      marksAllocated: operationalManagement.utilizationReport.marksAllocated ?? "0.5",
     },
     {
       key: "remainingBalance",
       indicator: "Availability of remaining balance from 2023/2024",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.remainingBalance.availability ?? "N/A",
+      quality: operationalManagement.remainingBalance.quality ?? "N/A",
+      marksAllocated: operationalManagement.remainingBalance.marksAllocated ?? "0.5",
     },
     {
       key: "bestPractices",
       indicator: "Availability of consumable best practices",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: operationalManagement.bestPractices.availability ?? "N/A",
+      quality: operationalManagement.bestPractices.quality ?? "N/A",
+      marksAllocated: operationalManagement.bestPractices.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1219,22 +1400,24 @@ const renderOperationalManagement = (data = {}) => {
 }
 
 // Update the renderTeachingAndLearning function to mark section headers
-const renderTeachingAndLearning = (data = {}) => {
+const renderTeachingAndLearning = (data: any = {}) => {
+  const teachingAndLearning = data?.teachingAndLearning || data || {};
+  console.log("teachingAndLearning", teachingAndLearning)
   const teachingItems = [
     { key: "cbtHeader", indicator: "3.1 CBT/CBA", isHeader: true, marksAllocated: "" },
     {
       key: "curriculum",
       indicator: "validated Competence Based Curriculum (CBC)",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.cbc.availability ?? "N/A",
+      quality: teachingAndLearning.cbc.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.cbc.marksAllocated ?? "0.5",
     },
     {
       key: "guidingDocuments",
       indicator: "Guiding Documents regarding CBT/CBA Implementation",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.guidingDocuments.availability ?? "N/A",
+      quality: teachingAndLearning.guidingDocuments.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.guidingDocuments.marksAllocated ?? "0.5",
     },
     {
       key: "trainingPlanningHeader",
@@ -1242,49 +1425,84 @@ const renderTeachingAndLearning = (data = {}) => {
       isHeader: true,
       marksAllocated: "",
     },
-    { key: "chronogram", indicator: "Validated Chronogram", availability: "N/A", quality: "", marksAllocated: "1" },
-    { key: "timetable", indicator: "Training Timetable", availability: "", quality: "", marksAllocated: "2" },
-    { key: "trainerPortfolios", indicator: "Trainer Portfolios", availability: "", quality: "", marksAllocated: "1" },
+    { key: "chronogram", 
+      indicator: "Validated Chronogram", 
+      availability: teachingAndLearning.chronogram.availability ?? "N/A",
+      quality: teachingAndLearning.chronogram.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.chronogram.marksAllocated ?? "0.5",
+    },
+    { key: "timetable", 
+      indicator: "Training Timetable", 
+      availability: teachingAndLearning.timetable.availability ?? "N/A",
+      quality: teachingAndLearning.timetable.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.timetable.marksAllocated ?? "0.5", 
+    },
+    { key: "trainerPortfolios", 
+      indicator: "Trainer Portfolios", 
+      availability: teachingAndLearning.trainerPortfolios.availability ?? "N/A",
+      quality: teachingAndLearning.trainerPortfolios.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.trainerPortfolios.marksAllocated ?? "0.5", 
+    },
     {
       key: "pedagogicalDocuments",
-      indicator:
-        "Pedagogical documents (Scheme of Works, Handouts/notes, Session Plans), aligned with the overall curriculum and learning objectives",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      indicator: "Pedagogical documents (Scheme of Works, Handouts/notes, Session Plans), aligned with the overall curriculum and learning objectives",
+      availability: teachingAndLearning.pedagogicalDocuments.availability ?? "N/A",
+      quality: teachingAndLearning.pedagogicalDocuments.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.pedagogicalDocuments.marksAllocated ?? "0.5", 
     },
     {
       key: "iapPlan",
       indicator: "Industrial Attachment Program (IAP) Plan",
-      availability: "",
-      quality: "",
-      marksAllocated: "2",
+      availability: teachingAndLearning.iapPlan.availability ?? "N/A",
+      quality: teachingAndLearning.iapPlan.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.iapPlan.marksAllocated ?? "0.5", 
     },
-    { key: "iapReports", indicator: "IAP Completion Reports", availability: "", quality: "", marksAllocated: "1" },
+    { key: "iapReports", 
+      indicator: "IAP Completion Reports", 
+      availability: teachingAndLearning.iapReports.availability ?? "N/A",
+      quality: teachingAndLearning.iapReports.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.iapReports.marksAllocated ?? "0.5", 
+    },
     { key: "cbaImplementationHeader", indicator: "3.3 CBA implementation", isHeader: true, marksAllocated: "" },
-    { key: "assessmentPlans", indicator: "Assessment Plans", availability: "", quality: "", marksAllocated: "2" },
-    { key: "traineePortfolio", indicator: "Trainee Portfolio", availability: "", quality: "", marksAllocated: "1" },
-    { key: "attendanceReports", indicator: "Attendance Reports", availability: "", quality: "", marksAllocated: "1" },
+
+    { key: "assessmentPlans", 
+      indicator: "Assessment Plans", 
+      availability: teachingAndLearning.assessmentPlans.availability ?? "N/A",
+      quality: teachingAndLearning.assessmentPlans.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.assessmentPlans.marksAllocated ?? "0.5",
+    },
+    { key: "traineePortfolio", 
+      indicator: "Trainee Portfolio", 
+      availability: teachingAndLearning.traineePortfolio.availability ?? "N/A",
+      quality: teachingAndLearning.traineePortfolio.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.traineePortfolio.marksAllocated ?? "0.5",
+    },
+    { key: "attendanceReports", 
+      indicator: "Attendance Reports", 
+      availability: teachingAndLearning.attendanceReports.availability ?? "N/A",
+      quality: teachingAndLearning.attendanceReports.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.attendanceReports.marksAllocated ?? "0.5",
+    },
     {
-      key: "sessionDelivery",
+      key: "deliveryMonitoring",
       indicator: "Session Delivery Monitoring Reports",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.deliveryMonitoring.availability ?? "N/A",
+      quality: teachingAndLearning.deliveryMonitoring.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.deliveryMonitoring.marksAllocated ?? "0.5",
     },
     {
       key: "portfolioVerification",
       indicator: "Portfolio Verification Reports",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.portfolioVerification.availability ?? "N/A",
+      quality: teachingAndLearning.portfolioVerification.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.portfolioVerification.marksAllocated ?? "0.5",
     },
     {
       key: "assessmentMonitoring",
       indicator: "Assessment Monitoring Reports",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.assessmentMonitoring.availability ?? "N/A",
+      quality: teachingAndLearning.assessmentMonitoring.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.assessmentMonitoring.marksAllocated ?? "0.5",
     },
     {
       key: "technologicalToolsHeader",
@@ -1292,20 +1510,25 @@ const renderTeachingAndLearning = (data = {}) => {
       isHeader: true,
       marksAllocated: "",
     },
-    { key: "digitalTools", indicator: "Digital tools", availability: "", quality: "", marksAllocated: "1" },
+    { key: "digitalTools", 
+      indicator: "Digital tools", 
+      availability: teachingAndLearning.digitalTools.availability ?? "N/A",
+      quality: teachingAndLearning.digitalTools.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.digitalTools.marksAllocated ?? "0.5",
+    },
     {
-      key: "feedbackTech",
+      key: "techFeedback",
       indicator: "Feedback from staff and students on technology use",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.techFeedback.availability ?? "N/A",
+      quality: teachingAndLearning.techFeedback.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.techFeedback.marksAllocated ?? "0.5",
     },
     {
       key: "efficiencyEvidence",
       indicator: "Evidence of improved efficiency",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: teachingAndLearning.efficiencyEvidence.availability ?? "N/A",
+      quality: teachingAndLearning.efficiencyEvidence.quality ?? "N/A",
+      marksAllocated: teachingAndLearning.efficiencyEvidence.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1322,29 +1545,32 @@ const renderTeachingAndLearning = (data = {}) => {
 }
 
 // Update the renderStakeholdersEngagement function to mark section headers
-const renderStakeholdersEngagement = (data = {}) => {
+const renderStakeholdersEngagement = (data: any = {}) => {
+  const stakeholdersEngagement = data?.stakeholdersEngagement || data || {};
+  console.log("stakeholdersEngagement", stakeholdersEngagement)
+
   const stakeholdersItems = [
     { key: "partnershipDevHeader", indicator: "4.1 Partnership Development", isHeader: true, marksAllocated: "" },
     {
       key: "mous",
       indicator: "At Least 3 MoUs With Relevant Private Companies Per Each Trade",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.mous.availability ?? "N/A",
+      quality: stakeholdersEngagement.mous.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.mous.marksAllocated ?? "0.5",
     },
     {
       key: "employersFeedback",
       indicator: "Employers feedback/ satisfaction survey results",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.employersFeedback.availability ?? "N/A",
+      quality: stakeholdersEngagement.employersFeedback.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.employersFeedback.marksAllocated ?? "0.5",
     },
     {
       key: "trainingAdjustments",
       indicator: "Training adjustments evidence based on feedback",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.trainingAdjustments.availability ?? "N/A",
+      quality: stakeholdersEngagement.trainingAdjustments.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.trainingAdjustments.marksAllocated ?? "0.5",
     },
     {
       key: "communityEngagementHeader",
@@ -1355,68 +1581,68 @@ const renderStakeholdersEngagement = (data = {}) => {
     {
       key: "stakeholderMeetings",
       indicator: "Records of meetings and planning sessions with stakeholders",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.stakeholderMeetings.availability ?? "N/A",
+      quality: stakeholdersEngagement.stakeholderMeetings.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.stakeholderMeetings.marksAllocated ?? "0.5",
     },
     {
-      key: "partnershipEvidence",
+      key: "planningSessions",
       indicator:
         "Minutes of meeting and records of planning sessions Evidence of partnerships with local organizations",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+        availability: stakeholdersEngagement.planningSessions.availability ?? "N/A",
+        quality: stakeholdersEngagement.planningSessions.quality ?? "N/A",
+        marksAllocated: stakeholdersEngagement.planningSessions.marksAllocated ?? "0.5",
     },
     {
-      key: "graduateSystem",
+      key: "graduateFiling",
       indicator: "Graduate Filing System for atleast previous 4 years",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.graduateFiling.availability ?? "N/A",
+      quality: stakeholdersEngagement.graduateFiling.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.graduateFiling.marksAllocated ?? "0.5",
     },
     {
       key: "alumniRecords",
       indicator: "Records of alumni meetings, events, and or other communications",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.alumniRecords.availability ?? "N/A",
+      quality: stakeholdersEngagement.alumniRecords.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.alumniRecords.marksAllocated ?? "0.5",
     },
     { key: "adaptabilityHeader", indicator: "4.3 Adaptability to Trends", isHeader: true, marksAllocated: "" },
     {
       key: "industryEngagement",
       indicator: "Industry engagement in training (contract, MoUs…)",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: stakeholdersEngagement.industryEngagement.availability ?? "N/A",
+      quality: stakeholdersEngagement.industryEngagement.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.industryEngagement.marksAllocated ?? "0.5",
     },
     {
       key: "trainingRelevance",
       indicator: "Feedback on training relevance",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: stakeholdersEngagement.trainingRelevance.availability ?? "N/A",
+      quality: stakeholdersEngagement.trainingRelevance.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.trainingRelevance.marksAllocated ?? "0.5",
     },
     {
       key: "staffTraining",
       indicator: "Staff training sessions held",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: stakeholdersEngagement.staffTraining.availability ?? "N/A",
+      quality: stakeholdersEngagement.staffTraining.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.staffTraining.marksAllocated ?? "0.5",
     },
     { key: "relationshipHeader", indicator: "4.4 Relationship with Subordinates", isHeader: true, marksAllocated: "" },
     {
       key: "subordinateFeedback",
       indicator: "Feedback from subordinates",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: stakeholdersEngagement.subordinateFeedback.availability ?? "N/A",
+      quality: stakeholdersEngagement.subordinateFeedback.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.subordinateFeedback.marksAllocated ?? "0.5",
     },
     {
       key: "conflictResolution",
       indicator: "Records of conflict resolution",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: stakeholdersEngagement.conflictResolution.availability ?? "N/A",
+      quality: stakeholdersEngagement.conflictResolution.quality ?? "N/A",
+      marksAllocated: stakeholdersEngagement.conflictResolution.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1433,67 +1659,80 @@ const renderStakeholdersEngagement = (data = {}) => {
 }
 
 // Update the renderContinuousImprovement function to mark section headers
-const renderContinuousImprovement = (data = {}) => {
+const renderContinuousImprovement = (data: any = {}) => {
+  const continuousImprovement = data?.continuousImprovement || data || {};
+  console.log("Continuous Improvement: ", continuousImprovement)
+
   const improvementItems = [
     { key: "professionalismHeader", indicator: "5.1 Professionalism", isHeader: true, marksAllocated: "" },
-    { key: "cpdPlan", indicator: "CPD plan", availability: "N/A", quality: "", marksAllocated: "1" },
+    { key: "cpdPlan", 
+      indicator: "CPD plan", 
+      availability: continuousImprovement.cpdPlan.availability ?? "N/A",
+      quality: continuousImprovement.cpdPlan.quality ?? "N/A",
+      marksAllocated: continuousImprovement.cpdPlan.marksAllocated ?? "0.5",
+    },
     {
       key: "cpdReports",
       indicator: "CPD implementation reports",
-      availability: "N/A",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.cpdReports.availability ?? "N/A",
+      quality: continuousImprovement.cpdReports.quality ?? "N/A",
+      marksAllocated: continuousImprovement.cpdReports.marksAllocated ?? "0.5",
     },
-    { key: "ethicalRecord", indicator: "Free ethical record", availability: "", quality: "", marksAllocated: "1" },
+    { key: "ethicalRecord", 
+      indicator: "Free ethical record", 
+      availability: continuousImprovement.ethicalRecord.availability ?? "N/A",
+      quality: continuousImprovement.ethicalRecord.quality ?? "N/A",
+      marksAllocated: continuousImprovement.ethicalRecord.marksAllocated ?? "0.5",
+    },
     {
       key: "roleModeling",
       indicator: "Positive role modeling in professional settings",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.roleModeling.availability ?? "N/A",
+      quality: continuousImprovement.roleModeling.quality ?? "N/A",
+      marksAllocated: continuousImprovement.roleModeling.marksAllocated ?? "0.5",
     },
     {
-      key: "staffFeedback",
+      key: "feedbackMechanisms",
       indicator: "Staff feedback mechanisms",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.feedbackMechanisms.availability ?? "N/A",
+      quality: continuousImprovement.feedbackMechanisms.quality ?? "N/A",
+      marksAllocated: continuousImprovement.feedbackMechanisms.marksAllocated ?? "0.5",
     },
     {
       key: "actionPlans",
       indicator: "Action plans based on feedback",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.actionPlans.availability ?? "N/A",
+      quality: continuousImprovement.actionPlans.quality ?? "N/A",
+      marksAllocated: continuousImprovement.actionPlans.marksAllocated ?? "0.5",
     },
     {
       key: "implementedImprovements",
       indicator: "Implemented improvements",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.implementedImprovements.availability ?? "N/A",
+      quality: continuousImprovement.implementedImprovements.quality ?? "N/A",
+      marksAllocated: continuousImprovement.implementedImprovements.marksAllocated ?? "0.5",
     },
     { key: "performanceMetricsHeader", indicator: "5.2 Performance Metrics", isHeader: true, marksAllocated: "" },
     {
       key: "kpis",
       indicator: "Documented KPIs or Performance review",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.kpis.availability ?? "N/A",
+      quality: continuousImprovement.kpis.quality ?? "N/A",
+      marksAllocated: continuousImprovement.kpis.marksAllocated ?? "0.5",
     },
     {
       key: "dataDecisions",
       indicator: "Evidence of data-driven decisions",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.dataDecisions.availability ?? "N/A",
+      quality: continuousImprovement.dataDecisions.quality ?? "N/A",
+      marksAllocated: continuousImprovement.dataDecisions.marksAllocated ?? "0.5",
     },
     {
-      key: "recordsImprovements",
+      key: "improvementRecords",
       indicator: "Records of implemented improvements",
-      availability: "",
-      quality: "",
-      marksAllocated: "1",
+      availability: continuousImprovement.improvementRecords.availability ?? "N/A",
+      quality: continuousImprovement.improvementRecords.quality ?? "N/A",
+      marksAllocated: continuousImprovement.improvementRecords.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1512,7 +1751,12 @@ const renderContinuousImprovement = (data = {}) => {
 // Fix the TypeScript error by adding proper type annotation
 const renderInfrastructureAndEnvironment = (data: any = {}) => {
   // Extract school category from the data to determine if it's a day or boarding school
-  const schoolCategory = data?.schoolCategory || data?.school?.category || ""
+  const schoolCategory = data?.school?.schoolCategory || data?.school?.schoolCategory || ""
+  console.log("School Category: ", schoolCategory)
+  const infrastructureAndEnvironment = data?.infrastructureAndEnvironment || data || {};
+  console.log("infrastructureAndEnvironment: ", infrastructureAndEnvironment)
+
+  
   const isBoardingSchool =
     schoolCategory.toLowerCase().includes("boarding") || schoolCategory.toLowerCase().includes("mixed")
   const isDaySchool = schoolCategory.toLowerCase().includes("day") || (!isBoardingSchool && schoolCategory !== "")
@@ -1520,10 +1764,29 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
   // Common infrastructure items that appear regardless of school type
   const commonInfrastructureItems = [
     { key: "adminBlockHeader", indicator: "6.1 Administration Block", isHeader: true, marksAllocated: "" },
-    { key: "offices", indicator: "Offices of all staff", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "meetingRooms", indicator: "Meeting rooms", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "emergencyExits", indicator: "Emergency exits", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "ventilation", indicator: "Ventilation and lighting", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "offices", 
+      indicator: "Offices of all staff", 
+      availability: "", 
+      quality: "",
+       marksAllocated: "0.5" 
+      },
+    { key: "meetingRooms", 
+      indicator: "Meeting rooms", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" 
+    },
+    { key: "emergencyExits", 
+      indicator: "Emergency exits", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" 
+    },
+    { key: "ventilation", 
+      indicator: "Ventilation and lighting", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
     { key: "classroomBlockHeader", indicator: "6.2 Classroom Block", isHeader: true, marksAllocated: "" },
     {
       key: "capacity",
@@ -1559,8 +1822,16 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
       marksAllocated: "0.5",
     },
     { key: "libraryHeader", indicator: "6.4 Library", isHeader: true, marksAllocated: "" },
-    { key: "books", indicator: "Books and other resources", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "studyArea", indicator: "Study area", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "books", 
+      indicator: "Books and other resources", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
+    { key: "studyArea", 
+      indicator: "Study area", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
     {
       key: "booksCondition",
       indicator: "Condition of books and resources",
@@ -1568,7 +1839,11 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
       quality: "",
       marksAllocated: "0.5",
     },
-    { key: "libraryComputers", indicator: "Computers", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "libraryComputers", 
+      indicator: "Computers", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
     { key: "kitchenHeader", indicator: "6.5 Kitchen", isHeader: true, marksAllocated: "" },
     {
       key: "healthSafety",
@@ -1606,8 +1881,16 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
       quality: "",
       marksAllocated: "0.5",
     },
-    { key: "refectoryVentilation", indicator: "Ventilation", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "wasteDisposal", indicator: "Waste disposal systems", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "refectoryVentilation", 
+      indicator: "Ventilation", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
+    { key: "wasteDisposal", 
+      indicator: "Waste disposal systems", 
+      availability: "", 
+      quality: "", 
+      marksAllocated: "0.5" },
   ]
 
   // Items specific to day schools

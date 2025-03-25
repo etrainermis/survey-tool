@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { escape } from "querystring";
 import { useToast } from "@/hooks/use-toast";
 import useAuth from "@/hooks/useAuth";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const [schoolType, setSchoolType] = useState<"day" | "boarding" | null>(null);
@@ -42,6 +44,10 @@ export default function Home() {
   });
   const [totalMarks, setTotalMarks] = useState(0);
   const [validationError, setValidationError] = useState("");
+  const navigate = useNavigate();
+  useEffect(() => {
+    setSchoolType(localStorage.getItem("schoolType") as "day" | "boarding");
+  }, []);
 
   // Calculate overall total marks whenever individual section marks change
   useEffect(() => {
@@ -57,13 +63,36 @@ export default function Home() {
   }, [sectionMarks]);
 
   const steps = [
-    { id: "school-type", title: "School Type" },
-    { id: "strategic-planning", title: "1. Strategic Planning" },
-    { id: "operational-management", title: "2. School Operational Management" },
-    { id: "teaching-learning", title: "3. Leading Teaching and Learning" },
-    { id: "stakeholders-engagement", title: "4. Stakeholders' Engagement" },
-    { id: "continuous-improvement", title: "5. Continuous Improvement" },
-    { id: "infrastructure", title: "6. Infrastructure and Environment" },
+    {
+      id: "strategic-planning",
+      title: "1. Strategic Planning",
+      type: ESchoolSurveyDataType.STRATEGIC_PLANNING,
+    },
+    {
+      id: "operational-management",
+      title: "2. School Operational Management",
+      type: ESchoolSurveyDataType.OPERATIONAL_MANAGEMENT,
+    },
+    {
+      id: "teaching-learning",
+      title: "3. Leading Teaching and Learning",
+      type: ESchoolSurveyDataType.TEACHING_AND_LEARNING,
+    },
+    {
+      id: "stakeholders-engagement",
+      title: "4. Stakeholders' Engagement",
+      type: ESchoolSurveyDataType.STAKEHOLDERS_ENGAGEMENT,
+    },
+    {
+      id: "continuous-improvement",
+      title: "5. Continuous Improvement",
+      type: ESchoolSurveyDataType.CONTINOUS_IMPROVEMENT,
+    },
+    {
+      id: "infrastructure",
+      title: "6. Infrastructure and Environment",
+      type: ESchoolSurveyDataType.INFRASTRUCTURE_AND_ENVIRONMENT,
+    },
     { id: "summary", title: "Summary and Preview" },
   ];
 
@@ -74,9 +103,9 @@ export default function Home() {
     }));
     //  await saveSectionData(data, type);
   };
-  const saveSectionData = async (data, type) => {
+  const saveSectionData = async (payload) => {
     try {
-      const response = await AuthApi.post(`/school-survey/add`, data);
+      const response = await AuthApi.post(`/school-survey/add`, {...payload, schoolId : localStorage.getItem("currentEvaluationSchool")});
     } catch (error) {
       console.log(error);
     }
@@ -95,11 +124,6 @@ export default function Home() {
   };
 
   const validateCurrentStep = () => {
-    if (currentStep === 0 && !schoolType) {
-      setValidationError("Please select a school type before proceeding.");
-      return false;
-    }
-
     // For other steps, check if all required fields are filled
     const currentStepId = steps[currentStep].id;
 
@@ -145,13 +169,47 @@ export default function Home() {
   };
   const saveProgress = (data) => {
     if (user?.id) {
-      localStorage.setItem(`survey_draft`, JSON.stringify(data));
+      localStorage.setItem(`survey_draft_${localStorage.getItem("currentEvaluationSchool")}`, JSON.stringify(data));
       toast({ description: "Progress saved", duration: 1000 });
     }
   };
-  const handleNext = () => {
+  const handleNext = async () => {
     saveProgress(formData);
+    switch (steps[currentStep].type) {
+      case ESchoolSurveyDataType.STRATEGIC_PLANNING:
+        await saveSectionData({
+          strategicPlanning: JSON.stringify(formData.strategicPlanning)
+        });
+        break;
+      case ESchoolSurveyDataType.OPERATIONAL_MANAGEMENT:
+        await saveSectionData({
+          operationalManagement: JSON.stringify(formData.operationalManagement)
+        });
+        break;
+      case ESchoolSurveyDataType.INFRASTRUCTURE_AND_ENVIRONMENT:
+        await saveSectionData({
+          infrastructureAndEnvironment: JSON.stringify(formData.infrastructure)
+        });
+        break;
+      case ESchoolSurveyDataType.STAKEHOLDERS_ENGAGEMENT:
+        await saveSectionData({
+          stakeholdersEngagement: JSON.stringify(formData.stakeholdersEngagement)
+        });
+        break;
+      case ESchoolSurveyDataType.CONTINOUS_IMPROVEMENT:
+        await saveSectionData({
+          continuousImprovement: JSON.stringify(formData.continuousImprovement)
+        });
+        break;
+      case ESchoolSurveyDataType.TEACHING_AND_LEARNING:
+        await saveSectionData({
+          teachingAndLearning: JSON.stringify(formData.teachingLearning)
+        });
+        break;
 
+      default:
+        break;
+    }
     if (validateCurrentStep() && currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
       setValidationError("");
@@ -195,13 +253,6 @@ export default function Home() {
 
   const renderStep = () => {
     switch (steps[currentStep].id) {
-      case "school-type":
-        return (
-          <SchoolTypeSelection
-            schoolType={schoolType}
-            setSchoolType={setSchoolType}
-          />
-        );
       case "strategic-planning":
         return (
           <StrategicPlanning
@@ -241,7 +292,7 @@ export default function Home() {
             formData={formData.teachingLearning}
             updateFormData={(data) =>
               updateFormData(
-                ESchoolSurveyDataType.LEARNING_AND_TEACHING,
+                ESchoolSurveyDataType.TEACHING_AND_LEARNING,
                 "teachingLearning",
                 data
               )
@@ -289,7 +340,7 @@ export default function Home() {
             formData={formData.infrastructure}
             updateFormData={(data) =>
               updateFormData(
-                ESchoolSurveyDataType.INFRASTRUCTURE,
+                ESchoolSurveyDataType.INFRASTRUCTURE_AND_ENVIRONMENT,
                 "infrastructure",
                 data
               )
@@ -360,11 +411,10 @@ export default function Home() {
                 Back
               </Button>
 
-              {currentStep < steps.length - 1  ? (
+              {currentStep < steps.length - 1 ? (
                 <Button
                   onClick={handleNext}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={currentStep === 0 && !schoolType}
                 >
                   Next
                 </Button>
@@ -386,6 +436,15 @@ export default function Home() {
           </div>
         )}
       </div>
+      <Button
+                variant="ghost"
+                onClick={() => navigate("/dashboard")}
+                className="mb-6 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Button>
+      
     </div>
   );
 }

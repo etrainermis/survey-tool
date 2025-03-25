@@ -1,9 +1,9 @@
 import { AuthApi } from "@/lib/config/axios.config";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export const useProvinces = () => {
   const { data, isLoading, error } = useSWR(
-    `/locations/provinces`,
+    `/location-address/provinces`,
     async (url) => {
       try {
         const response = await AuthApi.get(url);
@@ -24,7 +24,7 @@ export const useProvinces = () => {
 
 export const useDistricts = (provinceId: string | null) => {
   const { data, isLoading, error } = useSWR(
-    provinceId ? `/locations/districts/${provinceId}` : null,
+    provinceId ? `/location-address/districts/${provinceId}` : null,
     async (url) => {
       try {
         const response = await AuthApi.get(url);
@@ -40,5 +40,27 @@ export const useDistricts = (provinceId: string | null) => {
     districts: data,
     isLoading,
     error,
+    mutate
+  };
+};
+
+export const useAllDistricts = () => {
+  const { data, isLoading, mutate, error } = useSWR(
+    '/location-address/districts',
+    async (url) => {
+      try {
+        const response = await AuthApi.get(url);        
+        return response.data.content;
+      } catch (error) {
+        console.error('Error fetching districts:', error);
+        throw error;
+      }
+    }
+  );
+
+  return {
+    districts: data,
+    fetchingDistricts: isLoading,
+    errorFetchingDistricts: error
   };
 };

@@ -1,23 +1,30 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, X } from "lucide-react"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import type { AuthState } from "@/lib/auth"
-import { Form } from "@/components/ui/form"
-import { useForm } from "react-hook-form"
-import { useToast } from "@/components/ui/use-toast"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
-import useAuth from "@/hooks/useAuth"
-import { useAllSchools } from "@/hooks/useSchools"
-import { AuthApi } from "@/lib/config/axios.config"
-import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import type { AuthState } from "@/lib/auth";
+import { Form } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import useAuth from "@/hooks/useAuth";
+import { AuthApi } from "@/lib/config/axios.config";
+import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useAllDistricts } from "@/hooks/useLocation";
+import { useSchoolsByDistrict } from "@/hooks/useSchools";
 
 interface CreateSurveyProps {
   authState: AuthState;
@@ -37,11 +44,11 @@ interface SurveyData {
       village: string;
     };
     stats: {
-      trades: number
-      students: number
-      maleTeachers: number
-      femaleTeachers: number
-    }
+      trades: number;
+      students: number;
+      maleTeachers: number;
+      femaleTeachers: number;
+    };
     contact: {
       phone: string;
       email: string;
@@ -52,21 +59,21 @@ interface SurveyData {
       id: string;
       name: string;
       levels: Array<{
-        level: number
-        virtualClassrooms: number
-        physicalClassrooms: number
+        level: number;
+        virtualClassrooms: number;
+        physicalClassrooms: number;
         students: {
-          male: number
-          female: number
-        }
-      }>
-    }>
-  }
+          male: number;
+          female: number;
+        };
+      }>;
+    }>;
+  };
   companies: Array<{
-    name: string
-    distance: string
-    trades: string[]
-  }>
+    name: string;
+    distance: string;
+    trades: string[];
+  }>;
   infrastructure: Array<{
     type: string;
     size: string;
@@ -87,9 +94,9 @@ interface SurveyData {
       nonWorkingProjectors: number;
     };
     internet: {
-      exists: boolean
-      type?: "4G" | "Fiber"
-    }
+      exists: boolean;
+      type?: "4G" | "Fiber";
+    };
     server: {
       exists: boolean;
       specifications: string;
@@ -97,27 +104,34 @@ interface SurveyData {
     hasElearning: boolean;
     energySources: string[];
     equipment: {
-      hasAssetRegister: boolean
-      status: string
-      isAvailable: boolean
-      assetRegisterFile?: File
-    }
-  }
+      hasAssetRegister: boolean;
+      status: string;
+      isAvailable: boolean;
+      assetRegisterFile?: File;
+    };
+  };
 }
 
 const CreateSurvey = () => {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [currentInfraType, setCurrentInfraType] = useState(0)
-  const [isTradeDialogOpen, setIsTradeDialogOpen] = useState(false)
-  const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0)
-  const [newTradeName, setNewTradeName] = useState("")
-  const { toast } = useToast()
-  const form = useForm<SurveyData>()
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [selectedSchool, setSelectedSchool] = useState(null)
-  const { schools, fetchingSchools, errorFetchingSchools, mutate } = useAllSchools()
-  const fileInputRef = useRef(null)
+  const [currentStep, setCurrentStep] = useState(1);
+  const [currentInfraType, setCurrentInfraType] = useState(0);
+  const [isTradeDialogOpen, setIsTradeDialogOpen] = useState(false);
+  const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
+  const [newTradeName, setNewTradeName] = useState("");
+  const { toast } = useToast();
+  const form = useForm<SurveyData>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [selectedProvince, setSelectedProvince] = useState(null);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+    null
+  );
+  const { schools, fetchingSchools, errorFetchingSchools } =
+    useSchoolsByDistrict(selectedDistrictId);
+  const { districts, fetchingDistricts, errorFetchingDistricts } =
+    useAllDistricts();
+  const fileInputRef = useRef(null);
 
   const infrastructureTypes = [
     "administration block",
@@ -141,14 +155,11 @@ const CreateSurvey = () => {
 
   useEffect(() => {
     if (user?.id) {
-      const savedData = localStorage.getItem(
-        `survey_draft_${myParam}`
-      );
-      
-      
+      const savedData = localStorage.getItem(`survey_draft_${myParam}`);
+
       if (savedData) {
         form.reset(JSON.parse(savedData));
-        setSelectedSchool(JSON.parse(savedData).school)
+        setSelectedSchool(JSON.parse(savedData).school);
       }
     }
   }, [user, form, myParam]);
@@ -170,15 +181,15 @@ const CreateSurvey = () => {
       form.reset(currentData);
     }
   }, [currentInfraType, infrastructureTypes, form]);
-  
+
   const saveProgress = (data) => {
     if (user?.id) {
       // Make a copy of the data to avoid circular references
-      const dataCopy = JSON.parse(JSON.stringify(data))
+      const dataCopy = JSON.parse(JSON.stringify(data));
 
       // Remove File objects which can't be serialized
       if (dataCopy.it?.equipment?.assetRegisterFile) {
-        delete dataCopy.it.equipment.assetRegisterFile
+        delete dataCopy.it.equipment.assetRegisterFile;
       }
 
       localStorage.setItem(
@@ -229,7 +240,7 @@ const CreateSurvey = () => {
     } else {
       prevStep();
     }
-  }
+  };
 
   const onSubmit = async (data: any) => {
     try {
@@ -244,23 +255,23 @@ const CreateSurvey = () => {
       }
 
       // Make a copy of the data to avoid circular references
-      const dataCopy = JSON.parse(JSON.stringify(data))
+      const dataCopy = JSON.parse(JSON.stringify(data));
 
       // Remove File objects which can't be serialized
       if (dataCopy.it?.equipment?.assetRegisterFile) {
-        delete dataCopy.it.equipment.assetRegisterFile
+        delete dataCopy.it.equipment.assetRegisterFile;
       }
 
       const surveyPayload = {
         schoolId: selectedSchool.id,
         generalInformation: JSON.stringify(dataCopy),
-      }
+      };
 
       // Submit to API
       const response = await AuthApi.post(
         `/school-survey/add-specific?schoolSurveyDataType=${ESchoolSurveyDataType.GENERAL_INFORMATION}`,
-        surveyPayload,
-      )
+        surveyPayload
+      );
 
       // Handle successful submission
       toast({
@@ -269,7 +280,6 @@ const CreateSurvey = () => {
       });
 
       // Clear local storage
-     
 
       // Store the selected school ID in localStorage for the evaluation page
       localStorage.setItem("currentEvaluationSchool", selectedSchool.id);
@@ -293,38 +303,37 @@ const CreateSurvey = () => {
         variant: "destructive",
       });
     }
-  }
+  };
 
   const renderSchoolSection = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="school-select" className="text-blue-700">
-          Select School
+        <Label htmlFor="district-select" className="text-blue-700">
+          Select District
         </Label>
         <select
-          id="school-select"
+          id="district-select"
           className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          {...form.register("school.id", {
-            required: "Please select a school",
-          })}
           onChange={(e) => {
-            const school = schools.find((s) => s.id === e.target.value);
-            if (school) {
-              setSelectedSchool(school);
-              form.reset({ school });
-              localStorage.setItem("currentEvaluationSchool", school.id);
+            console.log(e.target.value);
+            
+            const district = districts.find((d) => d.id === Number(e.target.value));
+            console.log(districts);
+            
+            if (district) {
+              setSelectedDistrictId(district.id);              
             }
           }}
         >
-          <option value="">Select a school...</option>
-          {fetchingSchools ? (
-            <option disabled>Loading schools...</option>
-          ) : errorFetchingSchools ? (
+          <option value="">Select a district...</option>
+          {fetchingDistricts ? (
+            <option disabled>Loading Districts...</option>
+          ) : errorFetchingDistricts ? (
             <option disabled>Error fetching schools</option>
           ) : (
-            schools.map((school) => (
-              <option key={school.id} value={school.id}>
-                {school.name}
+            districts?.map((district) => (
+              <option key={district.id} value={district.id}>
+                {district.name}
               </option>
             ))
           )}
@@ -335,7 +344,46 @@ const CreateSurvey = () => {
           </p>
         )}
       </div>
-
+      {selectedDistrictId && (
+        <div className="space-y-2">
+          <Label htmlFor="school-select" className="text-blue-700">
+            Select School
+          </Label>
+          <select
+            id="school-select"
+            className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            {...form.register("school.id", {
+              required: "Please select a school",
+            })}
+            onChange={(e) => {
+              const school = schools.find((s) => s.id === e.target.value);
+              if (school) {
+                setSelectedSchool(school);
+                form.reset({ school });
+                localStorage.setItem("currentEvaluationSchool", school.id);
+              }
+            }}
+          >
+            <option value="">Select a school...</option>
+            {fetchingSchools ? (
+              <option disabled>Loading schools...</option>
+            ) : errorFetchingSchools ? (
+              <option disabled>Error fetching schools</option>
+            ) : (
+              schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name}
+                </option>
+              ))
+            )}
+          </select>
+          {form.formState.errors.school?.id && (
+            <p className="text-red-500">
+              {form.formState.errors.school.id.message}
+            </p>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="school-status" className="text-blue-700">
@@ -517,8 +565,11 @@ const CreateSurvey = () => {
               </span>
             </div>
 
-            {[1,2,3, 4, 5].map((level, levelIndex) => ( 
-              <div key={level} className="space-y-4 border-t border-blue-100 pt-4">
+            {[1, 2, 3, 4, 5].map((level, levelIndex) => (
+              <div
+                key={level}
+                className="space-y-4 border-t border-blue-100 pt-4"
+              >
                 <h4 className="font-medium ">Level {level}</h4>
                 <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-2">
@@ -527,10 +578,13 @@ const CreateSurvey = () => {
                       type="number"
                       min="0"
                       className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.virtualClassrooms`, {
-                        valueAsNumber: true,
-                        required: "Number of virtual classrooms is required",
-                      })}
+                      {...form.register(
+                        `school.trades.${tradeIndex}.levels.${levelIndex}.virtualClassrooms`,
+                        {
+                          valueAsNumber: true,
+                          required: "Number of virtual classrooms is required",
+                        }
+                      )}
                     />
                   </div>
                   <div className="space-y-2">
@@ -539,10 +593,13 @@ const CreateSurvey = () => {
                       type="number"
                       min="0"
                       className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                      {...form.register(`school.trades.${tradeIndex}.levels.${levelIndex}.physicalClassrooms`, {
-                        valueAsNumber: true,
-                        required: "Number of physical classrooms is required",
-                      })}
+                      {...form.register(
+                        `school.trades.${tradeIndex}.levels.${levelIndex}.physicalClassrooms`,
+                        {
+                          valueAsNumber: true,
+                          required: "Number of physical classrooms is required",
+                        }
+                      )}
                     />
                   </div>
                   <div className="space-y-2">
@@ -626,7 +683,11 @@ const CreateSurvey = () => {
                   "600-more",
                 ].map((size) => (
                   <div key={size} className="flex items-center space-x-2">
-                    <RadioGroupItem value={size} id={`size-${size}`} className="text-blue-600" />
+                    <RadioGroupItem
+                      value={size}
+                      id={`size-${size}`}
+                      className="text-blue-600"
+                    />
                     <Label htmlFor={`size-${size}`} className="">
                       {size}
                     </Label>
@@ -708,7 +769,11 @@ const CreateSurvey = () => {
               >
                 {["good", "moderate", "poor"].map((status) => (
                   <div key={status} className="flex items-center space-x-2">
-                    <RadioGroupItem value={status} id={`status-${status}`} className="text-blue-600" />
+                    <RadioGroupItem
+                      value={status}
+                      id={`status-${status}`}
+                      className="text-blue-600"
+                    />
                     <Label htmlFor={`status-${status}`} className="">
                       {status}
                     </Label>
@@ -812,11 +877,19 @@ const CreateSurvey = () => {
               defaultValue={form.watch("it.computerLab.hasLAN") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-lan-yes" className="text-blue-600" />
+                <RadioGroupItem
+                  value="yes"
+                  id="has-lan-yes"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-lan-yes" className="">
                   Yes
                 </Label>
-                <RadioGroupItem value="no" id="has-lan-no" className="text-blue-600" />
+                <RadioGroupItem
+                  value="no"
+                  id="has-lan-no"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-lan-no" className="">
                   No
                 </Label>
@@ -835,11 +908,19 @@ const CreateSurvey = () => {
               }
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-projectors-yes" className="text-blue-600" />
+                <RadioGroupItem
+                  value="yes"
+                  id="has-projectors-yes"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-projectors-yes" className="">
                   Yes
                 </Label>
-                <RadioGroupItem value="no" id="has-projectors-no" className="text-blue-600" />
+                <RadioGroupItem
+                  value="no"
+                  id="has-projectors-no"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-projectors-no" className="">
                   No
                 </Label>
@@ -900,11 +981,19 @@ const CreateSurvey = () => {
               defaultValue={form.watch("it.internet.exists") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-internet-yes" className="text-blue-600" />
+                <RadioGroupItem
+                  value="yes"
+                  id="has-internet-yes"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-internet-yes" className="">
                   Yes
                 </Label>
-                <RadioGroupItem value="no" id="has-internet-no" className="text-blue-600" />
+                <RadioGroupItem
+                  value="no"
+                  id="has-internet-no"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-internet-no" className="">
                   No
                 </Label>
@@ -935,11 +1024,19 @@ const CreateSurvey = () => {
               defaultValue={form.watch("it.server.exists") ? "yes" : "no"}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="has-server-yes" className="text-blue-600" />
+                <RadioGroupItem
+                  value="yes"
+                  id="has-server-yes"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-server-yes" className="">
                   Yes
                 </Label>
-                <RadioGroupItem value="no" id="has-server-no" className="text-blue-600" />
+                <RadioGroupItem
+                  value="no"
+                  id="has-server-no"
+                  className="text-blue-600"
+                />
                 <Label htmlFor="has-server-no" className="">
                   No
                 </Label>
@@ -995,7 +1092,9 @@ const CreateSurvey = () => {
         </div>
       </Card>
       <Card className="p-4 space-y-4 border-blue-200">
-        <h3 className="font-semibold text-blue-700">Equipment Asset Register</h3>
+        <h3 className="font-semibold text-blue-700">
+          Equipment Asset Register
+        </h3>
         <div className="space-y-2">
           <Label className="">Equipment Status</Label>
           <div className="grid grid-cols-1 gap-4">
@@ -1003,14 +1102,18 @@ const CreateSurvey = () => {
               <Checkbox
                 id="has-asset-register"
                 className="border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                onCheckedChange={(checked) => form.setValue("it.equipment.hasAssetRegister", checked as boolean)}
+                onCheckedChange={(checked) =>
+                  form.setValue(
+                    "it.equipment.hasAssetRegister",
+                    checked as boolean
+                  )
+                }
               />
               <Label htmlFor="has-asset-register" className="">
                 Has Asset Register
               </Label>
             </div>
 
-         
             {/* <div className="space-y-2">
               <Label className="">Asset Register Document</Label>
               <div className="flex items-center gap-2">
@@ -1054,10 +1157,18 @@ const CreateSurvey = () => {
 
             <div className="space-y-2">
               <Label className="">Status</Label>
-              <RadioGroup onValueChange={(value) => form.setValue("it.equipment.status", value)}>
+              <RadioGroup
+                onValueChange={(value) =>
+                  form.setValue("it.equipment.status", value)
+                }
+              >
                 {["good", "moderate", "poor"].map((status) => (
                   <div key={status} className="flex items-center space-x-2">
-                    <RadioGroupItem value={status} id={`equipment-status-${status}`} className="text-blue-600" />
+                    <RadioGroupItem
+                      value={status}
+                      id={`equipment-status-${status}`}
+                      className="text-blue-600"
+                    />
                     <Label htmlFor={`equipment-status-${status}`} className="">
                       {status}
                     </Label>
@@ -1074,56 +1185,65 @@ const CreateSurvey = () => {
   const renderCompanySection = () => {
     // Add company function
     const addCompany = () => {
-      const currentData = form.getValues()
+      const currentData = form.getValues();
       if (!currentData.companies) {
-        currentData.companies = []
+        currentData.companies = [];
       }
-      currentData.companies.push({ name: "", distance: "", trades: [] })
-      form.reset(currentData)
-      saveProgress(currentData)
-    }
+      currentData.companies.push({ name: "", distance: "", trades: [] });
+      form.reset(currentData);
+      saveProgress(currentData);
+    };
 
     // Add trade to a company
     const openTradeDialog = (companyIndex) => {
-      setCurrentCompanyIndex(companyIndex)
-      setNewTradeName("")
-      setIsTradeDialogOpen(true)
-    }
+      setCurrentCompanyIndex(companyIndex);
+      setNewTradeName("");
+      setIsTradeDialogOpen(true);
+    };
 
     // Add the trade from dialog
     const addTradeFromDialog = () => {
       if (newTradeName && newTradeName.trim() !== "") {
-        const currentData = form.getValues()
+        const currentData = form.getValues();
         if (!currentData.companies[currentCompanyIndex].trades) {
-          currentData.companies[currentCompanyIndex].trades = []
+          currentData.companies[currentCompanyIndex].trades = [];
         }
-        currentData.companies[currentCompanyIndex].trades.push(newTradeName.trim())
-        form.reset(currentData)
-        saveProgress(currentData)
-        setIsTradeDialogOpen(false)
+        currentData.companies[currentCompanyIndex].trades.push(
+          newTradeName.trim()
+        );
+        form.reset(currentData);
+        saveProgress(currentData);
+        setIsTradeDialogOpen(false);
       }
-    }
+    };
 
     // Remove trade from a company
     const removeTrade = (companyIndex, tradeIndex) => {
-      const currentData = form.getValues()
-      currentData.companies[companyIndex].trades.splice(tradeIndex, 1)
-      form.reset(currentData)
-      saveProgress(currentData)
-    }
+      const currentData = form.getValues();
+      currentData.companies[companyIndex].trades.splice(tradeIndex, 1);
+      form.reset(currentData);
+      saveProgress(currentData);
+    };
 
     return (
       <div className="space-y-6">
         <Card className="p-4 space-y-4 border-blue-200">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-blue-700">Company Information</h3>
-            <Button type="button" onClick={addCompany} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button
+              type="button"
+              onClick={addCompany}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               + Add Company
             </Button>
           </div>
 
           {(form.watch("companies") || []).map((company, companyIndex) => (
-            <div key={companyIndex} className="space-y-4 border-t border-blue-100 pt-4">
+            <div
+              key={companyIndex}
+              className="space-y-4 border-t border-blue-100 pt-4"
+            >
               <h4 className="font-medium">Company {companyIndex + 1}</h4>
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
@@ -1160,13 +1280,18 @@ const CreateSurvey = () => {
                   <div className="space-y-2 p-2 border border-blue-200 rounded-md">
                     {(company.trades || []).length > 0 ? (
                       (company.trades || []).map((trade, tradeIndex) => (
-                        <div key={tradeIndex} className="flex justify-between items-center p-2 bg-blue-50 rounded-md">
+                        <div
+                          key={tradeIndex}
+                          className="flex justify-between items-center p-2 bg-blue-50 rounded-md"
+                        >
                           <span>{trade}</span>
                           <Button
                             type="button"
                             variant="ghost"
                             className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => removeTrade(companyIndex, tradeIndex)}
+                            onClick={() =>
+                              removeTrade(companyIndex, tradeIndex)
+                            }
                           >
                             ×
                           </Button>
@@ -1217,15 +1342,19 @@ const CreateSurvey = () => {
                   placeholder="Enter trade name"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault()
-                      addTradeFromDialog()
+                      e.preventDefault();
+                      addTradeFromDialog();
                     }
                   }}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" onClick={() => setIsTradeDialogOpen(false)} variant="outline">
+              <Button
+                type="button"
+                onClick={() => setIsTradeDialogOpen(false)}
+                variant="outline"
+              >
                 Cancel
               </Button>
               <Button type="button" onClick={addTradeFromDialog}>
@@ -1235,8 +1364,8 @@ const CreateSurvey = () => {
           </DialogContent>
         </Dialog>
       </div>
-    )
-  }
+    );
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1251,23 +1380,31 @@ const CreateSurvey = () => {
             </p>
             {renderSchoolSection()}
           </div>
-        )
+        );
       case 2:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-blue-800">Company Information</h2>
-            <p className="text-blue-600">Enter information about companies working with the school</p>
+            <h2 className="text-xl font-semibold text-blue-800">
+              Company Information
+            </h2>
+            <p className="text-blue-600">
+              Enter information about companies working with the school
+            </p>
             {renderCompanySection()}
           </div>
-        )
+        );
       case 3:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-blue-800">Trade Information</h2>
-            <p className="text-blue-600">Enter information about school trades and students</p>
+            <h2 className="text-xl font-semibold text-blue-800">
+              Trade Information
+            </h2>
+            <p className="text-blue-600">
+              Enter information about school trades and students
+            </p>
             {renderTradesSection()}
           </div>
-        )
+        );
       case 4:
         return (
           <div className="space-y-4">
@@ -1279,7 +1416,7 @@ const CreateSurvey = () => {
             </p>
             {renderInfrastructureSection()}
           </div>
-        )
+        );
       case 5:
         return (
           <div className="space-y-4">
@@ -1311,7 +1448,9 @@ const CreateSurvey = () => {
 
         <Card className="p-6 border-blue-200">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-blue-800">Create New Survey</h1>
+            <h1 className="text-2xl font-bold text-blue-800">
+              Create New Survey
+            </h1>
             <p className="text-blue-600">Step {currentStep} of 5</p>
           </div>
 
@@ -1340,7 +1479,11 @@ const CreateSurvey = () => {
                   </Button>
 
                   {currentStep < 5 ? (
-                    <Button type="button" onClick={nextStep} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
                       Next
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>

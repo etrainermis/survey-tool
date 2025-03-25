@@ -1,68 +1,73 @@
-"use client"
+"use client";
 
-import { useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog"
-import { useAllSurveys } from "@/hooks/useAllSurveys"
-import dayjs from "dayjs"
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog";
+import { useAllSurveys } from "@/hooks/useAllSurveys";
+import dayjs from "dayjs";
 
 interface Survey {
-  id: string
+  id: string;
   school: {
-    id: string
-    name: string
-    status: string
-    category: string
+    id: string;
+    name: string;
+    status: string;
+    category: string;
     location?: {
-      province: string
-      district: string
-      sector: string
-      cell: string
-      village: string
-    }
+      province: string;
+      district: string;
+      sector: string;
+      cell: string;
+      village: string;
+    };
     stats?: {
-      trades: number
-      students: number
-      teachers: number
-      maleTeachers?: number
-      femaleTeachers?: number
-    }
+      trades: number;
+      students: number;
+      teachers: number;
+      maleTeachers?: number;
+      femaleTeachers?: number;
+    };
     contact?: {
-      phone: string
-      email: string
-      headteacher: string
-      owner: string
-    }
+      phone: string;
+      email: string;
+      headteacher: string;
+      owner: string;
+    };
     trades?: Array<{
-      id: string
-      name: string
+      id: string;
+      name: string;
       levels: Array<{
-        level: number
-        classrooms: number
+        level: number;
+        classrooms: number;
         students: {
-          male: number
-          female: number
-        }
-      }>
-    }>
-  }
-  createdAt: string
-  status: string
-  collectedData?: any
+          male: number;
+          female: number;
+        };
+      }>;
+    }>;
+  };
+  completedBy?: any;
+  createdAt: string;
+  status: string;
+  collectedData?: any;
 }
 
 const CompletedSurveys = () => {
-  const navigate = useNavigate()
-  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const navigate = useNavigate();
+  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handlePreviewSurvey = (survey: Survey) => {
-    setSelectedSurvey(survey)
-    setPreviewOpen(true)
-  }
+    if (!survey.school || !survey.school.id) {
+      console.error("School ID is missing in the selected survey:", survey);
+      return;
+    }
+    setSelectedSurvey(survey);
+    setPreviewOpen(true);
+  };
 
-  const { surveys, fetchingSurveys, errorFetchingSurveys, mutate } = useAllSurveys()
+  const { surveys, fetchingSurveys, errorFetchingSurveys } = useAllSurveys();
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
@@ -89,14 +94,18 @@ const CompletedSurveys = () => {
         ) : (
           <div className="bg-white rounded-lg shadow border border-blue-200">
             {surveys?.length > 0 ? (
-              surveys.map((survey: any, index: any) => (
+              surveys.map((survey: Survey, index: number) => (
                 <div
                   key={index}
                   className="p-4 border-b border-blue-100 last:border-b-0 flex justify-between items-center"
                 >
                   <div>
                     <h3 className="font-medium text-gray-900">{survey.school.name}</h3>
+                    <div className="flex gap-4">
                     <p className="text-sm text-gray-600">Completed on {dayjs(survey.createdAt).format("DD/MM/YYYY")}</p>
+                    <p className="text-sm text-gray-600">Completed By {(survey.completedBy?.firstName || "") + " "+  survey.completedBy?.lastName || ""}</p>
+
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -116,11 +125,14 @@ const CompletedSurveys = () => {
 
       {/* Survey Preview Popup */}
       {selectedSurvey && (
-        <SurveyPreviewDialog survey={selectedSurvey} open={previewOpen} onOpenChange={setPreviewOpen} />
+        <SurveyPreviewDialog
+          survey={selectedSurvey}// Passing school ID here
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default CompletedSurveys
-
+export default CompletedSurveys;

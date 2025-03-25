@@ -71,7 +71,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-blue-800">Survey Dashboard</h1>
-              <p className="text-blue-600">Welcome back, {user?.name || "User"}</p>
+              <p className="text-blue-600">Welcome back, {user?.firstName}</p>
             </div>
           </div>
           <div className="flex gap-4">
