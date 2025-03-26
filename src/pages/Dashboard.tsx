@@ -8,7 +8,7 @@ import { useEffect, useState } from "react"
 import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog"
 import useAuth from "@/hooks/useAuth"
 import DashboardLayout from "@/components/DashboardLayout"
-import { useAllSurveys } from "@/hooks/useAllSurveys"
+import { useAllCompletedSurveysByLoggedInUser, useAllInCompletedSurveysByLoggedInUser, useAllSurveys } from "@/hooks/useAllSurveys"
 
 interface Survey {
   school: {
@@ -21,31 +21,31 @@ interface Survey {
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const [incompleteSurveys, setIncompleteSurveys] = useState<Survey[]>([])
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const { logout, user } = useAuth()
-  const { surveys, fetchingSurveys } = useAllSurveys()
+  const { surveys : completedSurveys,fetchingSurveys: fetchingCompletedSurveys, errorFetchingSurveys: errorFetchingCompletedSurveys } = useAllCompletedSurveysByLoggedInUser();
+  const { surveys : incompleteSurveys,fetchingSurveys: fetchingIncompletedSurveys, errorFetchingSurveys: errorFetchingIncompletedSurveys } = useAllInCompletedSurveysByLoggedInUser();
 
-  useEffect(() => {
-    const userString = localStorage.getItem("user")
-    const user = userString ? JSON.parse(userString) : null // Parse user correctly
-    const drafts: any[] = [];
+  // useEffect(() => {
+  //   const userString = localStorage.getItem("user")
+  //   const user = userString ? JSON.parse(userString) : null // Parse user correctly
+  //   const drafts: any[] = [];
 
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("survey_draft_")) {
-        console.log(key);
+  //   Object.keys(localStorage).forEach((key) => {
+  //     if (key.startsWith("survey_draft_")) {
+  //       console.log(key);
         
-        const draft = JSON.parse(localStorage.getItem(key) || "null");
-        if (draft) {
-          drafts.push(draft);
-        }
-      }
-    });
-    setIncompleteSurveys(drafts);
+  //       const draft = JSON.parse(localStorage.getItem(key) || "null");
+  //       if (draft) {
+  //         drafts.push(draft);
+  //       }
+  //     }
+  //   });
+  //   setIncompleteSurveys(drafts);
 
 
-  }, [])
+  // }, [])
 
   const handleLogout = () => {
     logout()
@@ -126,7 +126,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-blue-800">
-                {fetchingSurveys ? <span className="text-blue-400">Loading...</span> : surveys?.length || 0}
+                {fetchingCompletedSurveys ? <span className="text-blue-400">Loading...</span> : completedSurveys?.length || 0}
               </p>
               <p className="text-sm text-blue-600 mt-1">Surveys ready for analysis</p>
             </CardContent>

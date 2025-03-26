@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { School } from "lucide-react"
+import { useAllInCompletedSurveysByLoggedInUser } from "@/hooks/useAllSurveys"
 
 interface Survey {
   school: {
@@ -48,27 +49,27 @@ interface Survey {
 
 const IncompleteSurveys = () => {
   const navigate = useNavigate()
-  const [incompleteSurveys, setIncompleteSurveys] = useState<Survey[]>([])
+  const { surveys , fetchingSurveys, errorFetchingSurveys } = useAllInCompletedSurveysByLoggedInUser();
 
-  useEffect(() => {
-    const userString = localStorage.getItem("user")
-    const user = userString ? JSON.parse(userString) : null // Parse user correctly
-    const drafts: any[] = [];
+  // useEffect(() => {
+  //   const userString = localStorage.getItem("user")
+  //   const user = userString ? JSON.parse(userString) : null // Parse user correctly
+  //   const drafts: any[] = [];
 
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("survey_draft_")) {
-        console.log(key);
+  //   Object.keys(localStorage).forEach((key) => {
+  //     if (key.startsWith("survey_draft_")) {
+  //       console.log(key);
         
-        const draft = JSON.parse(localStorage.getItem(key) || "null");
-        if (draft) {
-          drafts.push(draft);
-        }
-      }
-    });
-    setIncompleteSurveys(drafts);
+  //       const draft = JSON.parse(localStorage.getItem(key) || "null");
+  //       if (draft) {
+  //         drafts.push(draft);
+  //       }
+  //     }
+  //   });
+  //   setIncompleteSurveys(drafts);
 
 
-  }, [])
+  // }, [])
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
@@ -82,8 +83,8 @@ const IncompleteSurveys = () => {
           Back
         </Button>
         <div className="bg-white rounded-lg shadow border border-blue-200">
-          {incompleteSurveys.length > 0 ? (
-            incompleteSurveys.map((survey, index) => (
+          {surveys?.length > 0 ? (
+            surveys?.map((survey, index) => (
               <div
                 key={index}
                 className="p-4 border-b border-blue-100 last:border-b-0 flex justify-between items-center"
