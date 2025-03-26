@@ -421,9 +421,9 @@ const CreateSurvey = () => {
             onChange={(e) => localStorage.setItem("surveyType", e.target.value)}
           >
             <option value="">Select Category...</option>
-            <option value="public">Day</option>
-            <option value="private">Boarding</option>
-            <option value="private-govt">Mixed</option>
+            <option value="day">Day</option>
+            <option value="boarding">Boarding</option>
+            <option value="mixed">Mixed</option>
           </select>
           {form.formState.errors.school?.category && (
             <p className="text-red-500">
