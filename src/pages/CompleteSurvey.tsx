@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog";
-import { useAllSurveys } from "@/hooks/useAllSurveys";
+import { useAllCompletedSurveysByLoggedInUser, useAllSurveys } from "@/hooks/useAllSurveys";
 import dayjs from "dayjs";
 
 interface Survey {
@@ -67,7 +67,7 @@ const CompletedSurveys = () => {
     setPreviewOpen(true);
   };
 
-  const { surveys, fetchingSurveys, errorFetchingSurveys } = useAllSurveys();
+  const { surveys, fetchingSurveys, errorFetchingSurveys } = useAllCompletedSurveysByLoggedInUser();
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
