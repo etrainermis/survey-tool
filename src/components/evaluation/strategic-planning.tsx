@@ -258,7 +258,13 @@ export default function StrategicPlanning({
     availabilityValue: any
   ) => {
     setLocalData((prevData) => {
-   
+      console.log(
+        "Before update:",
+        baseId,
+        prevData[baseId]?.availability,
+        availabilityValue
+      );
+
       const updatedData = {
         ...prevData,
         [baseId]: {
@@ -267,6 +273,12 @@ export default function StrategicPlanning({
         },
       };
 
+      console.log(
+        "After update:",
+        baseId,
+        updatedData[baseId]?.availability,
+        availabilityValue
+      );
       return updatedData;
     });
   };
@@ -287,7 +299,12 @@ export default function StrategicPlanning({
   };
   const handleQualityChange = (baseId: keyof LocalData, qualityValue: any) => {
     setLocalData((prevData) => {
-     
+      console.log(
+        "Before update:",
+        baseId,
+        prevData[baseId]?.quality,
+        qualityValue
+      );
 
       const updatedData = {
         ...prevData,
@@ -297,7 +314,12 @@ export default function StrategicPlanning({
         },
       };
 
-     
+      console.log(
+        "After update:",
+        baseId,
+        updatedData[baseId]?.quality,
+        qualityValue
+      );
       return updatedData;
     });
   };

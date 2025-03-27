@@ -168,16 +168,19 @@ const CreateSurvey = () => {
     if (user?.id) {
       if (myParam !== undefined && myParam !== null && !!fetchedSurvey?.data) {
         form.reset(JSON.parse(fetchedSurvey.data.generalInformation));
+        console.log(form.getValues());
+        
         // setSelectedSchool(fetchedSurvey.data.school)
-        console.log(JSON.parse(fetchedSurvey.data.generalInformation).school);
+        // console.log(JSON.parse(fetchedSurvey.data.generalInformation).school);
         
         setSelectedSchool((prev) => {
           return fetchedSurvey.data.school;
         });
+      
         setSelectedDistrictId(fetchedSurvey.data.school.districtId.id);
       }
     }
-  }, [user, form, myParam, fetchedSurvey, selectedSchool]);
+  }, [user, form, myParam, fetchedSurvey]);
 
   useEffect(() => {
     const currentData = form.getValues();
@@ -374,8 +377,9 @@ const CreateSurvey = () => {
             {...form.register("school.id", {
               required: "Please select a school",
             })}
+            value={selectedSchool?.id || ""}
             onChange={(e) => {
-              const school = schools.find((s) => s.id === e.target.value);
+              const school = schools?.find((s) => s.id === e.target.value);
               if (school) {
                 setSelectedSchool(school);
                 form.reset({ school });
