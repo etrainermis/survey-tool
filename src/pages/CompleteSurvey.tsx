@@ -237,6 +237,7 @@ const CompletedSurveys = () => {
           ? JSON.parse(surveyData.generalInformation)
           : surveyData.generalInformation
         : {}
+        console.log("General Infooooooooooooo:", generalInfo)
 
       // Add these lines after parsing surveyData
       console.log("Survey Data:", surveyData)

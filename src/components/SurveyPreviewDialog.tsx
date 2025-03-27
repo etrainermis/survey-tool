@@ -45,6 +45,9 @@ const DataDebugger = ({ data }) => {
 
 // Add the renderResultsSummary function
 const renderResultsSummary = (schoolType, sectionMarks, totalMarks) => {
+  console.log("Section marks:", sectionMarks);
+  console.log("Total marks:", totalMarks);
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-100 p-3 rounded-md text-center">
@@ -71,27 +74,32 @@ const renderResultsSummary = (schoolType, sectionMarks, totalMarks) => {
           { key: "stakeholdersEngagement", name: "Stakeholders' Engagement", max: 10 },
           { key: "continuousImprovement", name: "Continuous Improvement", max: 10 },
           { key: "infrastructure", name: "Infrastructure and Environment", max: 20 },
-        ].map((section, index) => (
-          <div key={section.key}>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">
-                {index + 1}. {section.name}
-              </span>
-              <span className="font-semibold">
-                {sectionMarks[section.key].toFixed(2)} / {section.max}
-              </span>
+        ].map((section, index) => {
+          // Access totalMarks from the data directly for each section
+          const score = Number(sectionMarks[section.key]?.totalMarks) || 0; // Convert to number and default to 0 if NaN or undefined
+          return (
+            <div key={section.key}>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">
+                  {index + 1}. {section.name}
+                </span>
+                <span className="font-semibold">
+                  {score.toFixed(2)} / {section.max}
+                </span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2.5">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full"
+                  style={{
+                    width: `${(score / section.max) * 100}%`,
+                  }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-blue-200 rounded-full h-2.5">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full"
-                style={{
-                  width: `${(sectionMarks[section.key] / section.max) * 100}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
 
       <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <h3 className="text-lg font-semibold text-blue-700 mb-2">Evaluation Summary</h3>
@@ -227,9 +235,9 @@ console.log("Parsed Survey Data:", fetchedSurvey?.data);
 
   const evaluationDataFive = surveyData?.infrastructureAndEnvironment
   ? typeof surveyData.infrastructureAndEnvironment === "string"
-    ? JSON.parse(surveyData.infrastructureAndEnvironment)
-    : surveyData.infrastructureAndEnvironment
-  : {}
+    ? { ...JSON.parse(surveyData.infrastructureAndEnvironment), schoolCategory: generalInfo?.school?.category || "" }
+    : { ...surveyData.infrastructureAndEnvironment, schoolCategory: generalInfo?.school?.category || "" }
+  : {};
   
   console.log("Evaluation data one:", evaluationDataFive)
 
@@ -242,16 +250,19 @@ console.log("Parsed Survey Data:", fetchedSurvey?.data);
 
   // Calculate section marks for the summary
   const sectionMarks = {
-    strategicPlanning: evaluationData.totalMarks || 0,
-    operationalManagement: evaluationDataOne.totalMarks || 0,
-    teachingLearning: evaluationData.teachingAndLearning?.totalMarks || 0,
-    stakeholdersEngagement: evaluationData.stakeholdersEngagement?.totalMarks || 0,
-    continuousImprovement: evaluationData.continuousImprovement?.totalMarks || 0,
-    infrastructure: evaluationData.infrastructureAndEnvironment?.totalMarks || 0,
+    strategicPlanning: evaluationData.sectionMarks || 0,
+    operationalManagement: evaluationDataOne.sectionMarks  || 0,
+    teachingLearning: evaluationDataTwo.sectionMarks  || 0,
+    stakeholdersEngagement: evaluationDataThree.sectionMarks  || 0,
+    continuousImprovement: evaluationDataFour.sectionMarks  || 0,
+    infrastructure: evaluationDataFive.sectionMarks  || 0,
   }
 
-  // Calculate total marks
-  const totalMarks = Object.values(sectionMarks).reduce((sum: number, mark: any) => sum + Number(mark), 0)
+// Calculate total marks
+const totalMarks = Object.values(sectionMarks).reduce((sum: number, mark: any) => {
+  // Ensure we're adding the actual number of marks (not the whole object)
+  return sum + (mark.totalMarks ? Number(mark.totalMarks) : 0);
+}, 0);
 
   // Define all steps including the original 5, the evaluation sections, and the final summary
   const steps = [
@@ -422,13 +433,13 @@ const renderSchoolInformation = (data: any) => {
           <h4 className="font-semibold text-blue-600 mb-2">Contact Information</h4>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Email:</span> {school.email || "N/A"}
+              <span className="font-medium">Email:</span> {school.contact.email || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {school.phoneNumber || "N/A"}
+              <span className="font-medium">Phone:</span> {school.contact.phone || "N/A"}
             </p>
             <p>
-              <span className="font-medium">Head Teacher:</span> {school.headteacher || "N/A"}
+              <span className="font-medium">Head Teacher:</span> {school.contact.headteacher || "N/A"}
             </p>
           </div>
         </div>
@@ -438,7 +449,7 @@ const renderSchoolInformation = (data: any) => {
         <h4 className="font-semibold text-blue-600 mb-2">Staff Statistics</h4>
         <div className="grid grid-cols-2 gap-4">
           <p>
-            <span className="font-medium">Male Teachers:</span> {generalInfo?.maleTeachers || "0"}
+            <span className="font-medium">Male Teachers:</span> {school.stats?.maleTeachers || "0"}
           </p>
           <p>
             <span className="font-medium">Female Teachers:</span> {school.stats?.femaleTeachers || "0"}
@@ -1751,146 +1762,175 @@ const renderContinuousImprovement = (data: any = {}) => {
 // Fix the TypeScript error by adding proper type annotation
 const renderInfrastructureAndEnvironment = (data: any = {}) => {
   // Extract school category from the data to determine if it's a day or boarding school
-  const schoolCategory = data?.school?.schoolCategory || data?.school?.schoolCategory || ""
-  console.log("School Category: ", schoolCategory)
+  const schoolCategory = data?.schoolCategory || "";
+  console.log("School Category: ", schoolCategory);
   const infrastructureAndEnvironment = data?.infrastructureAndEnvironment || data || {};
   console.log("infrastructureAndEnvironment: ", infrastructureAndEnvironment)
 
   
   const isBoardingSchool =
-    schoolCategory.toLowerCase().includes("boarding") || schoolCategory.toLowerCase().includes("mixed")
-  const isDaySchool = schoolCategory.toLowerCase().includes("day") || (!isBoardingSchool && schoolCategory !== "")
+    schoolCategory.toLowerCase().includes("boarding") ||
+    schoolCategory.toLowerCase().includes("mixed");
+  const isDaySchool =
+    schoolCategory.toLowerCase().includes("day") ||
+    (!isBoardingSchool && schoolCategory !== "");
 
   // Common infrastructure items that appear regardless of school type
   const commonInfrastructureItems = [
     { key: "adminBlockHeader", indicator: "6.1 Administration Block", isHeader: true, marksAllocated: "" },
     { key: "offices", 
       indicator: "Offices of all staff", 
-      availability: "", 
-      quality: "",
-       marksAllocated: "0.5" 
+      availability: infrastructureAndEnvironment.offices.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.offices.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.offices.marksAllocated ?? "0.5",
       },
     { key: "meetingRooms", 
       indicator: "Meeting rooms", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" 
+      availability: infrastructureAndEnvironment.meetingRooms.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.meetingRooms.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.meetingRooms.marksAllocated ?? "0.5",
     },
     { key: "emergencyExits", 
       indicator: "Emergency exits", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" 
+      availability: infrastructureAndEnvironment.classEmergencyExits.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.classEmergencyExits.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.classEmergencyExits.marksAllocated ?? "0.5",
     },
     { key: "ventilation", 
       indicator: "Ventilation and lighting", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.classVentilation.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.classVentilation.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.classVentilation.marksAllocated ?? "0.5", 
+    },
     { key: "classroomBlockHeader", indicator: "6.2 Classroom Block", isHeader: true, marksAllocated: "" },
     {
       key: "capacity",
       indicator: "Capacity to accommodate students comfortably",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.classCapacity.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.classCapacity.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.classCapacity.marksAllocated ?? "0.5", 
     },
-    { key: "desks", indicator: "Desks and chairs", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "desks", 
+      indicator: "Desks and chairs", 
+      availability: infrastructureAndEnvironment.desksChairs.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.desksChairs.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.desksChairs.marksAllocated ?? "0.5", 
+    },
     {
       key: "classVentilation",
       indicator: "ventilation and lighting",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.classVentilation.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.classVentilation.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.classVentilation.marksAllocated ?? "0.5",
     },
-    { key: "classEmergency", indicator: "Emergency exits", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "emergencyExits", 
+      indicator: "Emergency exits", 
+      availability: infrastructureAndEnvironment.classEmergencyExits.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.classEmergencyExits.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.classEmergencyExits.marksAllocated ?? "0.5",
+    },
     { key: "computerLabHeader", indicator: "6.3 Computer Lab", isHeader: true, marksAllocated: "" },
     {
       key: "computers",
       indicator: "Functional computers related to the number of students",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.computers.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.computers.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.computers.marksAllocated ?? "0.5",
     },
-    { key: "internet", indicator: "internet access", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "workstations", indicator: "setup of workstations", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "internet", 
+      indicator: "internet access", 
+      availability: infrastructureAndEnvironment.internet.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.internet.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.internet.marksAllocated ?? "0.5",
+    },
+    { key: "workstations", 
+      indicator: "setup of workstations", 
+      availability: infrastructureAndEnvironment.workstations.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.workstations.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.workstations.marksAllocated ?? "0.5", 
+    },
     {
       key: "studyAreas",
       indicator: "Accessibility and quiet study areas",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.studyAreas.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.studyAreas.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.studyAreas.marksAllocated ?? "0.5", 
     },
     { key: "libraryHeader", indicator: "6.4 Library", isHeader: true, marksAllocated: "" },
     { key: "books", 
       indicator: "Books and other resources", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.books.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.books.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.books.marksAllocated ?? "0.5", 
+    },
     { key: "studyArea", 
       indicator: "Study area", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.studyAreas.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.studyAreas.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.studyAreas.marksAllocated ?? "0.5",  
+    },
     {
       key: "booksCondition",
       indicator: "Condition of books and resources",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.bookCondition.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.bookCondition.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.bookCondition.marksAllocated ?? "0.5",
     },
     { key: "libraryComputers", 
       indicator: "Computers", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.libraryComputers.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.libraryComputers.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.libraryComputers.marksAllocated ?? "0.5", 
+    },
     { key: "kitchenHeader", indicator: "6.5 Kitchen", isHeader: true, marksAllocated: "" },
     {
       key: "healthSafety",
       indicator: "Compliance with health and safety regulations",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.healthSafety.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.healthSafety.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.healthSafety.marksAllocated ?? "0.5",
     },
     {
       key: "foodStorage",
       indicator: "Cleanliness and organization of food storage",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.foodStorage.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.foodStorage.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.foodStorage.marksAllocated ?? "0.5",
     },
     {
-      key: "sanitationFacilities",
+      key: "sanitation",
       indicator: "Proper sanitation facilities for food preparation",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.sanitation.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.sanitation.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.sanitation.marksAllocated ?? "0.5",
     },
     { key: "refectoryHeader", indicator: "6.6 Refectory", isHeader: true, marksAllocated: "" },
     {
-      key: "tables",
+      key: "tablesSeating",
       indicator: "Condition of tables and seating arrangements",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.tablesSeating.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.tablesSeating.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.tablesSeating.marksAllocated ?? "0.5",
     },
     {
-      key: "cleanliness",
+      key: "hygiene",
       indicator: "Cleanliness and hygiene practices",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.hygiene.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.hygiene.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.hygiene.marksAllocated ?? "0.5",
     },
     { key: "refectoryVentilation", 
       indicator: "Ventilation", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.refectoryVentilation.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.refectoryVentilation.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.refectoryVentilation.marksAllocated ?? "0.5",
+     },
     { key: "wasteDisposal", 
       indicator: "Waste disposal systems", 
-      availability: "", 
-      quality: "", 
-      marksAllocated: "0.5" },
+      availability: infrastructureAndEnvironment.wasteDisposal.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.wasteDisposal.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.wasteDisposal.marksAllocated ?? "0.5",
+    },
   ]
 
   // Items specific to day schools
@@ -1904,23 +1944,23 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
     {
       key: "separateChangingRooms",
       indicator: "Separate changing rooms for girls and boys",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.separateChangingRooms.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.separateChangingRooms.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.separateChangingRooms.marksAllocated ?? "0.5",
     },
     {
-      key: "girlsChangingRoom",
+      key: "girlsChangingCleanliness",
       indicator: "Cleanliness of girls' changing room",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.girlsChangingCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.girlsChangingCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.girlsChangingCleanliness.marksAllocated ?? "0.5",
     },
     {
-      key: "boysChangingRoom",
+      key: "boysChangingCleanliness",
       indicator: "Cleanliness of boys' changing room",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.boysChangingCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.boysChangingCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.boysChangingCleanliness.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1930,23 +1970,23 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
     {
       key: "separateDormitories",
       indicator: "Separate dormitories for girls and boys",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.separateDormitories.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.separateDormitories.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.separateDormitories.marksAllocated ?? "0.5",
     },
     {
-      key: "girlsDormitories",
+      key: "girlsDormCleanliness",
       indicator: "Cleanliness of girls' dormitories",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.girlsDormCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.girlsDormCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.girlsDormCleanliness.marksAllocated ?? "0.5",
     },
     {
-      key: "boysDormitories",
+      key: "boysDormCleanliness",
       indicator: "Cleanliness of boys' dormitories",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.boysDormCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.boysDormCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.boysDormCleanliness.marksAllocated ?? "0.5",
     },
   ]
 
@@ -1956,45 +1996,45 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
     {
       key: "separateWashrooms",
       indicator: "Separate washrooms for girls and boys",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.separateWashrooms.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.separateWashrooms.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.separateWashrooms.marksAllocated ?? "0.5",
     },
     {
-      key: "girlsWashrooms",
+      key: "girlsWashroomCleanliness",
       indicator: "Cleanliness of girls' washrooms",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.girlsWashroomCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.girlsWashroomCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.girlsWashroomCleanliness.marksAllocated ?? "0.5",
     },
     {
-      key: "boysWashrooms",
+      key: "boysWashroomCleanliness",
       indicator: "Cleanliness of boys' washrooms",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.boysWashroomCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.boysWashroomCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.boysWashroomCleanliness.marksAllocated ?? "0.5",
     },
     { key: "toiletsHeader", indicator: "6.10 Toilets", isHeader: true, marksAllocated: "" },
     {
       key: "separateToilets",
       indicator: "Separate toilets for girls and boys",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.separateToilets.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.separateToilets.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.separateToilets.marksAllocated ?? "0.5",
     },
     {
-      key: "girlsToilets",
+      key: "girlsToiletCleanliness",
       indicator: "Cleanliness of girls' toilets",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.girlsToiletCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.girlsToiletCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.girlsToiletCleanliness.marksAllocated ?? "0.5",
     },
     {
-      key: "boysToilets",
+      key: "boysToiletCleanliness",
       indicator: "Cleanliness of boys' toilets",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.boysToiletCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.boysToiletCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.boysToiletCleanliness.marksAllocated ?? "0.5",
     },
     {
       key: "playgroundsHeader",
@@ -2005,43 +2045,58 @@ const renderInfrastructureAndEnvironment = (data: any = {}) => {
     {
       key: "playground",
       indicator: "Atleast one playground among football, volleyball and basketball",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.playground.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.playground.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.playground.marksAllocated ?? "0.5",
     },
     {
       key: "sportsFacilities",
       indicator: "Sports facilities (balls and kits)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.sportsFacilities.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.sportsFacilities.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.sportsFacilities.marksAllocated ?? "0.5",
     },
     { key: "schoolGardenHeader", indicator: "6.12 School Garden", isHeader: true, marksAllocated: "" },
     {
-      key: "plantsSafety",
+      key: "plants",
       indicator: "Health and safety of plants (non-toxic)",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.plants.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.plants.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.plants.marksAllocated ?? "0.5",
     },
-    { key: "educationalGarden", indicator: "Educational garden", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "educationalGarden", 
+      indicator: "Educational garden", 
+      availability: infrastructureAndEnvironment.educationalGarden.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.educationalGarden.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.educationalGarden.marksAllocated ?? "0.5",
+    },
     { key: "workshopsHeader", indicator: "6.13 Workshops", isHeader: true, marksAllocated: "" },
     {
-      key: "toolsCondition",
+      key: "tools",
       indicator: "Condition of tools and machinery",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.tools.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.tools.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.tools.marksAllocated ?? "0.5",
     },
     {
       key: "workshopVentilation",
       indicator: "Proper ventilation and safety measures",
-      availability: "",
-      quality: "",
-      marksAllocated: "0.5",
+      availability: infrastructureAndEnvironment.workshopVentilation.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.workshopVentilation.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.workshopVentilation.marksAllocated ?? "0.5",
     },
-    { key: "storeArrangement", indicator: "Store arrangement", availability: "", quality: "", marksAllocated: "0.5" },
-    { key: "workshopCleanliness", indicator: "Cleanliness", availability: "", quality: "", marksAllocated: "0.5" },
+    { key: "storeArrangement", 
+      indicator: "Store arrangement", 
+      availability: infrastructureAndEnvironment.storeArrangement.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.storeArrangement.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.storeArrangement.marksAllocated ?? "0.5", 
+    },
+    { key: "workshopCleanliness", 
+      indicator: "Cleanliness", 
+      availability: infrastructureAndEnvironment.workshopCleanliness.availability ?? "N/A",
+      quality: infrastructureAndEnvironment.workshopCleanliness.quality ?? "N/A",
+      marksAllocated: infrastructureAndEnvironment.workshopCleanliness.marksAllocated ?? "0.5", 
+    },
   ]
 
   // Combine the appropriate items based on school type
