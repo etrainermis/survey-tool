@@ -107,8 +107,8 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-blue-800">{incompleteSurveys.length}</p>
-              <p className="text-sm text-blue-600 mt-1">Surveys awaiting completion</p>
+            {fetchingIncompletedSurveys ? <span className="text-blue-400">Loading...</span> : incompleteSurveys?.length || 0}
+            <p className="text-sm text-blue-600 mt-1">Surveys awaiting completion</p>
             </CardContent>
           </Card>
 
