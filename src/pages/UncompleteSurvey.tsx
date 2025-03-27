@@ -70,6 +70,10 @@ const IncompleteSurveys = () => {
 
 
   // }, [])
+  useEffect(()=>{
+    console.log(surveys);
+    
+  }, [])
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">

@@ -157,7 +157,6 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
   
     // Handle case where survey or fetchedSurvey is null or undefined
     if (!fetchedSurvey) return null;
-    console.log("Fetched Survey:", fetchedSurvey);
 
   // Parse the survey data
   const surveyData = fetchedSurvey?.data
@@ -166,7 +165,6 @@ export const SurveyPreviewDialog = ({ survey, open, onOpenChange }: SurveyPrevie
     : fetchedSurvey.data
   : {}
 
-console.log("Parsed Survey Data:", fetchedSurvey?.data);
     
 
   // Get the general information data - handle both string and object formats

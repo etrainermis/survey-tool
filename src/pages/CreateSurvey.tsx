@@ -19,6 +19,7 @@ import { ESchoolSurveyDataType } from "@/common/enums/SchoolSurveyDataType"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useAllDistricts } from "@/hooks/useLocation"
 import { useSchoolsByDistrict } from "@/hooks/useSchools"
+import { useOneSurvey } from "@/hooks/useOneSurvey"
 
 interface CreateSurveyProps {
   authState: AuthState
@@ -147,24 +148,23 @@ const CreateSurvey = () => {
   ]
   const [searchParams] = useSearchParams()
   const myParam = searchParams.get("schoolId")
+  const { survey: fetchedSurvey, fetchingSurvey, errorFetchingSurvey } = useOneSurvey(myParam);
 
-  // useEffect(() => {
-  //   console.log("My Param:", myParam);
-  // }, [myParam]);
+  
 
-  useEffect(() => {
+  useEffect(() => {    
     if (user?.id) {
-      const savedData = localStorage.getItem(`survey_draft_${myParam}`)
-
-      if (savedData) {
-        form.reset(JSON.parse(savedData))
-        setSelectedSchool(JSON.parse(savedData).school)
+      if (myParam !== undefined && myParam !== null && !!fetchedSurvey?.data) {
+        form.reset(fetchedSurvey.data)
+        setSelectedSchool(fetchedSurvey.data.school)
       }
     }
   }, [user, form, myParam])
 
   useEffect(() => {
     const currentData = form.getValues()
+    console.log(currentData);
+    
     if (!currentData.infrastructure) {
       currentData.infrastructure = []
     }
@@ -311,10 +311,8 @@ const CreateSurvey = () => {
           id="district-select"
           className="w-full p-2 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           onChange={(e) => {
-            console.log(e.target.value)
 
             const district = districts.find((d) => d.id === Number(e.target.value))
-            console.log(districts)
 
             if (district) {
               setSelectedDistrictId(district.id)
