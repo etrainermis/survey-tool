@@ -113,11 +113,6 @@ export default function EvaluationItemWithWeights({
     return 0; // Default case
   };
 
-  useEffect(() => {
-    // console.log(qualityValue);
-    // console.log(onQualityChange("strategicPlan", "yes"));
-    // console.log(availabilityValue);
-  }, []);
   return (
     <div className="grid grid-cols-1 gap-2 p-2 rounded-md hover:bg-blue-50">
       <div className="grid grid-cols-[2fr,1fr,1fr,0.5fr,0.5fr,1fr] gap-4 items-start">
