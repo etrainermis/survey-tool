@@ -2,7 +2,7 @@ import _ from "axios";
 
 const baseUrl = import.meta.env.DEV
 
-  ? import.meta.env.VITE_BASE_API_URL_DEV
+  ? import.meta.env.VITE_BASE_API_URL_PROD
 
   : import.meta.env.VITE_BASE_API_URL;
 
