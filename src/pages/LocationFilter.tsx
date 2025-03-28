@@ -12,7 +12,7 @@ const LocationFilter: React.FC<Props> = ({ onSchoolSelect }) => {
 
   const { provinces, isLoading: loadingProvinces } = useProvinces();
   const { districts, isLoading: loadingDistricts } = useDistricts(selectedProvince);
-  const { schools, isLoading: loadingSchools } = useSchoolsByDistrict(selectedDistrict);
+  const { schools, fetchingSchools: loadingSchools } = useSchoolsByDistrict(selectedDistrict);
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provinceId = e.target.value;

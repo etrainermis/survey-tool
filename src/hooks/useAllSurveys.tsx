@@ -9,7 +9,6 @@ export const useAllSurveys = (size?: number, page?: number) => {
     async (url) => {
       try {
         const response = await AuthApi.get(url);
-        console.log(response.data);
         return response?.data?.content;
         
       } catch (error) {
@@ -31,7 +30,6 @@ export const useAllCompletedSurveysByLoggedInUser = (size?: number, page?: numbe
     async (url) => {
       try {
         const response = await AuthApi.get(url);
-        console.log(response.data.data);
         return response?.data?.data.content;
         
       } catch (error) {
@@ -54,7 +52,6 @@ export const useAllInCompletedSurveysByLoggedInUser = (size?: number, page?: num
     async (url) => {
       try {
         const response = await AuthApi.get(url);
-        console.log(response.data.data);
         return response?.data?.data.content;
         
       } catch (error) {
