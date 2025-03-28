@@ -1584,7 +1584,6 @@ const CreateSurvey = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
-        {(!fetchingSurvey && myParam) ? (
           <Card className="p-6 border-blue-200">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-blue-800">
@@ -1642,7 +1641,6 @@ const CreateSurvey = () => {
               </form>
             </Form>
           </Card>
-        ) : <p>Loading...</p>}
       </div>
     </div>
   );
