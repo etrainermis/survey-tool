@@ -57,6 +57,37 @@ const App = () => {
                   <Navigate to="/login" replace />
                 )
               }
+            />     
+
+            <Route
+              path="/incomplete-surveys"
+              element={
+                isAuthenticated ? (
+                  <IncompleteSurveys />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />       
+            <Route
+              path="/completed-surveys"
+              element={
+                isAuthenticated ? (
+                  <CompletedSurveys />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />     
+            <Route
+              path="/evaluation"
+              element={
+                isAuthenticated ? (
+                  <Page />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
             />
 
             {/* Default redirect to dashboard if authenticated */}
