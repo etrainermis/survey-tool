@@ -124,7 +124,8 @@ const CompletedSurveys = () => {
     setPreviewOpen(true)
   }
 
-  const { surveys, fetchingSurveys, errorFetchingSurveys } = useAllCompletedSurveysByLoggedInUser();
+  const { surveys, fetchingSurveys, errorFetchingSurveys } = useAllCompletedSurveysByLoggedInUser()
+
   // Helper function to render evaluation data
   const renderEvaluationSection = (data: any, title: string) => {
     if (!data) return ""
@@ -237,9 +238,8 @@ const CompletedSurveys = () => {
           ? JSON.parse(surveyData.generalInformation)
           : surveyData.generalInformation
         : {}
-        console.log("General Infooooooooooooo:", generalInfo)
 
-      // Add these lines after parsing surveyData
+      console.log("General Info:", generalInfo)
       console.log("Survey Data:", surveyData)
       console.log("Companies:", generalInfo?.companies || survey.companies)
       console.log("Trades:", generalInfo?.school?.trades || survey.school?.trades)
@@ -282,7 +282,7 @@ const CompletedSurveys = () => {
         : {}
 
       // Extract school type for the summary
-      const schoolCategory = generalInfo?.school?.category || ""
+      const schoolCategory = generalInfo?.school?.category || survey.school?.category || ""
       const schoolType =
         schoolCategory.toLowerCase().includes("boarding") || schoolCategory.toLowerCase().includes("mixed")
           ? "boarding"
@@ -290,16 +290,19 @@ const CompletedSurveys = () => {
 
       // Calculate section marks for the summary
       const sectionMarks = {
-        strategicPlanning: evaluationData.totalMarks || 0,
-        operationalManagement: evaluationDataOne.totalMarks || 0,
-        teachingLearning: evaluationDataTwo?.totalMarks || 0,
-        stakeholdersEngagement: evaluationDataThree?.totalMarks || 0,
-        continuousImprovement: evaluationDataFour?.totalMarks || 0,
-        infrastructure: evaluationDataFive?.totalMarks || 0,
+        strategicPlanning: evaluationData.sectionMarks || evaluationData || 0,
+        operationalManagement: evaluationDataOne.sectionMarks || evaluationDataOne || 0,
+        teachingLearning: evaluationDataTwo.sectionMarks || evaluationDataTwo || 0,
+        stakeholdersEngagement: evaluationDataThree.sectionMarks || evaluationDataThree || 0,
+        continuousImprovement: evaluationDataFour.sectionMarks || evaluationDataFour || 0,
+        infrastructure: evaluationDataFive.sectionMarks || evaluationDataFive || 0,
       }
 
       // Calculate total marks
-      const totalMarks = Object.values(sectionMarks).reduce((sum: number, mark: any) => sum + Number(mark), 0)
+      const totalMarks = Object.values(sectionMarks).reduce((sum: number, mark: any) => {
+        // Ensure we're adding the actual number of marks (not the whole object)
+        return sum + (mark.totalMarks ? Number(mark.totalMarks) : 0)
+      }, 0)
 
       // Write the HTML content
       printWindow.document.write(`
@@ -913,62 +916,218 @@ const CompletedSurveys = () => {
 
       // Operational Management Section
       if (Object.keys(evaluationDataOne).length > 0) {
+        const operationalManagement = evaluationDataOne?.operationalManagement || evaluationDataOne || {}
+
+        // Create items array for operational management
+        const operationalItems = [
+          {
+            key: "schoolCommitteeHeader",
+            indicator: "2.1 School Committee Governance (2 marks)",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          {
+            key: "sec",
+            indicator: "Availability Of School Executive Committee (SEC)",
+            availability: operationalManagement.sec?.availability || "N/A",
+            quality: operationalManagement.sec?.quality || "N/A",
+            marksAllocated: operationalManagement.sec?.marksAllocated || "0.5",
+          },
+          {
+            key: "feedingCommittee",
+            indicator: "Availablity Of School Feeding Committee",
+            availability: operationalManagement.feedingCommittee?.availability || "N/A",
+            quality: operationalManagement.feedingCommittee?.quality || "N/A",
+            marksAllocated: operationalManagement.feedingCommittee?.marksAllocated || "0.5",
+          },
+          {
+            key: "secMinutes",
+            indicator: "At least 1 minutes Of School Executive Committee meeting per term",
+            availability: operationalManagement.secMinutes?.availability || "N/A",
+            quality: operationalManagement.secMinutes?.quality || "N/A",
+            marksAllocated: operationalManagement.secMinutes?.marksAllocated || "0.5",
+          },
+          {
+            key: "sgaMinutes",
+            indicator: "One minutes Of School General Assembly (SGA) meeting per year",
+            availability: operationalManagement.sgaMinutes?.availability || "N/A",
+            quality: operationalManagement.sgaMinutes?.quality || "N/A",
+            marksAllocated: operationalManagement.sgaMinutes?.marksAllocated || "0.5",
+          },
+          {
+            key: "proceduresHeader",
+            indicator: "2.2 Procedures and Communication",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          // Add more items for operational management
+        ]
+
         printWindow.document.write(`
         <div class="section page-break">
           <div class="header-blue">
             <h3>2. School Operational Management (30 Marks)</h3>
           </div>
           
-          ${renderEvaluationTable(evaluationDataOne, [])}
-          ${renderOverview(evaluationDataOne)}
+          ${renderEvaluationTable(operationalManagement, operationalItems)}
+          ${renderOverview(operationalManagement)}
         </div>
       `)
       }
 
       // Teaching and Learning Section
       if (Object.keys(evaluationDataTwo).length > 0) {
+        const teachingAndLearning = evaluationDataTwo?.teachingAndLearning || evaluationDataTwo || {}
+
+        // Create items array for teaching and learning
+        const teachingItems = [
+          {
+            key: "cbtHeader",
+            indicator: "3.1 CBT/CBA",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          {
+            key: "cbc",
+            indicator: "validated Competence Based Curriculum (CBC)",
+            availability: teachingAndLearning.cbc?.availability || "N/A",
+            quality: teachingAndLearning.cbc?.quality || "N/A",
+            marksAllocated: teachingAndLearning.cbc?.marksAllocated || "0.5",
+          },
+          {
+            key: "guidingDocuments",
+            indicator: "Guiding Documents regarding CBT/CBA Implementation",
+            availability: teachingAndLearning.guidingDocuments?.availability || "N/A",
+            quality: teachingAndLearning.guidingDocuments?.quality || "N/A",
+            marksAllocated: teachingAndLearning.guidingDocuments?.marksAllocated || "0.5",
+          },
+          // Add more items for teaching and learning
+        ]
+
         printWindow.document.write(`
         <div class="section page-break">
           <div class="header-blue">
             <h3>3. Leading Teaching and Learning (20 Marks)</h3>
           </div>
           
-          ${renderEvaluationTable(evaluationDataTwo, [])}
-          ${renderOverview(evaluationDataTwo)}
+          ${renderEvaluationTable(teachingAndLearning, teachingItems)}
+          ${renderOverview(teachingAndLearning)}
         </div>
       `)
       }
 
       // Stakeholders Engagement Section
       if (Object.keys(evaluationDataThree).length > 0) {
+        const stakeholdersEngagement = evaluationDataThree?.stakeholdersEngagement || evaluationDataThree || {}
+
+        // Create items array for stakeholders engagement
+        const stakeholdersItems = [
+          {
+            key: "partnershipDevHeader",
+            indicator: "4.1 Partnership Development",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          {
+            key: "mous",
+            indicator: "At Least 3 MoUs With Relevant Private Companies Per Each Trade",
+            availability: stakeholdersEngagement.mous?.availability || "N/A",
+            quality: stakeholdersEngagement.mous?.quality || "N/A",
+            marksAllocated: stakeholdersEngagement.mous?.marksAllocated || "0.5",
+          },
+          {
+            key: "employersFeedback",
+            indicator: "Employers feedback/ satisfaction survey results",
+            availability: stakeholdersEngagement.employersFeedback?.availability || "N/A",
+            quality: stakeholdersEngagement.employersFeedback?.quality || "N/A",
+            marksAllocated: stakeholdersEngagement.employersFeedback?.marksAllocated || "0.5",
+          },
+          // Add more items for stakeholders engagement
+        ]
+
         printWindow.document.write(`
         <div class="section page-break">
           <div class="header-blue">
             <h3>4. Stakeholders' Engagement (10 Marks)</h3>
           </div>
           
-          ${renderEvaluationTable(evaluationDataThree, [])}
-          ${renderOverview(evaluationDataThree)}
+          ${renderEvaluationTable(stakeholdersEngagement, stakeholdersItems)}
+          ${renderOverview(stakeholdersEngagement)}
         </div>
       `)
       }
 
       // Continuous Improvement Section
       if (Object.keys(evaluationDataFour).length > 0) {
+        const continuousImprovement = evaluationDataFour?.continuousImprovement || evaluationDataFour || {}
+
+        // Create items array for continuous improvement
+        const improvementItems = [
+          {
+            key: "professionalismHeader",
+            indicator: "5.1 Professionalism",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          {
+            key: "cpdPlan",
+            indicator: "CPD plan",
+            availability: continuousImprovement.cpdPlan?.availability || "N/A",
+            quality: continuousImprovement.cpdPlan?.quality || "N/A",
+            marksAllocated: continuousImprovement.cpdPlan?.marksAllocated || "0.5",
+          },
+          {
+            key: "cpdReports",
+            indicator: "CPD implementation reports",
+            availability: continuousImprovement.cpdReports?.availability || "N/A",
+            quality: continuousImprovement.cpdReports?.quality || "N/A",
+            marksAllocated: continuousImprovement.cpdReports?.marksAllocated || "0.5",
+          },
+          // Add more items for continuous improvement
+        ]
+
         printWindow.document.write(`
         <div class="section page-break">
           <div class="header-blue">
             <h3>5. Continuous Improvement (10 Marks)</h3>
           </div>
           
-          ${renderEvaluationTable(evaluationDataFour, [])}
-          ${renderOverview(evaluationDataFour)}
+          ${renderEvaluationTable(continuousImprovement, improvementItems)}
+          ${renderOverview(continuousImprovement)}
         </div>
       `)
       }
 
       // Infrastructure and Environment Section
       if (Object.keys(evaluationDataFive).length > 0) {
+        const infrastructureAndEnvironment =
+          evaluationDataFive?.infrastructureAndEnvironment || evaluationDataFive || {}
+
+        // Create items array for infrastructure and environment
+        const infrastructureItems = [
+          {
+            key: "adminBlockHeader",
+            indicator: "6.1 Administration Block",
+            isHeader: true,
+            marksAllocated: "",
+          },
+          {
+            key: "offices",
+            indicator: "Offices of all staff",
+            availability: infrastructureAndEnvironment.offices?.availability || "N/A",
+            quality: infrastructureAndEnvironment.offices?.quality || "N/A",
+            marksAllocated: infrastructureAndEnvironment.offices?.marksAllocated || "0.5",
+          },
+          {
+            key: "meetingRooms",
+            indicator: "Meeting rooms",
+            availability: infrastructureAndEnvironment.meetingRooms?.availability || "N/A",
+            quality: infrastructureAndEnvironment.meetingRooms?.quality || "N/A",
+            marksAllocated: infrastructureAndEnvironment.meetingRooms?.marksAllocated || "0.5",
+          },
+          // Add more items for infrastructure and environment
+        ]
+
         printWindow.document.write(`
         <div class="section page-break">
           <div class="header-blue">
@@ -977,103 +1136,105 @@ const CompletedSurveys = () => {
             ${schoolType === "boarding" ? '<p style="font-size: 0.9em; color: #3b82f6; margin-top: 5px;">Boarding School</p>' : ""}
           </div>
           
-          ${renderEvaluationTable(evaluationDataFive, [])}
-          ${renderOverview(evaluationDataFive)}
+          ${renderEvaluationTable(infrastructureAndEnvironment, infrastructureItems)}
+          ${renderOverview(infrastructureAndEnvironment)}
         </div>
       `)
       }
 
       // Results Summary Section
       printWindow.document.write(`
-      <div class="section page-break">
-        <div class="header-blue">
-          <h3>Evaluation Results Summary</h3>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-          <div>
-            <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">School Type:</p>
-            <p style="font-size: 1.1em; font-weight: 600;">${schoolType === "day" ? "Day School" : "Boarding School"}</p>
-          </div>
-          
-          <div>
-            <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Total Score:</p>
-            <p style="font-size: 1.5em; font-weight: 700; color: #1e40af;">${totalMarks.toFixed(2)} / 100</p>
-          </div>
-        </div>
-        
-        <div>
-          ${[
-            { key: "strategicPlanning", name: "Strategic Planning", max: 10 },
-            { key: "operationalManagement", name: "School Operational Management", max: 30 },
-            { key: "teachingLearning", name: "Leading Teaching and Learning", max: 20 },
-            { key: "stakeholdersEngagement", name: "Stakeholders' Engagement", max: 10 },
-            { key: "continuousImprovement", name: "Continuous Improvement", max: 10 },
-            { key: "infrastructure", name: "Infrastructure and Environment", max: 20 },
-          ]
-            .map(
-              (section, index) => `
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 0.9em; font-weight: 500;">
-                  ${index + 1}. ${section.name}
-                </span>
-                <span style="font-weight: 600;">
-                  ${sectionMarks[section.key].toFixed(2)} / ${section.max}
-                </span>
-              </div>
-              <div class="progress-container">
-                <div class="progress-bar" style="width: ${(sectionMarks[section.key] / section.max) * 100}%;"></div>
-              </div>
+<div class="section page-break">
+  <div class="header-blue">
+    <h3>Evaluation Results Summary</h3>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <div>
+      <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">School Type:</p>
+      <p style="font-size: 1.1em; font-weight: 600;">${schoolType === "day" ? "Day School" : "Boarding School"}</p>
+    </div>
+    
+    <div>
+      <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Total Score:</p>
+      <p style="font-size: 1.5em; font-weight: 700; color: #1e40af;">${totalMarks.toFixed(2)} / 100</p>
+    </div>
+  </div>
+  
+  <div>
+    ${[
+      { key: "strategicPlanning", name: "Strategic Planning", max: 10 },
+      { key: "operationalManagement", name: "School Operational Management", max: 30 },
+      { key: "teachingLearning", name: "Leading Teaching and Learning", max: 20 },
+      { key: "stakeholdersEngagement", name: "Stakeholders' Engagement", max: 10 },
+      { key: "continuousImprovement", name: "Continuous Improvement", max: 10 },
+      { key: "infrastructure", name: "Infrastructure and Environment", max: 20 },
+    ]
+      .map((section, index) => {
+        // Access totalMarks from the data directly for each section
+        const score = Number(sectionMarks[section.key]?.totalMarks) || 0 // Convert to number and default to 0 if NaN or undefined
+        return `
+          <div style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.9em; font-weight: 500;">
+                ${index + 1}. ${section.name}
+              </span>
+              <span style="font-weight: 600;">
+                ${score.toFixed(2)} / ${section.max}
+              </span>
             </div>
-          `,
-            )
-            .join("")}
-        </div>
-        
-        <div style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;">
-          <h4 style="margin-top: 0; margin-bottom: 10px; color: #3b82f6;">Evaluation Summary</h4>
-          <p style="font-size: 0.9em; color: #1e40af;">
-            This evaluation tool has assessed your institution across six key areas. Your total score is ${totalMarks.toFixed(2)} out of 100.
-            ${
-              totalMarks >= 80
-                ? " Your institution demonstrates excellent performance across most evaluation criteria."
-                : totalMarks >= 60
-                  ? " Your institution demonstrates good performance with some areas for improvement."
-                  : totalMarks >= 40
-                    ? " Your institution meets basic requirements but has significant areas for improvement."
-                    : " Your institution requires substantial improvements across multiple evaluation criteria."
-            }
-          </p>
-        </div>
-        
-        <div style="margin-top: 30px;">
-          <h4 style="color: #3b82f6;">Evaluator's Comments</h4>
-          <div style="width: 100%; height: 100px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background-color: white; margin-bottom: 15px;"></div>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-            <div>
-              <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Evaluator's Signature 1</p>
-              <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
-            </div>
-            <div>
-              <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Evaluator's Signature 2</p>
-              <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${(score / section.max) * 100}%;"></div>
             </div>
           </div>
-        </div>
-        
-        <div style="margin-top: 30px;">
-          <h4 style="color: #3b82f6;">Headteacher's Comments</h4>
-          <div style="width: 100%; height: 100px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background-color: white; margin-bottom: 15px;"></div>
-          
-          <div style="margin-top: 15px;">
-            <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Headteacher's Signature</p>
-            <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
-          </div>
-        </div>
+        `
+      })
+      .join("")}
+  </div>
+  
+  <div style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;">
+    <h4 style="margin-top: 0; margin-bottom: 10px; color: #3b82f6;">Evaluation Summary</h4>
+    <p style="font-size: 0.9em; color: #1e40af;">
+      This evaluation tool has assessed your institution across six key areas. Your total score is ${totalMarks.toFixed(2)} out of 100.
+      ${
+        totalMarks >= 80
+          ? " Your institution demonstrates excellent performance across most evaluation criteria."
+          : totalMarks >= 60
+            ? " Your institution demonstrates good performance with some areas for improvement."
+            : totalMarks >= 40
+              ? " Your institution meets basic requirements but has significant areas for improvement."
+              : " Your institution requires substantial improvements across multiple evaluation criteria."
+      }
+    </p>
+  </div>
+  
+  <div style="margin-top: 30px;">
+    <h4 style="color: #3b82f6;">Evaluator's Comments</h4>
+    <div style="width: 100%; height: 100px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background-color: white; margin-bottom: 15px;"></div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+      <div>
+        <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Evaluator's Signature 1</p>
+        <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
       </div>
-    `)
+      <div>
+        <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Evaluator's Signature 2</p>
+        <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div style="margin-top: 30px;">
+    <h4 style="color: #3b82f6;">Headteacher's Comments</h4>
+    <div style="width: 100%; height: 100px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background-color: white; margin-bottom: 15px;"></div>
+    
+    <div style="margin-top: 15px;">
+      <p style="font-size: 0.9em; font-weight: 500; color: #3b82f6;">Headteacher's Signature</p>
+      <div style="width: 100%; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white;"></div>
+    </div>
+  </div>
+</div>
+`)
 
       // Close the HTML document
       printWindow.document.write(`
@@ -1102,7 +1263,6 @@ const CompletedSurveys = () => {
       setIsDownloading(false)
     }
   }
-
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
