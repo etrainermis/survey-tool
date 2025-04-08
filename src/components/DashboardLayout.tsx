@@ -33,7 +33,7 @@ const DashboardLayout = () => {
           ...survey,
           processedData: data,
           //TODO : uncomment
-          // isComplete: data.school && data.school.districtId && data.school.id && data.school.name,
+          isComplete: data.school && data.school.districtId && data.school.id && data.school.name,
         }
       })
       setFilteredSurveys(processed.filter((survey: any) => survey.isComplete))
