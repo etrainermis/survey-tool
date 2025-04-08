@@ -1,12 +1,8 @@
 import _ from "axios";
 
-const baseUrl = import.meta.env.VITE_BASE_API_URL_DEV
+const baseUrl = import.meta.env.VITE_BASE_API_URL_PROD;
 
-  ? import.meta.env.VITE_BASE_API_URL_PROD
-
-  : import.meta.env.VITE_BASE_API_URL;
-
-console.log({ baseUrl });
+console.log( "baseUrl", baseUrl );
 
 const axios = _.create({
   baseURL: baseUrl,
