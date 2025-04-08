@@ -44,12 +44,19 @@ interface Survey {
         }
       }>
     }>
-  }
+  },
+  strategicPlanning: any;
+  operationalManagement: any;
+  teachingAndLearning: any;
+  stakeholdersEngagement: any;
+  continuousImprovement: any;
+  infrastructureAndEnvironment: any;
 }
 
 const IncompleteSurveys = () => {
   const navigate = useNavigate()
   const { surveys , fetchingSurveys, errorFetchingSurveys } = useAllInCompletedSurveysByLoggedInUser();
+  console.log("helloooooooooooo")
 
   // useEffect(() => {
   //   const userString = localStorage.getItem("user")
