@@ -20,9 +20,12 @@ import { useToast } from "@/hooks/use-toast";
 import useAuth from "@/hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useOneSurvey } from "@/hooks/useOneSurvey";
+
 
 export default function Home() {
   const [schoolType, setSchoolType] = useState<"day" | "boarding" | null>(null);
+  // const [currentSchoolId, setCurrentSchoolId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -44,7 +47,24 @@ export default function Home() {
   });
   const [totalMarks, setTotalMarks] = useState(0);
   const [validationError, setValidationError] = useState("");
-  const navigate = useNavigate();
+
+  const currentSchoolId = typeof window !== "undefined" ? localStorage.getItem("currentEvaluationSchool") : null;
+const { survey, fetchingSurvey, errorFetchingSurvey } = useOneSurvey(currentSchoolId ?? "");
+console.log("fetchingSurvey", fetchingSurvey);
+
+const navigate = useNavigate();
+useEffect(() => {
+  if (!fetchingSurvey && survey && survey.id) {
+    toast({
+      description: "This school already has a submitted evaluation.",
+      duration: 2000,
+    });
+
+    navigate(`/survey-preview/${currentSchoolId}`);
+  }
+}, [survey, fetchingSurvey, currentSchoolId, navigate]);
+
+
   useEffect(() => {
     setSchoolType(localStorage.getItem("schoolType") as "day" | "boarding");
   }, []);
@@ -105,7 +125,10 @@ export default function Home() {
   };
   const saveSectionData = async (payload) => {
     try {
-      const response = await AuthApi.post(`/school-survey/add`, {...payload, schoolId : localStorage.getItem("currentEvaluationSchool")});
+      const response = await AuthApi.post(`/school-survey/add`, {
+        ...payload,
+        schoolId: localStorage.getItem("currentEvaluationSchool"),
+      });
     } catch (error) {
       console.log(error);
     }
@@ -167,12 +190,33 @@ export default function Home() {
     setValidationError("");
     return true;
   };
+  
+  // useEffect(() => {
+  //   if (!currentSchoolId) return;
+  
+  //   const savedData = localStorage.getItem(`survey_draft_${currentSchoolId}`);
+  //   if (savedData) {
+  //     try {
+  //       const parsed = JSON.parse(savedData);
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         ...parsed,
+  //       }));
+  //     } catch (e) {
+  //       console.error("Failed to parse saved form data:", e);
+  //     }
+  //   }
+  // }, [currentSchoolId]);
+  
+  
   const saveProgress = (data) => {
     if (user?.id) {
       localStorage.setItem(`survey_draft_${localStorage.getItem("currentEvaluationSchool")}`, JSON.stringify(data));
       toast({ description: "Progress saved", duration: 1000 });
     }
   };
+
+  
   const handleNext = async () => {
     saveProgress(formData);
     switch (steps[currentStep].type) {
