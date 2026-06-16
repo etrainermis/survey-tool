@@ -2,8 +2,7 @@
 
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
-import { School } from "lucide-react"
+import { useMemo, useState } from "react"
 import { useAllInCompletedSurveysByLoggedInUser } from "@/hooks/useAllSurveys"
 
 interface Survey {
@@ -55,8 +54,23 @@ interface Survey {
 
 const IncompleteSurveys = () => {
   const navigate = useNavigate()
-  const { surveys , fetchingSurveys, errorFetchingSurveys } = useAllInCompletedSurveysByLoggedInUser();
-  console.log("helloooooooooooo")
+  const { surveys, fetchingSurveys } = useAllInCompletedSurveysByLoggedInUser()
+  const [hiddenSchoolIds, setHiddenSchoolIds] = useState<string[]>([])
+
+  const visibleSurveys = useMemo(() => {
+    if (!surveys?.length) return []
+
+    const uniqueBySchool = new Map<string, Survey>()
+    surveys.forEach((survey) => {
+      if (survey?.school?.id && !uniqueBySchool.has(survey.school.id)) {
+        uniqueBySchool.set(survey.school.id, survey)
+      }
+    })
+
+    return Array.from(uniqueBySchool.values()).filter(
+      (survey) => !hiddenSchoolIds.includes(survey.school.id),
+    )
+  }, [surveys, hiddenSchoolIds])
 
   // useEffect(() => {
   //   const userString = localStorage.getItem("user")
@@ -90,23 +104,39 @@ const IncompleteSurveys = () => {
           Back
         </Button>
         <div className="bg-white rounded-lg shadow border border-blue-200">
-          {surveys?.length > 0 ? (
-            surveys?.map((survey, index) => (
+          {fetchingSurveys ? (
+            <p className="text-blue-500 text-center py-8">Loading incomplete surveys...</p>
+          ) : visibleSurveys.length > 0 ? (
+            visibleSurveys.map((survey) => (
               <div
-                key={index}
+                key={survey.school.id}
                 className="p-4 border-b border-blue-100 last:border-b-0 flex justify-between items-center"
               >
                 <div>
                   <h3 className="font-medium ">{survey.school.name}</h3>
                   <p className="text-sm text-blue-500">Draft</p>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/create-survey?schoolId=${survey.school.id}`)}
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-400"
-                >
-                  Continue
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setHiddenSchoolIds((prev) => [...prev, survey.school.id])
+                    }}
+                    className="border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800 hover:border-red-400"
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      localStorage.setItem("currentEvaluationSchool", survey.school.id)
+                      navigate(`/create-survey?schoolId=${survey.school.id}`)
+                    }}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-400"
+                  >
+                    Continue
+                  </Button>
+                </div>
               </div>
             ))
           ) : (
