@@ -1,6 +1,9 @@
 import _ from "axios";
 
-const baseUrl = import.meta.env.VITE_BASE_API_URL_PROD;
+const baseUrl =
+  import.meta.env.VITE_BASE_API_URL ||
+  import.meta.env.VITE_BASE_API_URL_DEV ||
+  import.meta.env.VITE_BASE_API_URL_PROD;
 
 console.log( "baseUrl", baseUrl );
 
