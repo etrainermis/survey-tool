@@ -8,12 +8,26 @@ interface ITSectionProps {
 }
 
 const ITSection: React.FC<ITSectionProps> = ({ data }) => {
+  const isAffirmative = (value: unknown): boolean => {
+    if (typeof value === "boolean") return value
+    if (typeof value === "string") return ["yes", "true", "1"].includes(value.toLowerCase())
+    return false
+  }
+
   const processedData = React.useMemo(() => {
     if (!data?.length) return null
 
     const computerStats = {
       working: 0,
       notWorking: 0,
+    }
+    const connectivityStats = {
+      internetYes: 0,
+      internetNo: 0,
+      projectorsYes: 0,
+      projectorsNo: 0,
+      serverYes: 0,
+      serverNo: 0,
     }
 
     const energySources = new Map()
@@ -28,6 +42,20 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
       computerStats.working += Number.parseInt(it.computerLab?.workingComputers) || 0
       computerStats.notWorking += Number.parseInt(it.computerLab?.nonWorkingComputers) || 0
 
+      // Connectivity stats
+      const hasInternet = isAffirmative(it.internet?.exists) || isAffirmative(it.computerLab?.hasLAN)
+      const hasProjectors = isAffirmative(it.computerLab?.hasProjectors)
+      const hasServer = isAffirmative(it.server?.exists)
+
+      if (hasInternet) connectivityStats.internetYes++
+      else connectivityStats.internetNo++
+
+      if (hasProjectors) connectivityStats.projectorsYes++
+      else connectivityStats.projectorsNo++
+
+      if (hasServer) connectivityStats.serverYes++
+      else connectivityStats.serverNo++
+
       // Energy sources - Check if energySources exists and is an array
       if (Array.isArray(it.energySources)) {
         it.energySources.forEach((source: string) => {
@@ -38,6 +66,7 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
 
     return {
       computerStats,
+      connectivityStats,
       energySources: Array.from(energySources.entries()),
     }
   }, [data])
@@ -59,14 +88,22 @@ const ITSection: React.FC<ITSectionProps> = ({ data }) => {
     datasets: [
       {
         label: "Yes",
-        data: [15, 12, 8],
+        data: [
+          processedData?.connectivityStats.internetYes || 0,
+          processedData?.connectivityStats.projectorsYes || 0,
+          processedData?.connectivityStats.serverYes || 0,
+        ],
         backgroundColor: "rgba(66, 133, 244, 0.6)",
         borderColor: "rgba(66, 133, 244, 1)",
         borderWidth: 1,
       },
       {
         label: "No",
-        data: [5, 8, 12],
+        data: [
+          processedData?.connectivityStats.internetNo || 0,
+          processedData?.connectivityStats.projectorsNo || 0,
+          processedData?.connectivityStats.serverNo || 0,
+        ],
         backgroundColor: "rgba(234, 67, 53, 0.6)",
         borderColor: "rgba(234, 67, 53, 1)",
         borderWidth: 1,

@@ -165,20 +165,47 @@ const CreateSurvey = () => {
   } = useOneSurvey(myParam);
 
   useEffect(() => {
-    if (user?.id) {
-      if (myParam !== undefined && myParam !== null && !!fetchedSurvey?.data) {
-        form.reset(JSON.parse(fetchedSurvey.data.generalInformation));
-        console.log(form.getValues());
-        
-        // setSelectedSchool(fetchedSurvey.data.school)
-        // console.log(JSON.parse(fetchedSurvey.data.generalInformation).school);
-        
-        setSelectedSchool((prev) => {
-          return fetchedSurvey.data.school;
-        });
-      
-        setSelectedDistrictId(fetchedSurvey.data.school.districtId.id);
+    if (!user?.id || !myParam) return
+
+    // Keep the active draft key aligned with the school being resumed.
+    localStorage.setItem("currentEvaluationSchool", myParam)
+
+    // Priority 1: load latest locally saved draft for this school.
+    const localDraft = localStorage.getItem(`survey_draft_${myParam}`)
+    if (localDraft) {
+      try {
+        const parsedDraft = JSON.parse(localDraft)
+        form.reset(parsedDraft)
+        if (parsedDraft?.school) {
+          setSelectedSchool(parsedDraft.school)
+          const districtId =
+            parsedDraft.school?.districtId?.id ??
+            parsedDraft.school?.districtId ??
+            parsedDraft.school?.location?.districtId ??
+            null
+          if (districtId) setSelectedDistrictId(String(districtId))
+        }
+        return
+      } catch (error) {
+        console.error("Failed to parse local draft:", error)
       }
+    }
+
+    // Priority 2: fallback to server-side saved general information.
+    if (!fetchedSurvey?.data) return
+    try {
+      const serverGeneralInformation = fetchedSurvey.data.generalInformation
+      const parsedData =
+        typeof serverGeneralInformation === "string"
+          ? JSON.parse(serverGeneralInformation)
+          : serverGeneralInformation
+
+      form.reset(parsedData)
+      setSelectedSchool(fetchedSurvey.data.school)
+      const districtId = fetchedSurvey.data.school?.districtId?.id
+      if (districtId) setSelectedDistrictId(String(districtId))
+    } catch (error) {
+      console.error("Failed to parse server survey data:", error)
     }
   }, [user, form, myParam, fetchedSurvey]);
 
@@ -212,9 +239,18 @@ const CreateSurvey = () => {
         delete dataCopy.it.equipment.assetRegisterFile;
       }
 
+      const activeSchoolId =
+        selectedSchool?.id ||
+        dataCopy?.school?.id ||
+        myParam ||
+        localStorage.getItem("currentEvaluationSchool");
+
+      if (!activeSchoolId) return;
+
+      localStorage.setItem("currentEvaluationSchool", String(activeSchoolId));
       localStorage.setItem(
-        `survey_draft_${localStorage.getItem("currentEvaluationSchool")}`,
-        JSON.stringify(data)
+        `survey_draft_${activeSchoolId}`,
+        JSON.stringify(dataCopy)
       );
       toast({ description: "Progress saved", duration: 1000 });
     }

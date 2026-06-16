@@ -5,6 +5,7 @@ import TradesSection from "./sections/TradesSection"
 import InfrastructureSection from "./sections/InfrastructureSection"
 import ITSection from "./sections/ITSection"
 import { useAllSurveys } from "@/hooks/useAllSurveys"
+import { EvaluationStatus } from "./evaluation/common/evaluation-status"
 import { Provinces, Districts } from "rwanda"
 import { Radar } from "react-chartjs-2"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -14,6 +15,38 @@ import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler,
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
 const DashboardLayout = () => {
+  const isCompletedSurvey = (survey: any) => {
+    const normalizedStatus =
+      (survey?.evaluationStatus || survey?.status || survey?.surveyStatus || "").toString().toUpperCase()
+
+    if (normalizedStatus === EvaluationStatus.COMPLETE) return true
+
+    // Fallback for payloads without explicit status fields:
+    // treat records with all evaluation sections present as completed.
+    const requiredSections = [
+      "strategicPlanning",
+      "operationalManagement",
+      "teachingAndLearning",
+      "stakeholdersEngagement",
+      "continuousImprovement",
+      "infrastructureAndEnvironment",
+    ]
+
+    return requiredSections.every((key) => Boolean(survey?.[key]))
+  }
+
+  const parseEvaluationSection = (section: unknown) => {
+    if (!section) return null
+
+    try {
+      const parsed = typeof section === "string" ? JSON.parse(section) : section
+      const totalMarks = Number((parsed as { sectionMarks?: { totalMarks?: number | string } })?.sectionMarks?.totalMarks)
+      return Number.isFinite(totalMarks) ? totalMarks : null
+    } catch {
+      return null
+    }
+  }
+
   const [selectedProvince, setSelectedProvince] = useState("")
   const [selectedDistrict, setSelectedDistrict] = useState("")
   const [selectedSchool, setSelectedSchool] = useState("")
@@ -26,8 +59,9 @@ const DashboardLayout = () => {
   // Process surveys to get unique locations with data
   useEffect(() => {
     if (surveys) {
-      console.log(surveys)
-      const processed = surveys.map((survey: any) => {
+      const processed = surveys
+        .filter((survey: any) => isCompletedSurvey(survey))
+        .map((survey: any) => {
         const data = JSON.parse(survey.generalInformation)
         return {
           ...survey,
@@ -109,19 +143,49 @@ const DashboardLayout = () => {
   }, [selectedProvince, selectedDistrict, selectedSchool, filteredSurveys])
 
   // Spider chart data for the 6 components
+  const radarLabels = [
+    "Strategic Planning",
+    "Operational Management",
+    "Teaching & Learning",
+    "Stakeholders Engagement",
+    "Continuous Improvement",
+    "Infrastructure",
+  ]
+
+  const radarSections = [
+    { key: "strategicPlanning", max: 10 },
+    { key: "operationalManagement", max: 30 },
+    { key: "teachingAndLearning", max: 20 },
+    { key: "stakeholdersEngagement", max: 10 },
+    { key: "continuousImprovement", max: 10 },
+    { key: "infrastructureAndEnvironment", max: 20 },
+  ]
+
+  const radarScores = React.useMemo(() => {
+    if (!getFilteredData?.length) return radarSections.map(() => 0)
+
+    const totals = radarSections.map(() => ({ total: 0, count: 0 }))
+
+    getFilteredData.forEach((survey) => {
+      radarSections.forEach((section, index) => {
+        const marks = parseEvaluationSection(survey?.[section.key])
+        if (marks === null) return
+
+        const percentage = (marks / section.max) * 100
+        totals[index].total += Math.max(0, Math.min(100, percentage))
+        totals[index].count += 1
+      })
+    })
+
+    return totals.map(({ total, count }) => (count > 0 ? Number((total / count).toFixed(1)) : 0))
+  }, [getFilteredData])
+
   const radarData = {
-    labels: [
-      "Strategic Planning",
-      "Operational Management",
-      "Teaching & Learning",
-      "Stakeholders Engagement",
-      "Continuous Improvement",
-      "Infrastructure",
-    ],
+    labels: radarLabels,
     datasets: [
       {
         label: "Average Score (%)",
-        data: [85, 23, 88, 65, 82, 98],
+        data: radarScores,
         backgroundColor: "rgba(59, 130, 246, 0.2)",
         borderColor: "rgba(59, 130, 246, 1)",
         borderWidth: 2,
@@ -286,7 +350,7 @@ const DashboardLayout = () => {
               </div>
               <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                 {radarData.labels.map((label, index) => {
-                  const score = radarData.datasets[0].data[index]
+                  const score = radarScores[index] || 0
                   const color = getColorForScore(score)
                   const status = getStatusForScore(score)
                   const bgClass = getBgClassForScore(score)
