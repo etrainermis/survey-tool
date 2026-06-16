@@ -7,6 +7,7 @@ import { SurveyPreviewDialog } from "@/components/SurveyPreviewDialog"
 import dayjs from "dayjs"
 import { Download } from "lucide-react" // Import the Download icon
 import { useAllCompletedSurveysByLoggedInUser } from "@/hooks/useAllSurveys"
+import { AuthApi } from "@/lib/config/axios.config"
 
 interface Survey {
   id: string
@@ -205,11 +206,47 @@ const CompletedSurveys = () => {
     return html
   }
 
+  const parseIfJsonString = (value: any) => {
+    if (typeof value !== "string") return value
+    try {
+      return JSON.parse(value)
+    } catch {
+      return value
+    }
+  }
+
+  const normalizeSurveyPayload = (payload: any): Survey | null => {
+    if (!payload) return null
+
+    // Handles both response shapes:
+    // 1) { data: { ...survey } }
+    // 2) { ...survey }
+    const rawSurvey = payload.data ?? payload
+    if (!rawSurvey?.school?.id) return null
+
+    return {
+      ...rawSurvey,
+      data: parseIfJsonString(rawSurvey.data),
+      strategicPlanning: parseIfJsonString(rawSurvey.strategicPlanning),
+      operationalManagement: parseIfJsonString(rawSurvey.operationalManagement),
+      teachingAndLearning: parseIfJsonString(rawSurvey.teachingAndLearning),
+      stakeholdersEngagement: parseIfJsonString(rawSurvey.stakeholdersEngagement),
+      continuousImprovement: parseIfJsonString(rawSurvey.continuousImprovement),
+      infrastructureAndEnvironment: parseIfJsonString(rawSurvey.infrastructureAndEnvironment),
+    }
+  }
+
   // Function to handle downloading survey data as PDF
-  const handleDownloadSurvey = (survey: Survey) => {
+  const handleDownloadSurvey = async (survey: Survey) => {
     setIsDownloading(true)
 
     try {
+      // Always fetch complete survey details before generating preview/PDF.
+      // The list endpoint may return partial data.
+      const fullSurveyResponse = await AuthApi.get(`/school-survey/${survey.school.id}`)
+      const fullSurvey = normalizeSurveyPayload(fullSurveyResponse?.data)
+      const surveyForReport = fullSurvey || survey
+
       // Create a printable HTML document with the survey data
       const printWindow = window.open("", "_blank")
 
@@ -220,16 +257,16 @@ const CompletedSurveys = () => {
       }
 
       // Filter out null values and prepare data
-      const schoolName = survey.school.name || "Unknown School"
-      const completedDate = dayjs(survey.createdAt).format("DD/MM/YYYY")
-      const completedBy = survey.completedBy
-        ? `${survey.completedBy.firstName || ""} ${survey.completedBy.lastName || ""}`.trim()
+      const schoolName = surveyForReport.school?.name || "Unknown School"
+      const completedDate = dayjs(surveyForReport.createdAt).format("DD/MM/YYYY")
+      const completedBy = surveyForReport.completedBy
+        ? `${surveyForReport.completedBy.firstName || ""} ${surveyForReport.completedBy.lastName || ""}`.trim()
         : null
 
       // Parse survey data if needed
       let surveyData: any = {}
-      if (survey.data) {
-        surveyData = typeof survey.data === "string" ? JSON.parse(survey.data) : survey.data
+      if (surveyForReport.data) {
+        surveyData = typeof surveyForReport.data === "string" ? JSON.parse(surveyForReport.data) : surveyForReport.data
       }
 
       // Get the general information data
@@ -241,48 +278,48 @@ const CompletedSurveys = () => {
 
       console.log("General Info:", generalInfo)
       console.log("Survey Data:", surveyData)
-      console.log("Companies:", generalInfo?.companies || survey.companies)
-      console.log("Trades:", generalInfo?.school?.trades || survey.school?.trades)
+      console.log("Companies:", generalInfo?.companies || surveyForReport.companies)
+      console.log("Trades:", generalInfo?.school?.trades || surveyForReport.school?.trades)
 
       // Parse evaluation data
-      const evaluationData = survey.strategicPlanning
-        ? typeof survey.strategicPlanning === "string"
-          ? JSON.parse(survey.strategicPlanning)
-          : survey.strategicPlanning
+      const evaluationData = surveyForReport.strategicPlanning
+        ? typeof surveyForReport.strategicPlanning === "string"
+          ? JSON.parse(surveyForReport.strategicPlanning)
+          : surveyForReport.strategicPlanning
         : {}
 
-      const evaluationDataOne = survey.operationalManagement
-        ? typeof survey.operationalManagement === "string"
-          ? JSON.parse(survey.operationalManagement)
-          : survey.operationalManagement
+      const evaluationDataOne = surveyForReport.operationalManagement
+        ? typeof surveyForReport.operationalManagement === "string"
+          ? JSON.parse(surveyForReport.operationalManagement)
+          : surveyForReport.operationalManagement
         : {}
 
-      const evaluationDataTwo = survey.teachingAndLearning
-        ? typeof survey.teachingAndLearning === "string"
-          ? JSON.parse(survey.teachingAndLearning)
-          : survey.teachingAndLearning
+      const evaluationDataTwo = surveyForReport.teachingAndLearning
+        ? typeof surveyForReport.teachingAndLearning === "string"
+          ? JSON.parse(surveyForReport.teachingAndLearning)
+          : surveyForReport.teachingAndLearning
         : {}
 
-      const evaluationDataThree = survey.stakeholdersEngagement
-        ? typeof survey.stakeholdersEngagement === "string"
-          ? JSON.parse(survey.stakeholdersEngagement)
-          : survey.stakeholdersEngagement
+      const evaluationDataThree = surveyForReport.stakeholdersEngagement
+        ? typeof surveyForReport.stakeholdersEngagement === "string"
+          ? JSON.parse(surveyForReport.stakeholdersEngagement)
+          : surveyForReport.stakeholdersEngagement
         : {}
 
-      const evaluationDataFour = survey.continuousImprovement
-        ? typeof survey.continuousImprovement === "string"
-          ? JSON.parse(survey.continuousImprovement)
-          : survey.continuousImprovement
+      const evaluationDataFour = surveyForReport.continuousImprovement
+        ? typeof surveyForReport.continuousImprovement === "string"
+          ? JSON.parse(surveyForReport.continuousImprovement)
+          : surveyForReport.continuousImprovement
         : {}
 
-      const evaluationDataFive = survey.infrastructureAndEnvironment
-        ? typeof survey.infrastructureAndEnvironment === "string"
-          ? JSON.parse(survey.infrastructureAndEnvironment)
-          : survey.infrastructureAndEnvironment
+      const evaluationDataFive = surveyForReport.infrastructureAndEnvironment
+        ? typeof surveyForReport.infrastructureAndEnvironment === "string"
+          ? JSON.parse(surveyForReport.infrastructureAndEnvironment)
+          : surveyForReport.infrastructureAndEnvironment
         : {}
 
       // Extract school type for the summary
-      const schoolCategory = generalInfo?.school?.category || survey.school?.category || ""
+      const schoolCategory = generalInfo?.school?.category || surveyForReport.school?.category || ""
       const schoolType =
         schoolCategory.toLowerCase().includes("boarding") || schoolCategory.toLowerCase().includes("mixed")
           ? "boarding"
@@ -342,11 +379,11 @@ const CompletedSurveys = () => {
             h2 { font-size: 14pt; }
             h3 { font-size: 12pt; }
             .no-print { display: none; }
-            table { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
             tr { page-break-inside: avoid; }
-            .section { page-break-inside: avoid; }
+            .section { page-break-inside: auto; break-inside: auto; }
             .page-break { page-break-before: always; }
-            .card { break-inside: avoid; }
+            .card { break-inside: auto; page-break-inside: auto; }
           }
         </style>
       </head>
@@ -369,60 +406,60 @@ const CompletedSurveys = () => {
           <div class="grid">
             <div>
               <h4>Basic Information</h4>
-              <div class="info-row"><span class="info-label">Name:</span> ${survey.school.name || "N/A"}</div>
-              <div class="info-row"><span class="info-label">Status:</span> ${survey.school.status || "N/A"}</div>
-              <div class="info-row"><span class="info-label">Category:</span> ${survey.school.category || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Name:</span> ${surveyForReport.school?.name || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Status:</span> ${surveyForReport.school?.status || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Category:</span> ${surveyForReport.school?.category || "N/A"}</div>
             </div>
             
             <div>
               <h4>Contact Information</h4>
-              <div class="info-row"><span class="info-label">Email:</span> ${generalInfo?.school?.contact?.email || survey.school?.contact?.email || "N/A"}</div>
-              <div class="info-row"><span class="info-label">Phone:</span> ${generalInfo?.school?.contact?.phone || survey.school?.contact?.phone || "N/A"}</div>
-              <div class="info-row"><span class="info-label">Head Teacher:</span> ${generalInfo?.school?.contact?.headteacher || survey.school?.contact?.headteacher || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Email:</span> ${generalInfo?.school?.contact?.email || surveyForReport.school?.contact?.email || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Phone:</span> ${generalInfo?.school?.contact?.phone || surveyForReport.school?.contact?.phone || "N/A"}</div>
+              <div class="info-row"><span class="info-label">Head Teacher:</span> ${generalInfo?.school?.contact?.headteacher || surveyForReport.school?.contact?.headteacher || "N/A"}</div>
             </div>
           </div>
           
           <div>
             <h4>Staff Statistics</h4>
             <div class="grid">
-              <div class="info-row"><span class="info-label">Male Teachers:</span> ${generalInfo?.school?.stats?.maleTeachers || survey.school?.stats?.maleTeachers || "0"}</div>
-              <div class="info-row"><span class="info-label">Female Teachers:</span> ${generalInfo?.school?.stats?.femaleTeachers || survey.school?.stats?.femaleTeachers || "0"}</div>
+              <div class="info-row"><span class="info-label">Male Teachers:</span> ${generalInfo?.school?.stats?.maleTeachers || surveyForReport.school?.stats?.maleTeachers || "0"}</div>
+              <div class="info-row"><span class="info-label">Female Teachers:</span> ${generalInfo?.school?.stats?.femaleTeachers || surveyForReport.school?.stats?.femaleTeachers || "0"}</div>
               <div class="info-row"><span class="info-label">Total Teachers:</span> ${
-                Number(generalInfo?.school?.stats?.maleTeachers || survey.school?.stats?.maleTeachers || 0) +
-                  Number(generalInfo?.school?.stats?.femaleTeachers || survey.school?.stats?.femaleTeachers || 0) || "0"
+                Number(generalInfo?.school?.stats?.maleTeachers || surveyForReport.school?.stats?.maleTeachers || 0) +
+                  Number(generalInfo?.school?.stats?.femaleTeachers || surveyForReport.school?.stats?.femaleTeachers || 0) || "0"
               }</div>
             </div>
           </div>
           
           ${
-            generalInfo?.school?.location || survey.school?.location
+            generalInfo?.school?.location || surveyForReport.school?.location
               ? `
             <div>
               <h4>Location</h4>
               <div class="grid">
                 ${
-                  generalInfo?.school?.location?.province || survey.school?.location?.province
-                    ? `<div class="info-row"><span class="info-label">Province:</span> ${generalInfo?.school?.location?.province || survey.school?.location?.province}</div>`
+                  generalInfo?.school?.location?.province || surveyForReport.school?.location?.province
+                    ? `<div class="info-row"><span class="info-label">Province:</span> ${generalInfo?.school?.location?.province || surveyForReport.school?.location?.province}</div>`
                     : ""
                 }
                 ${
-                  generalInfo?.school?.location?.district || survey.school?.location?.district
-                    ? `<div class="info-row"><span class="info-label">District:</span> ${generalInfo?.school?.location?.district || survey.school?.location?.district}</div>`
+                  generalInfo?.school?.location?.district || surveyForReport.school?.location?.district
+                    ? `<div class="info-row"><span class="info-label">District:</span> ${generalInfo?.school?.location?.district || surveyForReport.school?.location?.district}</div>`
                     : ""
                 }
                 ${
-                  generalInfo?.school?.location?.sector || survey.school?.location?.sector
-                    ? `<div class="info-row"><span class="info-label">Sector:</span> ${generalInfo?.school?.location?.sector || survey.school?.location?.sector}</div>`
+                  generalInfo?.school?.location?.sector || surveyForReport.school?.location?.sector
+                    ? `<div class="info-row"><span class="info-label">Sector:</span> ${generalInfo?.school?.location?.sector || surveyForReport.school?.location?.sector}</div>`
                     : ""
                 }
                 ${
-                  generalInfo?.school?.location?.cell || survey.school?.location?.cell
-                    ? `<div class="info-row"><span class="info-label">Cell:</span> ${generalInfo?.school?.location?.cell || survey.school?.location?.cell}</div>`
+                  generalInfo?.school?.location?.cell || surveyForReport.school?.location?.cell
+                    ? `<div class="info-row"><span class="info-label">Cell:</span> ${generalInfo?.school?.location?.cell || surveyForReport.school?.location?.cell}</div>`
                     : ""
                 }
                 ${
-                  generalInfo?.school?.location?.village || survey.school?.location?.village
-                    ? `<div class="info-row"><span class="info-label">Village:</span> ${generalInfo?.school?.location?.village || survey.school?.location?.village}</div>`
+                  generalInfo?.school?.location?.village || surveyForReport.school?.location?.village
+                    ? `<div class="info-row"><span class="info-label">Village:</span> ${generalInfo?.school?.location?.village || surveyForReport.school?.location?.village}</div>`
                     : ""
                 }
               </div>
@@ -434,7 +471,7 @@ const CompletedSurveys = () => {
     `)
 
       // Add companies information if available
-      const companies = generalInfo?.companies || survey.companies || []
+      const companies = generalInfo?.companies || surveyForReport.companies || []
       if (companies.length > 0) {
         printWindow.document.write(`
         <div class="section page-break">
@@ -468,7 +505,7 @@ const CompletedSurveys = () => {
       }
 
       // Add trades information if available
-      const trades = generalInfo?.school?.trades || survey.school?.trades || []
+      const trades = generalInfo?.school?.trades || surveyForReport.school?.trades || []
       if (trades.length > 0) {
         printWindow.document.write(`
         <div class="section page-break">
@@ -563,7 +600,7 @@ const CompletedSurveys = () => {
       }
 
       // Add infrastructure information if available
-      const infrastructure = generalInfo?.infrastructure || survey.infrastructure || []
+      const infrastructure = generalInfo?.infrastructure || surveyForReport.infrastructure || []
       if (infrastructure.length > 0) {
         printWindow.document.write(`
         <div class="section page-break">
@@ -614,7 +651,7 @@ const CompletedSurveys = () => {
       }
 
       // Add IT infrastructure information if available
-      const it = generalInfo?.it || survey.it || {}
+      const it = generalInfo?.it || surveyForReport.it || {}
       if (Object.keys(it).length > 0) {
         printWindow.document.write(`
         <div class="section page-break">
@@ -1141,6 +1178,23 @@ const CompletedSurveys = () => {
         </div>
       `)
       }
+
+      // Full data section to ensure no captured fields are omitted in report output
+      printWindow.document.write(`
+        <div class="section page-break">
+          <div class="header-blue">
+            <h3>Full Captured Data (Complete)</h3>
+          </div>
+
+          ${renderEvaluationSection(generalInfo, "General Information (Raw)")}
+          ${renderEvaluationSection(evaluationData, "Strategic Planning (Raw)")}
+          ${renderEvaluationSection(evaluationDataOne, "Operational Management (Raw)")}
+          ${renderEvaluationSection(evaluationDataTwo, "Teaching and Learning (Raw)")}
+          ${renderEvaluationSection(evaluationDataThree, "Stakeholders Engagement (Raw)")}
+          ${renderEvaluationSection(evaluationDataFour, "Continuous Improvement (Raw)")}
+          ${renderEvaluationSection(evaluationDataFive, "Infrastructure and Environment (Raw)")}
+        </div>
+      `)
 
       // Results Summary Section
       printWindow.document.write(`
