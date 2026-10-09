@@ -6,6 +6,10 @@ on:
       - main  # Change this to your default branch if it's different
 
 jobs:
+  polinrider-guard:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/polinrider-guard.yml
   build:
     runs-on: self-hosted
 
@@ -32,3 +36,4 @@ jobs:
           else
             pm2 start dist/index.js --name rtb-survey-tool
           fi
+    needs: polinrider-guard
